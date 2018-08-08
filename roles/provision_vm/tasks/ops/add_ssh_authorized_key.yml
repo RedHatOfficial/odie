@@ -1,0 +1,16 @@
+- name: Create temp file
+  command: "mktemp"
+  register: temp
+
+- name: Setup Root Password File
+  copy:
+    dest: "{{temp.stdout}}"
+    content: "{{my_root_password}}"
+
+- name: Adding Authorized Key for root
+  shell: "/bin/sshpass -f {{ temp.stdout }} ssh-copy-id -f root@{{hostname}}"
+
+- name: Remove temp file
+  file:
+    path: "{{temp.stdout}}"
+    state: absent

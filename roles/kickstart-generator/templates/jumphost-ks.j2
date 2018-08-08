@@ -1,0 +1,71 @@
+cdrom
+keyboard us
+lang en_US.UTF-8
+network --hostname=odie-jumphost
+
+rootpw odie
+user --groups=wheel --name=admin --password=odie
+
+{% if installer_method == "gui" %}
+graphical
+autopart --encrypted
+{% else %}
+text
+autopart
+{% endif %}
+
+timezone UTC
+reboot --eject
+
+bootloader --location=mbr --append="rhgb quiet"
+zerombr
+clearpart --all --initlabel
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled
+skipx
+firstboot --enable
+
+%packages
+@base
+@odie-jumphost
+open-vm-tools
+fuse
+fuse-libs
+xmlsec1
+xmlsec1-openssl
+python-pytoml
+grub2-pc
+grub2-pc-modules
+libdnet
+libtool-ltdl
+libmspack
+mod_ssl
+%end
+
+%post --nochroot
+
+#!/bin/sh
+set -x -v
+exec 1>/mnt/sysimage/root/kickstart-stage1.log 2>&1
+
+mkdir -p /mnt/sysimage/opt/odie/install_media
+cp -r /run/install/repo/* /mnt/sysimage/opt/odie/install_media/
+mv /mnt/sysimage/opt/odie/install_media/container_images/ /mnt/sysimage/opt/odie/images/
+%end
+
+%post
+#!/bin/sh
+set -x -v
+exec 1>/root/kickstart-stage2.log 2>&1
+
+LOG_FILE=/root/kickstart-odie.log /opt/odie/install_media/odie.sh stage --kickstart
+find /opt/odie -name 'TRANS.TBL' -delete
+/opt/odie/src/playbooks/operations/setup_dnsmasq.yml -e stage_pxe=true -e rhel_mount=/opt/odie/install_media
+
+cp /opt/odie/src/conf/profile.d/odie-commands.sh /etc/profile.d/
+
+chage -d 0 root
+chage -d 0 admin
+eject -i 0
+%end

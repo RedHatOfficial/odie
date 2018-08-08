@@ -1,0 +1,5 @@
+# V-72891
+# 2.3.1.3 Configure syslog Logging
+log_destination = 'syslog'
+syslog_facility = '${POSTGRESQL_SYSLOG_FACILITY}' # choose the facility that makes sense
+syslog_ident = 'postgres'

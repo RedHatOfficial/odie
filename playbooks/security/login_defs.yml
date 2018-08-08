@@ -1,0 +1,16 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Configure login.defs file
+  hosts: all:localhost
+  tasks:
+    - name: All local interactive user accounts, upon creation, must be assigned a home directory.
+      lineinfile:
+          dest: /etc/login.defs
+          regexp: ^#?CREATE_HOME
+          line: "CREATE_HOME yes"
+
+    - name: "The shadow file must be configured to store only encrypted representations of passwords."
+      lineinfile:
+          dest: /etc/login.defs
+          regexp: ^#?ENCRYPT_METHOD
+          line: "ENCRYPT_METHOD SHA512"

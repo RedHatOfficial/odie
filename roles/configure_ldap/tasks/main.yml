@@ -1,0 +1,32 @@
+---
+- name: Copy group-sync and whitelist files to /opt/odie/config/ if they do not already exist
+  template:
+    src: "{{ item }}"
+    dest: "/opt/odie/config/{{ item }}"
+    force: no
+  register: example_files
+  with_items:
+    - group-sync
+    - whitelist
+
+- name: Fail if example files were copied
+  fail:
+    msg: "Example files copied to /opt/odie/config, exiting now"
+  when: example_files.changed
+
+- name: Copy group-sync and whitelist files to /tmp/
+  template:
+    src: "/opt/odie/config/{{ item }}"
+    dest: "/tmp/{{ item }}"
+  with_items:
+    - group-sync
+    - whitelist
+
+- name: Sync LDAP groups to OCP
+  shell: "oc adm groups sync --sync-config=/tmp/group-sync --whitelist=/tmp/whitelist --confirm"
+
+- name: Clean up .j2 files
+  shell: "rm -rf /tmp/{{ item }}"
+  with_items:
+    - group-sync
+    - whitelist

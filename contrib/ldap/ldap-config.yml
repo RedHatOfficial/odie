@@ -1,0 +1,21 @@
+kind: LDAPSyncConfig
+apiVersion: v1
+url: ldap://ad1.win12.rhc-lab.iad.redhat.com
+insecure: true
+bindDN: "battles.user.odie.rhc-lab.iad.redhat.com@win12.rhc-lab.iad.redhat.com"
+bindPassword: "ODIEpassphrase123!"
+rfc2307:
+    groupsQuery:
+        baseDN: "OU=OCP,DC=win12,DC=rhc-lab,DC=iad,DC=redhat,DC=com"
+        scope: sub
+        derefAliases: never
+        filter: (objectclass=group)
+    groupUIDAttribute: dn
+    groupNameAttributes: [ cn ]    
+    groupMembershipAttributes: [ member ]
+    usersQuery:
+    #    baseDN: "cn=users,dc=win12,dc=rhc-lab,dc=iad,dc=redhat,dc=com"
+        scope: sub
+        derefAliases: never
+    userUIDAttribute: dn
+    userNameAttributes: [ uid ]

@@ -1,0 +1,48 @@
+#!/usr/bin/env ansible-playbook
+---
+# Run system tests against a hardened system
+- include: playbooks/operations/ping.yml
+- include: playbooks/security/fips_check.yml
+
+- name: Check access to internal registry
+  hosts: all
+  tasks:
+    - uri:
+        url: http://ocp-registry.lab.revoweb:5000/v2/_catalog
+        return_content: yes
+      register: registrypage
+    - name: Verify registry catalog is not empty
+      fail:
+      when: "'repositories' not in registrypage.content"
+
+- name: "Check access to docker-registry-default"
+  hosts: all
+  tasks:
+    - uri:
+        url: "https://docker-registry-default.{{ default_subdomain }}/"
+        validate_certs: no
+        return_content: yes
+
+- name: "Check access to registry-console-default"
+  hosts: all
+  tasks:
+    - uri:
+        url: "https://registry-console-default.{{ default_subdomain }}/"
+        validate_certs: no
+        return_content: yes
+
+- name: Check if reference-project is installed
+  hosts: localhost
+  tasks:
+    - name: Check if reference-project is installed
+      shell: |
+        if [ `oc projects -q | grep 'reference-project'` ]; then echo true; else echo false; fi
+      register: reference_project_available
+
+- name: Validate Reference Project
+  hosts: localhost
+  tasks:
+    - name: Validate Reference Project
+      include_role:
+        name: reference_project_validation
+      when: reference_project_available

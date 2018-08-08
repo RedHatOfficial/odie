@@ -1,0 +1,36 @@
+#!/usr/bin/env ansible-playbook
+---
+
+- name: Push all the images into the Cluster Registry
+  hosts: localhost
+  vars:
+      target_registry: "registry01.lab.local:5000"
+      images_source: .
+      images_target: .
+      import_images: True
+      debug: true
+      crunchy:
+  vars_files:
+    - "{{config_path}}"
+  pre_tasks:
+    - name: Empty Image streams
+      set_fact:
+        image_streams: "{{ [] }}"
+      when: image_streams is not defined
+
+    - name: Setup registry with properly prefixed name
+      set_fact:
+        images: "{{ { 'name': output_name, 'ocp_registry': true, 'repos': image_streams | map('regex_replace', '^(.*)$', '{{project_name}}/\\1') | list} }}"
+
+    - debug:
+        var: images
+      when: debug
+
+  roles:
+    - docker_login
+    - name: ODIE Export
+      role: docker_pull
+      registry: "{{images}}"
+      source_registry: "{{ route_url }}"
+      when: image_streams is defined and image_streams
+

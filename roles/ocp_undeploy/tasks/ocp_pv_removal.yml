@@ -1,0 +1,16 @@
+---
+  - name: PV Removal {{ project.name }}
+    debug:
+      msg: "{{ project }} {{app }}"
+  - debug:
+      var: project
+
+  - name: Removing PV
+    include: pv_remove.yml
+    vars:
+      jumphost_dir: "{{root_dir}}/{{project.name}}/apps/{{app.name}}/pvs/{{pv}}"
+    loop_control:
+      loop_var: pv
+    with_items:
+      - "{{ app.pvs }}"
+

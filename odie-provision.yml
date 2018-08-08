@@ -1,0 +1,13 @@
+#!/usr/bin/env ansible-playbook
+---
+- include: playbooks/development/provision_jumphost.yml
+- include: playbooks/development/configure_jumphost.yml
+- include: playbooks/development/provision_vms.yml
+- include: playbooks/operations/ping.yml
+
+# run odie-check.yml
+
+- include: playbooks/development/install_odie.yml
+
+# run odie-validate.yml
+# run odie-harden.yml

@@ -1,0 +1,54 @@
+= {subject}: {description}
+// --------------------------------
+// Author Information
+// --------------------------------
+:author: Red Hat ODIE Team
+:email: <mbattles@redhat.com>
+// --------------------------------
+// Document Information
+// --------------------------------
+:customer:  Red Hat, Inc.
+:confidentiality: For Internal Use Only
+:subject: ODIE Technical Documentation
+:description:  Operational Runbook
+// --------------------------------
+// Revision Information
+// --------------------------------
+:revdate: 07-10-2018
+:revnumber: 0.7.0.0
+:year: 2018
+// --------------------------------
+// Document/Brand Configuration
+// Do Not Change
+// --------------------------------
+:doctype: book
+:listing-caption: Listing
+:toc:
+:toclevels: 4
+:numbered:
+:chapter-label:
+:pdf-page-size: letter
+:pdf-style: redhat
+:pdf-stylesdir: .
+:backend: xhtml
+ifdef::backend-pdf[]
+:title-page-background-image: image:../assets/images/EngagementJournalCoverPageLogoNew.jpg[pdfwidth=8.0in,align=center]
+:pygments-style: tango
+:source-highlighter: pygments
+endif::[]
+
+
+:imagesdir: ../assets/images
+include::general/preface.adoc[]
+
+include::runbook/hardware-requirements.adoc[]
+include::runbook/bluesuit.adoc[]
+//include::runbook/certs.adoc[]
+//include::runbook/dns.adoc[]
+include::runbook/reference_table.adoc[]
+
+//:build: 0
+//include::technical/app-conventions.adoc[]
+//include::runbook/config_yml.adoc[]
+//include::runbook/build_properties.adoc[]
+//include::technical/dev_notes.adoc[]

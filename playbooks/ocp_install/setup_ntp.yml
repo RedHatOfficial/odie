@@ -1,0 +1,36 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Configure chrony client
+  hosts: all
+  tasks:
+    - block:
+      - name: Install chrony
+        yum:
+          name: chrony
+          state: present
+      - name: Configure chrony
+        systemd:
+          name: chronyd
+          enabled: True
+          state: started
+      - name: Set Timezone
+        command: timedatectl set-timezone UTC
+      - name: Remove Red Hat NTP pools
+        lineinfile:
+          dest: /etc/chrony.conf
+          regexp: "^server"
+          state: absent
+      - name: Set NTP server
+        lineinfile:
+          dest: /etc/chrony.conf
+          insertbefore: BOF
+          state: present
+          line: "server {{ ntp_server }} iburst"
+      - name: Configure chrony
+        systemd:
+          name: chronyd
+          enabled: True
+          state: restarted
+      - name: Burst timeupdate
+        command: chronyc -a 'burst 4/4'
+      when: configure_ntp_clients is defined and configure_ntp_clients == True and ntp_server is defined

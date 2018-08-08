@@ -1,0 +1,11 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Configure LDAP
+  hosts: jumphost
+  tasks:
+    - name: Configure LDAP
+      include_role:
+        name: configure_ldap
+      #when: configure_ldap is defined and configure_ldap
+
+

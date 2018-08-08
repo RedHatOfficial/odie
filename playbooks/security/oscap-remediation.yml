@@ -1,0 +1,37 @@
+#!/usr/bin/env ansible-playbook
+#
+#  Perform the OpenSCAP remediation on all of the VMs in the ODIE cluster
+#
+
+---
+- name: Remediate VMs with OpenSCAP
+  hosts: all:localhost
+  vars:
+    output_dir: /var/www/html/oscap-results
+    remediation: yes
+    oscap_dependencies:
+      - openscap
+      - openscap-scanner
+      - openscap-utils
+      - scap-security-guide
+      - scap-security-guide-doc
+      - coolkey
+      - pam_pkcs11
+      - pcsc-lite
+      - pcsc-lite-ccid
+      - pcsc-lite-libs
+
+  tasks:
+    - name: Install oscap RPMs
+      yum:
+        name: "{{oscap_dependencies}}"
+        state: present
+
+    - name: OSCAP with remediation:{{ remediation }}
+      script: "{{odie_src_dir}}/scripts/oscap-remediation.sh {{ remediation }}"
+
+
+- name: Re-enabling FW on lb_nfs & registry
+  hosts: lb:registry
+  roles:
+    - os_firewall

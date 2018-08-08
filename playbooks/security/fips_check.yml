@@ -1,0 +1,12 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: FIPS Compliance Check
+  hosts: all:localhost
+  tasks:
+    - name: Check whether FIPS kernel bit is set
+      command: cat /proc/sys/crypto/fips_enabled
+      register: fips
+
+    - name: Check that FIPS is enabled
+      fail:
+      when: fips.stdout == "0"

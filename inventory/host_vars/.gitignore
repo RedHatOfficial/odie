@@ -1,0 +1,3 @@
+# The contents of this directory should be generated automatically by 
+# the csv2hosts.py script, so we will ignore the .yml files in this directory
+*.yml

@@ -1,0 +1,8 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Update PIV Proxy
+  hosts: jumphost
+  tasks:
+    - name: Update PIV Proxy
+      include_role:
+        name: update_cac_proxy

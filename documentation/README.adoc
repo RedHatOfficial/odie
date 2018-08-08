@@ -1,0 +1,72 @@
+= ODIE Documentation
+
+This documentation is written in AsciiDoc which is a A light weight plain-text writing format for authoring documentation.
+
+`asciidoctor` is a text processor that can translate AsciiDoc documents
+into various formats, including XHTML and PDF. 
+Below are some links to help you get stated with asciidoc(tor)
+
+* http://asciidoctor.org/docs/asciidoc-writers-guide/
+* https://dzone.com/articles/awesome-asciidoctor-span-cell[Tables in AsciiDoc]
+* https://powerman.name/doc/asciidoc[Cheatsheet]
+* https://github.com/asciidoctor/asciidoctor-pdf/blob/master/docs/theming-guide.adoc[asciidoctor-pdf theming guide]
+
+== Setup & Installation
+
+A Jumphost can be converted into a BuildHost which will configure AsciiDoctor.  Alternatively, you may set it up manually for your system via the
+appropriate setup instructions:
+
+.Fedora Setup
+----
+dnf install ruby ruby-devel gcc
+dnf install rubygem-asciidoctor
+dnf install rubygem-coderay
+gem install --pre asciidoctor-pdf
+gem install asciidoctor-confluence
+gem install pygments.rb
+----
+
+.RHEL Setup
+----
+yum install ruby ruby-devel gcc
+gem install asciidoctor
+gem install asciidoctor-confluence
+gem install --pre asciidoctor-pdf
+gem install coderay pygments.rb
+----
+
+.Windows Setup
+----
+Download and Install Ruby: http://rubyinstaller.org/downloads/
+Download and Install Python 2.7.x: https://www.python.org/downloads/
+Add Python to PATH System Environment Variable
+Copy "fonts" directory to "C:\usr\share\"
+From a Command Prompt, Run:
+  gem install asciidoctor
+  gem install asciidoctor-confluence
+  gem install --pre asciidoctor-pdf
+  gem install coderay pygments.rb
+----
+
+.macOS Setup
+----
+Insure you have the latest ruby installed: curl -sSL https://get.rvm.io | bash -s stable --ruby
+sudo gem update --system
+sudo gem install -n /usr/local/bin asciidoctor
+sudo gem install -n /usr/local/bin asciidoctor-confluence
+sudo gem install -n /usr/local/bin --pre asciidoctor-pdf
+sudo gem install -n /usr/local/bin coderay pygments.rb
+----
+
+== Build Documents
+To build the PDF version of the documentation:
+
+```
+make pdfs
+```
+
+Your PDFs will be available under `target`
+
+
+// vim: tw=150 lbr wrap
+

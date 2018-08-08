@@ -1,0 +1,11 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Reboot Hosts
+  hosts: all:!jumphost
+  tasks:
+    - name: Restart server
+      command: /sbin/shutdown -r +1
+      async: 0
+      poll: 0
+      ignore_errors: true
+

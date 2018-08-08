@@ -1,0 +1,24 @@
+#!/usr/bin/env ansible-playbook
+---
+
+- name: Import (push) all the images into the Cluster Registry
+  hosts: "{{ target_host | default('localhost') }}"
+  vars:
+      import_images: True
+      debug: true
+
+  pre_tasks:
+    - name: Loading {{manifest_path}}
+      include_vars:
+        file: "{{manifest_path}}"
+        name: registry
+
+    - name: Setting Source registry {{route_url}}
+      set_fact:
+
+  roles:
+    - docker_login
+    - name: ODIE Import
+      role: docker_push
+      target_registry: "{{ route_url }}"
+

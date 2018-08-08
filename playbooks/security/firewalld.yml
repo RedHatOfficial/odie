@@ -1,0 +1,22 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Configure firewalld drop Zone
+  hosts: all:localhost
+  tasks:
+    - name: Set Default firewalld Zone for Incoming Packets
+      lineinfile:
+          dest: /etc/firewalld/firewalld.conf
+          regexp: ^#?DefaultZone
+          line: "DefaultZone=drop"
+
+- name: Configure firewalld  public Zone
+  hosts: localhost
+  tasks:
+    - name: Set hosts to allow to ssh into jumphost
+      firewalld:
+        source: "{{ jumphost_ssh_hosts }}"
+        zone: public
+        state: enabled
+        permanent: true
+        immediate: true
+      when: jumphost_ssh_hosts is defined

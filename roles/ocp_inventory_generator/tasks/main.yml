@@ -1,0 +1,2 @@
+---
+- include: inventory_gen.yml tag=configuration,ocp

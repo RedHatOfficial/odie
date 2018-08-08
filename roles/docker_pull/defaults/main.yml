@@ -1,0 +1,12 @@
+---
+odie_images_dir: "output"
+
+# default to gzip
+# Compression settings
+compress_ext: 'gz'
+compress_type: 'gzip'
+compress_cmd: 'gzip'
+compress_args: '--rsyncable -7'
+uncompress_cmd: 'gunzip'
+uncompress_args: ''
+

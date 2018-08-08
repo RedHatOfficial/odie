@@ -1,0 +1,24 @@
+---
+# defaults file for rsyslog_configuration
+
+# By default, this role will be turned OFF. You must manually
+# set this boolean to "true" for the role to be applied
+setup_rsyslog_export: false
+setup_rsyslog_remote_server: false
+
+# UDP and 514 are the default protocol and port for rsyslog exports
+rsyslog_export_protocol: udp
+rsyslog_export_port: 514
+
+
+# default size for rsyslog
+rsyslog_var_log_size: 52428800
+
+# default remote system log location
+remote_rsyslog_files: /var/log/hosts/
+
+# By default, this role will be turned OFF. You must manually
+# set this boolean to "true" for the role to be applied
+
+# Set remote hostname
+remote_rsyslog_export_hostname: rsyslog.lab.odie

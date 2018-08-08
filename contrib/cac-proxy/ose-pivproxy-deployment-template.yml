@@ -1,0 +1,150 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: ose-pivproxy
+  annotations:
+    description: Template for deploying a x509/PIV/CAC proxy that can be used for OSE/OCP authentication.
+labels:
+  name: ose-pivproxy
+objects:
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      name: ose-pivproxy
+      app: ose-pivproxy
+    name: ose-pivproxy
+  spec:
+    replicas: 1
+    selector:
+      name: ose-pivproxy
+    template:
+      metadata:
+        labels:
+          name: ose-pivproxy
+          app: ose-pivproxy
+      spec:
+        containers:
+        - name: ose-pivproxy
+          image: ${P_NAMESPACE}/${P_IMAGE_NAME}:${P_IMAGE_VERSION}
+          env:
+          - name: PIVPROXY_PUBLIC_URL
+            value: ${P_PIVPROXY_PUBLIC_URL}
+          - name: MASTER_PUBLIC_URL
+            value: ${P_MASTER_PUBLIC_URL}
+          - name: BASE_NAME
+            value: ose-pivproxy
+          volumeMounts:
+          - mountPath: /secrets
+            name: ose-pivproxy-secret-mount
+            readOnly: true
+          - mountPath: /piv
+            name: ose-pivproxy-smartcard-ca-mount
+            readOnly: true
+          - mountPath: /client_secrets
+            name: ose-pivproxy-client-secret-mount
+            readOnly: true
+          - mountPath: /config
+            name: ose-pivproxy-config-mount
+            readOnly: true
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          - containerPort: 8443
+            protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz.html
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 3
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /healthz.html
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 3
+            periodSeconds: 30
+        volumes:
+        - name: ose-pivproxy-secret-mount
+          secret:
+            secretName: ose-pivproxy-certs
+            defaultMode: 440
+        - name: ose-pivproxy-smartcard-ca-mount
+          secret:
+            secretName: ose-pivproxy-smartcard-ca
+            defaultMode: 440
+        - name: ose-pivproxy-client-secret-mount
+          secret:
+            secretName: ose-pivproxy-client-secrets
+            defaultMode: 440
+        - name: ose-pivproxy-config-mount
+          configMap:
+            name: ose-pivproxy
+            defaultMode: 440
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.openshift.io/serving-cert-secret-name: ose-pivproxy-certs
+    labels:
+      name: ose-pivproxy
+      app: ose-pivproxy
+    name: ose-pivproxy
+  spec:
+    type: ClusterIP
+    ports:
+    - name: ose-pivproxy
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+    selector:
+      name: ose-pivproxy
+- apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      app: ose-pivproxy
+      name: ose-pivproxy
+    name: ose-pivproxy
+  spec:
+    host: ${P_PIVPROXY_PUBLIC_URL}
+    port:
+      targetPort: ose-pivproxy
+    tls:
+      termination: passthrough
+    to:
+      kind: Service
+      name: ose-pivproxy
+      weight: 100
+    wildcardPolicy: None
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    labels:
+      name: ose-pivproxy
+      app: ose-pivproxy
+    name: ose-pivproxy
+  data: {} # empty data as a placeholder
+parameters:
+  - name: P_NAMESPACE
+    description: Target namespace for image. Used to reference the ImageStream source for the image.
+    value: pivproxy
+    required: true
+  - name: P_IMAGE_NAME
+    description: The name of the image to be used when performing the pull operation.
+    value: ose-pivproxy
+    required: true
+  - name: P_IMAGE_VERSION
+    description: The version of the ose-pivproxy image to use.
+    value: "latest"
+  - name: P_MASTER_PUBLIC_URL
+    description: The public URL for the master node so that authentication details can be proxied back to the master.
+    value: ""
+    required: true
+  - name: P_PIVPROXY_PUBLIC_URL
+    description: The public URL that will be used for the PIV Proxy Route. This will be used to redirect from the master to the proxy.
+    value: ""
+    required: true

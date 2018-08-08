@@ -1,0 +1,84 @@
+---
+# tasks file for rsyslog_configuration
+
+# The "docker_status" result is used to skip ODIE instances that 
+# are not running docker (see below)
+- name: Capture docker installation state
+  stat:
+    path: "/usr/lib/systemd/system/docker.service"
+  register: docker_status
+
+- name: Ensure rsyslog is installed
+  yum:
+    name: rsyslog
+    state: present
+
+- name: Protocol setting (udp)
+  set_fact:
+    protocol: "@"
+  when: rsyslog_export_protocol == "udp"
+
+- name: Protocol setting (tcp)
+  set_fact:
+    protocol: "@@"
+  when: rsyslog_export_protocol == "tcp"
+
+- name: Modify /etc/rsyslog.conf
+  lineinfile:
+    destfile: /etc/rsyslog.conf
+    state: present
+    insertbefore: '# ### end of the forwarding rule ###'
+    line: "*.* {{ protocol }}{{ remote_rsyslog_export_hostname }}:{{ rsyslog_export_port }}"
+  notify: restart rsyslog
+
+- name: Modify /etc/systemd/journald.conf
+  lineinfile:
+    destfile: /etc/systemd/journald.conf
+    state: present
+    regexp: '^MaxFileSec=.*'
+    line: MaxFileSec=3month
+  notify: restart journald
+
+- name: Modify /etc/audisp/plugins.d/syslog.conf to send auditd events to rsyslog
+  copy:
+    src: templates/auditd-rsyslog.conf
+    dest: /etc/audisp/plugins.d/syslog.conf
+    backup: yes
+  register: result_audisp
+
+# auditd has to be restarted with the service command, which is redirected to systemctl
+# It has to do with this kernel issue: See Bug 1026648.
+- name: Restart auditd service
+  command: service auditd restart
+  when: result_audisp.changed
+
+- name: Enable Docker syslog logging driver (remote rsyslog)
+  replace:
+    dest: /etc/sysconfig/docker
+    regexp: '--log-driver=journald'
+    replace: '--log-driver=syslog'
+  register: dockerd_result
+  when:
+    - setup_rsyslog_export
+    - docker_status.stat.exists == true
+
+- name: Setup Docker syslog logging driver (remote syslog)
+  template:
+     src: docker.json.j2
+     dest: /etc/sysconfig/docker.json 
+     owner: root
+     group: root
+     mode: 0644
+  register: dockerj_result
+  when:
+    - setup_rsyslog_export
+    - docker_status.stat.exists == true
+
+- name: Restart docker service
+  systemd:
+    name: docker
+    state: restarted
+  when:
+    - ( dockerd_result.changed ) or ( dockerj_result.changed )
+    - docker_status.stat.exists == true
+

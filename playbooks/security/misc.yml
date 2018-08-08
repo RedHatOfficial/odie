@@ -1,0 +1,12 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Remove the original Kickstart scripts
+  hosts: all:localhost
+  tasks:
+    - name: Removing anaconda-ks.cfg
+      file:
+        path: /root/{{item}}
+        state: absent
+      with_items:
+        - anaconda-ks.cfg
+        - original-ks.cfg

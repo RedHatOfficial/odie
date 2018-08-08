@@ -1,0 +1,35 @@
+.Team Roster
+|===
+|Role |Name |Email
+
+|	Senior Architect
+|	Mike Battles
+|	mbattles@redhat.com
+
+
+|	Senior Application Consultant
+|	Kevin Franklin
+|	kfrankli@redhat.com
+
+
+|	Senior Application Consultant
+|	Nate Revo
+|	nrevo@redhat.com
+
+
+|	Senior Platform Consultant
+|	Stuart Bain
+|	sbain@redhat.com
+
+
+|   Associate Consultant
+|   Randy Johnson
+|   rajohnso@redhat.com
+
+
+|   Senior Consultant
+|   Paul Begovich
+|   pbegovic@redhat.com
+
+
+|===

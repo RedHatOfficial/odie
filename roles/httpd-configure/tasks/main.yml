@@ -1,0 +1,30 @@
+---
+- block:
+  - name: Disable the started RHEL Apache HTTPD Welcome/Test Page
+    copy:
+      content: '# This file has been disabled'
+      dest: /etc/httpd/conf.d/welcome.conf
+      force: yes
+
+  - name: Disable the Apache HTTPD server from autoindexing
+    copy:
+      content: '# This file has been disabled'
+      dest: /etc/httpd/conf.d/autoindex.conf
+      force: yes
+
+  - name: Determine Jumphost hostname
+    local_action: command hostname
+    register: jumphost_hostname
+
+  - name: Populate httpd template file
+    template:
+      src: "httpd-conf.j2"
+      dest: "/etc/httpd/conf/httpd.conf"
+      mode: 0644
+    when: secure_kickstarts
+
+  - name: Restart httpd service
+    service:
+      name: httpd
+      state: restarted
+  when: enable_pxe is not defined or not enable_pxe 

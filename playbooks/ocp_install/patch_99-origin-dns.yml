@@ -1,0 +1,13 @@
+#!/usr/bin/env ansible-playbook
+
+#sed -i 's/^# Test it/sleep 1; # Test it/g' /etc/NetworkManager/dispatcher.d/99-origin-dns.sh
+- name: Patch NetworkManager dispatcher.d 99-origin-dns.sh
+  hosts: nodes
+  tasks:
+    - name: Add 1 second sleep to OpenShift dns update script
+      lineinfile:
+        destfile: /etc/NetworkManager/dispatcher.d/99-origin-dns.sh
+        regexp: '^# Test it(.*)$'
+        line: 'sleep 1; # Test it\1'
+        backrefs: yes
+

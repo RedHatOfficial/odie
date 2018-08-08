@@ -1,0 +1,10 @@
+{% include './templates/includes/second-block.j2' %}
+yum install -y docker
+echo VG=docker-vg >> /etc/sysconfig/docker-storage-setup
+
+sed -i '/OPTIONS=.*/c\OPTIONS="--selinux-enabled"' /etc/sysconfig/docker
+
+systemctl start docker-storage-setup
+systemctl enable docker
+systemctl start docker
+

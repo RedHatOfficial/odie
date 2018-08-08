@@ -1,0 +1,70 @@
+---
+# tasks file for remote_rsyslog_configuration
+
+- name: REMOTE RSYSLOG |  Ensure rsyslog is installed
+  yum:
+    name: rsyslog
+    state: present
+
+- name: REMOTE RSYSLOG |  Create rsyslog file storage location
+  file:
+    path: '{{ remote_rsyslog_files }}'
+    owner: root
+    group: root
+    mode: 0644
+    state: directory
+
+- name: REMOTE RSYSLOG |  Configure rsyslog service
+  template:
+    src: rsyslog.conf.j2
+    dest: /etc/rsyslog.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: result_rsyslog
+
+- name: REMOTE RSYSLOG | Create remote log rotation file
+  template:
+    src: remote_log_rotate.j2
+    dest: /usr/local/bin/remote_log_rotate
+    owner: root
+    group: root
+    mode: 0644
+
+- name: REMOTE RSYSLOG | Copy remote log rotation script
+  copy:
+    src: remote_log_rotate.sh
+    dest: /usr/local/bin/remote_log_rotate.sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: REMOTE RSYSLOG |  Configure audisp for rsyslog
+  copy:
+    src: templates/auditd-rsyslog.conf
+    dest: "/etc/audisp/plugins.d/syslog.conf"
+    backup: yes
+  register: result_audisp
+
+# auditd has to be restarted with the service command, which is redirected to systemctl
+# It has to do with a kernel issue. See Bug 1026648.
+- name: REMOTE RSYSLOG |  Restart auditd service
+  shell: service auditd restart
+  when: result_audisp.changed
+
+# Setup remote rsyslog firewall
+- name: REMOTE RSYSLOG | Configure iptables
+  include_role:
+    name: os_firewall
+
+# Restart services
+- name: REMOTE RSYSLOG |  Restart iptables service
+  systemd:
+    name: iptables
+    state: restarted
+
+- name: REMOTE RSYSLOG |  Restart rsyslog service
+  systemd:
+    name: rsyslog
+    state: restarted
+  when: result_rsyslog.changed == true

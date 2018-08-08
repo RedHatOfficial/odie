@@ -1,0 +1,24 @@
+kind: LDAPSyncConfig
+apiVersion: v1
+url: "ldap://10.15.69.4"
+insecure: true
+bindDN: ""
+bindPassword: ""
+rfc2307:
+    groupsQuery:
+        baseDN: "cn=ocpadmins,cn=groups,cn=compat,dc=rhc-lab,dc=iad,dc=redhat,dc=com"
+        scope: sub
+        derefAliases: never
+        filter: (cn=ocpadmins)
+    groupUIDAttribute: dn
+    groupNameAttributes: [ cn ]
+    groupMembershipAttributes: [ memberUid ]
+    usersQuery:
+        baseDN: "cn=users,cn=compat,dc=rhc-lab,dc=iad,dc=redhat,dc=com"
+        scope: sub
+        derefAliases: never
+        filter: (uid=*)
+    userUIDAttribute: uid
+    userNameAttributes: [ uid ]
+    tolerateMemberNotFoundErrors: false
+    tolerateMembersOutOfScopeErrors: false

@@ -1,0 +1,6 @@
+
+# Root password
+rootpw --iscrypted {{ encrypted_root_password }}
+
+# Admin user setup
+user --groups=wheel --name={{ my_username }} --password={{ encrypted_password }} --iscrypted --gecos="{{ my_username }}"

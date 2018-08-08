@@ -1,0 +1,13 @@
+enable_dhcp: false
+enable_pxe: false
+
+stage_pxe: true
+
+#temp_dhcp_ip: '172.27.168.1'
+ip_range_start: '172.27.168.100'
+ip_range_end: '172.27.168.200'
+
+tftp_root: /var/lib/tftpboot
+rhel_mount: /opt/odie/install_media
+
+my_repo_host: "{{ ansible_default_ipv4.address }}" 

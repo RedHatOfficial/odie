@@ -1,0 +1,7 @@
+- name: restart_masters_cluster
+  command: /usr/bin/systemctl restart atomic-openshift-master-controllers atomic-openshift-master-api
+  when: groups['masters']|length > 1
+
+- name: restart_masters_solo
+  command: /usr/bin/systemctl restart atomic-openshift-master
+  when: groups['masters']|length == 1

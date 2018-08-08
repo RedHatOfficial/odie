@@ -1,0 +1,5 @@
+[local]
+name=ODIE Local Repo
+baseurl=file:///opt/odie/repos/odie-custom
+enabled=1
+gpgcheck=0

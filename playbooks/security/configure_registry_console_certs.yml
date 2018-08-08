@@ -1,0 +1,29 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Configure Registry Console Certificates
+  hosts: localhost
+  tasks:
+    - name: Check for existing Registry secret
+      command: "oc get secret/console-secret -n default"
+      ignore_errors: yes
+      register: check_registry_secret
+
+    - block:
+      - name: Create temporary Registry Console Certificate file
+        command: "mktemp /tmp/tmp.XXXXXXXXXXXX.cert"
+        register: tmp_registry_console_cert
+
+      - name: Concatenate PEM files into single file
+        shell: "cat {{ registry_console_certfile }} {{ registry_console_ca_file }} {{ registry_console_keyfile }} > {{ tmp_registry_console_cert.stdout }}"
+
+      - name: Create OpenShift Registry Console Certificate Secret
+        command: "oc secrets new console-secret {{ tmp_registry_console_cert.stdout }} -n default"
+
+      - name: Redeploy OpenShift Registry Console
+        command: "oc volume dc/registry-console --add --type=secret --secret-name=console-secret -m /etc/cockpit/ws-certs.d -n default"
+
+      - name: Delete temporary Registry Console Certificate
+        file:
+          path: '{{ tmp_registry_console_cert.stdout }}'
+          state: absent
+      when: check_registry_secret.rc != 0 and registry_console_certfile is defined and registry_console_keyfile is defined and registry_console_ca_file is defined

@@ -1,0 +1,13 @@
+- name: "Changing {{hostname}} to {{state}}"
+  command: "virsh {{command}} {{hostname}}"
+
+
+- name: "Waiting for {{hostname}} to be {{state}}"
+  virt:
+    name: "{{ hostname }}"
+    command: status
+    uri: "{{kvm_uri}}"
+  register: vm_result
+  until: vm_result.status == state
+  delay: "{{delay}}"
+  retries: "{{ timeout }}"

@@ -1,0 +1,7 @@
+name: {{registry.name}}
+{% if registry.ocp_registry is defined and registry.ocp_registry%}
+ocp_registry: {{registry.ocp_registry}}
+{% endif %}
+source_registry: {{source_registry}}
+repos:
+{{registry.repos| to_nice_yaml}}

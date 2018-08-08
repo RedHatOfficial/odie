@@ -1,0 +1,24 @@
+---
+# tasks file for kickstart-generator
+#`
+- name: Encrypt the password
+  set_fact:
+    encrypted_root_password: "{{ my_root_password|password_hash('sha256', my_password_salt) }}"
+
+- name: Encrypt the password
+  set_fact:
+    luks_encryption: "--encrypted --passphrase=\"{{ luks_passphrase }}\""
+  when: luks_passphrase is defined
+
+- name: Encrypt the user password
+  set_fact:
+    encrypted_password: "{{ my_password|password_hash('sha256', my_password_salt) }}"
+
+- name: Render the template
+  template:
+    src: "{{ flavor }}-ks.j2"
+    dest: "{{ kickstart_dir }}/{{ hostname }}.cfg"
+    mode: 0600
+    owner: apache
+    group: apache
+  delegate_to: localhost

@@ -1,0 +1,41 @@
+{% include './templates/includes/common-header.j2' %}
+
+# Firewall configuration
+#firewall --enabled --ssh --port=2049:tcp,2049:udp,111:udp,111:tcp,20048:udp,20048:tcp
+# Additional firewall ports will be opened with Ansible
+
+{% include './templates/includes/disk-rhel.j2' %}
+
+# Second disk
+part pv.2 --fstype="lvmpv" --grow --size=10000 {{ luks_encryption }}
+volgroup nfsVG01 pv.2
+logvol /ocp --fstype="xfs" --grow --size=900 --name=nfsVol01 --vgname=nfsVG01 {{ luks_encryption }}
+
+%packages
+{% include './templates/includes/common-packages.j2' %}
+%end
+
+%addon com_redhat_kdump --disable --reserve-mb='128'
+%end
+
+%post
+
+{% include './templates/includes/common-footer.j2' %}
+{% include './templates/includes/second-block.j2' %}
+
+# TODO: Ansiblize everything below this line
+yum clean all
+
+systemctl enable nfs-server rpcbind nfs-lock nfs-idmap
+systemctl start nfs-server rpcbind nfs-lock nfs-idmap
+
+/usr/bin/mkdir -p /ocp/{registry,pvs}
+chmod 777 /opt/registry
+
+cat <<- NFS > /etc/exports
+/ocp/registry *(rw,sync,no_all_squash,no_root_squash)
+/ocp/pvs *(rw,sync,no_all_squash,no_root_squash)
+NFS
+
+eject -i 0
+%end

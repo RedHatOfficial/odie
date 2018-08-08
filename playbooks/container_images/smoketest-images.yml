@@ -1,0 +1,7 @@
+registries:
+  smoketest:
+    name: smoketest
+    ocp_registry: true
+    source_registry: docker-registry-default.example.lab.local
+    repos:
+      - smoketest/helloworld-mdb:latest

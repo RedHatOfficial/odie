@@ -1,0 +1,30 @@
+#!/usr/bin/env ansible-playbook
+---
+
+# TODO: Check whether you need to execute all of these
+- include: /usr/share/ansible/openshift-ansible/playbooks/byo/openshift-cluster/initialize_groups.yml
+  tags:
+  - always
+
+- include: /usr/share/ansible/openshift-ansible/playbooks/common/openshift-cluster/std_include.yml
+  tags:
+  - always
+
+- name: Invoke OpenShift Facts
+  hosts: all
+  roles:
+    - /usr/share/ansible/openshift-ansible/roles/openshift_facts
+
+
+
+- name: Wipe disks to prep for Gluster Install
+  hosts: glusterfs
+  tasks:
+    - name: Determine VM type
+      set_fact:
+        disk_prefix: "{% set vm_tech = lookup('pipe', 'dmidecode -s system-product-name' ) %} {% if vm_tech == 'KVM' or vm_tech == 'RHEV Hypervisor' %}/dev/vd{% else %}/dev/sd{% endif %}"
+
+    - name: Wipe Disks
+      command: "pvcreate -y --metadatasize=128M --dataalignment=256K {{disk_prefix}}c"
+
+- include: /usr/share/ansible/openshift-ansible/playbooks/common/openshift-glusterfs/config.yml

@@ -1,0 +1,6 @@
+{{ remote_rsyslog_files }}/*/*.log {
+   rotate 5
+   compress
+   size 20971520
+   missingok
+}

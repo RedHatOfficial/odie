@@ -1,0 +1,84 @@
+# Lab LDAP Instructions
+
+Start up Active Directory
+- Start all VMs as normal.
+- Power on windows-server-2012-1
+- Open a console & let boot
+- Login as Admninstrator / Redhat1234
+
+- From the lower left, Click `Programs` then navigate to `Administrative Tools > Active Directory Users & Computers`
+- Right click on the *Users* folder and then `New > User`
+- Enter the fields.  Use the msUPN from the cert in the user login
+- enter password as the usual secure password for the cluster
+- deselect _User must change password_
+- select _Password never expires_
+
+
+- Right click on user > properties
+- select the *Members Of* tab
+- click *Add*
+- Type `clusteradmin ; readonly ` 
+- Click *Check Names*
+- Click *OK*
+- Click *Apply*
+- Click *OK*
+
+TIP: Obviously vary this depending on your needs
+
+- Goto `Programs > ADSI Edit`
+- If you aren't already connected, goto `Action > Connect To`
+  - The default options should be fine but you want to select a well known Naming context
+- Expand the tree > and select CN=Users
+- Select your newly created user and right click properties
+- Scroll down to the *uid* field and enter the msUPN name 
+
+
+- Leave the AD session open for troubleshooting, but you are done administering your user
+
+
+# Check PIVProxy certs
+
+TIP: If you have encrypted your config files, run `odie decrypt` to convert them to plaintext.  Also remember to re-encrypt via `odie encrypt` when finished
+
+- Check the contents of `/opt/odie/config/certs.yml`
+
+
+```
+# These certificates are used to establish the trustchain for the PIV proxy.  This is used
+# when authenticating to the web interface. The root cert is in P7B format, while the
+# others are in PEM format.
+pivproxy_ca_file: /opt/odie/config/certs/CA.lab.iad.consulting.redhat.com.p7b
+pivproxy_hostname_cert: /opt/odie/config/certs/ose-pivproxy.odie.rhc-lab.iad.redhat.com.crt
+pivproxy_hostname_key: /opt/odie/config/certs/ose-pivproxy.odie.rhc-lab.iad.redhat.com.key
+```
+
+# TBD
+
+
+# Setup client configuration
+
+
+[root@master01 master]# openssl verify -CAfile proxyca.crt ~/battles.user.odie.rhc-lab.iad.redhat.com.crt 
+/root/battles.user.odie.rhc-lab.iad.redhat.com.crt: C = US, ST = VA, L = TYSONS, O = RED HAT, OU = CONSULTING, CN = battles.user.odie.rhc-lab.iad.redhat.com
+error 20 at 0 depth lookup:unable to get local issuer certificate
+
+ODIEpassphrase123!
+
+- battles.user.odie.rhc-lab.iad.redhat.com  cluster_admin, readonly
+- paul.user.odie.rhc-lab.iad.redhat.com  readonly
+- kfrankli.user.odie.rhc-lab.iad.redhat.com  readonly
+- nrevo.user.odie.rhc-lab.iad.redhat.com  NO ACCOUNT!
+
+Password for all is ODIEpassphrase123!
+
+
+> Setup the Group Sync
+
+ oc adm groups sync --sync-config=ldap-config.yaml |  oc apply -f
+
+( should be implempted as odie auth ldap-group-sync)
+
+> Configure PIVProxy to use LDAP
+
+ oc delete configmap/ose-pivproxy && oc create configmap ose-pivproxy --from-file=pivproxy.conf=pivproxy.conf &&  oc delete pods --selector app=ose-pivproxy --grace-period=0 --force && watch oc get pod
+(should be implemented as odie auth update-pivproxy)

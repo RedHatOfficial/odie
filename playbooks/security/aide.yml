@@ -1,0 +1,26 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Install and configure AIDE
+  hosts: all:localhost
+  tasks:
+    - name: Install AIDE and initialize database
+      yum:
+        name: aide
+        state: present
+      notify: init aide
+      register: aide_installed
+
+    - name: Configure AIDE cron job
+      cron:
+        name: 'Run AIDE integrity check weekly'
+        user: root
+        cron_file: aide
+        job: /usr/sbin/aide --check | /bin/mail -s "$(hostname) - Daily AIDE integrity check run" root@localhost
+        special_time: weekly
+      when: aide_installed
+
+  handlers:
+    - name: init aide
+      command: /usr/sbin/aide --init -B 'database_out=file:/var/lib/aide/aide.db.gz'
+      async: 500
+      poll: 0

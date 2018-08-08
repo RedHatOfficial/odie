@@ -1,0 +1,35 @@
+- name: Get Real Source Path
+  command: "realpath {{nfs_source}}"
+  register: source_path
+  delegate_to: localhost
+
+- name: Check if Dir mounted
+  shell: "lsof {{nfs_dest}}"
+  register: lsof
+  ignore_errors: true
+
+- name: Mounted Directory
+  fail:
+    msg: "Process using directory:  {{lsof.stdout}}"
+  when: lsof.rc != 1
+
+- name: Unmount the NFS volume
+  mount:
+    name: "{{ nfs_dest }}"
+    state: unmounted
+  ignore_errors: true
+
+
+- name: Remove existing directory
+  file:
+    path: "{{nfs_dest}}"
+    state: absent
+
+- name: Mount the NFS volume
+  mount:
+    name: "{{ nfs_dest }}"
+    # HACK: this assumes the hypervisor is the DNS/NFS/all-the-things
+    src: "{{ dns }}:{{source_path.stdout}}"
+    fstype: nfs
+    state: mounted
+    opts: "nodev,nosuid"

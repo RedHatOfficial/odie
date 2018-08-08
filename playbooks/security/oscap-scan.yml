@@ -1,0 +1,26 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Run oscap scans
+  hosts: all:localhost
+  vars:
+    output_dir: /var/www/html/oscap-results/
+    output_filename: stig-rhel7-ospp
+    remediation: no
+
+  tasks:
+
+    - name: OSCAP with remediation:{{ remediation }}
+      script: "{{odie_src_dir}}/scripts/oscap-remediation.sh {{ remediation }}"
+
+    - file:
+        path: "{{output_dir}}"
+        state: directory
+
+    - fetch:
+        src: /tmp/{{output_filename}}-scan.html
+        dest: "{{output_dir}}/{{output_filename}}-{{ inventory_hostname }}.html"
+        flat: yes
+    - fetch:
+        src: /tmp/{{output_filename}}-scan.xml
+        dest: "{{output_dir}}/{{output_filename}}-{{ inventory_hostname }}.xml"
+        flat: yes

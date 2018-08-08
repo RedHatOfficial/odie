@@ -1,0 +1,53 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Sync images to registry
+  hosts: registry
+  vars:
+    images_source: /opt/odie/images/
+    images_target: "{{images_source}}"
+  tasks:
+  - name: Install docker-pycreds
+    yum:
+      name:
+        - python-docker-py
+        - python-docker-pycreds
+      state: present
+
+  - name: Create registry image temp dir
+    file:
+      path: "{{images_target}}"
+      state: absent
+    when:
+      - clean_deploy == True
+
+  - name: Create registry image temp dir
+    file:
+      path: "{{images_target}}"
+      state: directory
+      recurse: yes
+
+- name: Push all the images into the Cluster Registry
+  hosts: "{{ host_target | default('localhost') }}"
+  vars:
+      target_registry: "{{ cluster_registry }}"
+      import_images: True
+      images_source: /opt/odie/images/
+      images_target: "{{images_source}}"
+      image_manifests: "{{ lookup('fileglob', '{{images_source}}/*.yml').split(',') }}"
+  vars_files:
+    - /opt/odie/src/conf/base-images.yml
+
+  tasks:
+    - debug:
+        var: item
+      with_items: "{{ image_manifests }}"
+
+    - name: Setup OCP embedded registry
+      include_role:
+        name: docker_login
+      when: ocp_project is defined
+
+    - name: "Loading from {{item}} manifest"
+      include: tasks/push_registry.yml
+      with_items: "{{ image_manifests }}"
+

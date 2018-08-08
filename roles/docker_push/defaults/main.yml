@@ -1,0 +1,20 @@
+---
+# by default this is assumes that the role is being executed on the registry VM
+cluster_registry: localhost:5000
+
+# the location of the images from the registry
+images_target: /opt/openshift/images
+
+# default to xz
+#compress_ext: 'xz'
+#compress_type: 'xz'
+#compress_cmd: 'xz'
+#compress_args: '-e -3 -T0'
+#uncompress_cmd: 'xz'
+#uncompress_args: '-d -T0'
+
+import_images: True
+
+# These are used to put the versions into the docker image loading
+ocp_version: 3.9
+ocp_short_version: 3.9

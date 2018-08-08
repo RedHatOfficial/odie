@@ -1,0 +1,14 @@
+---
+- name: Tear down the DHCP service and PXE
+  hosts: localhost
+  tasks:
+    - name: Remove secondary IP address to ethernet interface
+      command: "ip addr del {{ temp_dhcp_ip }}/24 dev {{ ansible_default_ipv4.interface }}"
+      ignore_errors: true
+
+    - name: Stop and disable dnsmasq
+      service:
+        name: dnsmasq
+        state: stopped
+        enabled: no
+      

@@ -1,0 +1,12 @@
+---
+# tasks file for verifying the reference project
+#
+
+- name: Find Host for reference-app route
+  include: reference_app_get_host.yml
+
+- name: Validate database connectivity in reference app
+  include: reference_app_validate_db.yml
+
+- name: Validate amq connectivity in reference app
+  include: reference_app_validate_jms.yml

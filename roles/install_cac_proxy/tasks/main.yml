@@ -1,0 +1,36 @@
+- name: Set Role Facts
+  set_fact:
+    public_hostname: "{{ hostvars[groups['lb_nfs'][0]].hostname }}"
+    piv_hostname: "ose-pivproxy.{{default_subdomain}}"
+    jumphost_user: "system:jumphost"
+    temp_file: "/tmp/identityProvider"
+
+- name: Create Certificates
+  include: certs_configuration.yml
+  when: hostname is defined and hostname == hostvars[groups['masters'][0]].hostname
+
+- name: Copy Files to Masters
+  copy:
+    src: "{{temp_file}}"
+    dest: "{{ temp_file }}"
+
+- name: Copy yq
+  copy:
+    src: "/opt/odie/src/contrib/bin/yaml_linux_amd64"
+    dest: "/usr/local/bin/yq"
+    mode: 0755
+
+- name: Copy over proxyca.crt
+  copy:
+    src: "{{certs_output_dir}}/proxyca.crt"
+    dest: "/etc/origin/master/proxyca.crt"
+
+- name: Backup master-yaml
+  command: "cp -f /etc/origin/master/master-config.yaml  /etc/origin/master/master-config.yaml.bkup"
+
+- name: Update master-yaml
+  command: "/usr/local/bin/yq w -i -s {{temp_file}} /etc/origin/master/master-config.yaml"
+  notify:
+    - restart_masters_solo
+    - restart_masters_cluster
+

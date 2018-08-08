@@ -1,0 +1,9 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Update Running Pods
+  hosts: localhost
+  roles:
+    - ocp_maintenance
+  tasks:
+    - debug:
+        var: projects

@@ -1,0 +1,14 @@
+cat <<-REPO > /etc/yum.repos.d/ose.repo
+{% include './templates/repos.j2' %}
+
+REPO
+
+mkdir -p /root/.ssh
+
+cat <<-KEY > /root/.ssh/authorized_keys
+{{ my_ssh_key }}
+KEY
+
+echo "{{my_username}} ALL=(ALL)    ALL" >> /etc/sudoers
+
+

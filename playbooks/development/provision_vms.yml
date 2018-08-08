@@ -1,0 +1,14 @@
+#!/usr/bin/env ansible-playbook
+- name: Setup Cluster VMs
+  hosts: all:!jumphost
+  connection: local
+  gather_facts: false
+  tags:
+    - kvm
+  become: yes
+  vars:
+    ks_url: "http://{{my_repo_host}}/pub/"
+    cd_boot: False
+    extra_args: "ks={{ks_url}}{{hostname}}.cfg ip=dhcp"
+  roles:
+    - provision_vm

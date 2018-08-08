@@ -1,0 +1,29 @@
+---
+- name: Define Role Variables
+  set_fact:
+    output: "{{images_target}}/{{registry.name}}.tar"
+
+- name: Define Role Variables
+  set_fact:
+    src_manifest: "{{images_source}}/{{registry.name}}.yml"
+    output_manifest: "{{images_target}}/{{registry.name}}.yml"
+    src_archive: "{{images_source}}/{{registry.name}}.tar.{{compress_ext}}"
+    output_archive: "{{output}}.{{compress_ext}}"
+    repos: "{{ registry.repos }}"
+
+- name: Define Role Variables
+  set_fact:
+    target_registry: "{{ route_url }}"
+    output_manifest: "{{images_target}}/{{registry.name}}.ocp.yml"
+    output_archive: "{{images_target}}/{{registry.name}}.ocp.tar.{{compress_ext}}"
+  when: ocp_project is defined
+
+- name: Copy Manifest
+  copy:
+    src: "{{src_manifest}}"
+    dest: "{{output_manifest}}"
+  register: manifest
+
+- name: Pull Archive
+  include: load_archive.yml
+  when: manifest.changed == true

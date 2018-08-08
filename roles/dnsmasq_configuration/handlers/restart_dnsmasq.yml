@@ -1,0 +1,11 @@
+# DNSMasq misbehaves and needs a explicit stop/start
+- service:
+    name: dnsmasq
+    state: stopped
+
+- shell: "sleep 5"
+
+- service:
+    name: dnsmasq
+    state: started
+    enabled: yes

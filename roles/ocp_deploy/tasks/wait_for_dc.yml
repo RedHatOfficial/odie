@@ -1,0 +1,41 @@
+- name: Overwrite default app_startup_timeout
+  set_fact:
+    app_startup_timeout: "{{ app.config.properties.app_startup_timeout }}"
+  when: app.config.properties.app_startup_timeout is defined
+
+- name: Get broker deployment configuration version
+  command: "oc get dc broker-amq -n {{ project.name }} --template='{{ '{{' }} .status.latestVersion {{ '}}' }}'"
+  ignore_errors: true
+  register: amq_dc_version
+
+- name: Check is the amq replication controller has hit a Complete phase
+  shell: " oc get rc broker-amq-{{ amq_dc_version.stdout }} -n {{ project.name }} --template='{{ '{{' }} .metadata.annotations {{ '}}' }}'"
+  register: amq_rc_phase
+  until: amq_rc_phase.stdout.find("openshift.io/deployment.phase:Complete") != -1
+  retries: "{{ ( app_startup_timeout|int / 5 ) | round(0, 'ceil') | int }}"
+  delay: 5
+
+- name: Get postgresql deployment configuration version
+  command: "oc get dc {{ app.name }}-postgresql -n {{ project.name }} --template='{{ '{{' }} .status.latestVersion {{ '}}' }}'"
+  ignore_errors: true
+  register: db_dc_version
+
+- name: Check if the postgresql replication controller has hit a Complete phase
+  shell: " oc get rc {{ app.name }}-postgresql-{{ db_dc_version.stdout }} -n {{ project.name }} --template='{{ '{{' }} .metadata.annotations {{ '}}' }}'"
+  register: db_rc_phase
+  until: db_rc_phase.stdout.find("openshift.io/deployment.phase:Complete") != -1
+  retries: "{{ ( app_startup_timeout|int / 5 ) | round(0, 'ceil') | int }}"
+  delay: 5
+  when: db_dc_version != ""
+
+- name: Get app deployment configuration version
+  command: "oc get dc {{ app.name }} -n {{ project.name }} --template='{{ '{{' }} .status.latestVersion {{ '}}' }}'"
+  register: app_dc_version
+
+- name: Check is the app replication controller has hit a Complete phase
+  shell: " oc get rc {{ app.name }}-{{ app_dc_version.stdout }} -n {{ project.name }} --template='{{ '{{' }} .metadata.annotations {{ '}}' }}'"
+  register: app_rc_phase
+  until: app_rc_phase.stdout.find("openshift.io/deployment.phase:Complete") != -1
+  retries: "{{ ( app_startup_timeout|int / 5 ) | round(0, 'ceil') | int }}"
+  delay: 10
+  when: app_dc_version != ""

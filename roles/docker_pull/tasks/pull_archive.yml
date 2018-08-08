@@ -1,0 +1,30 @@
+---
+- name: Echo
+  shell: "echo  Pulling {{ image }} to {{ output }} "
+
+- name: Check for {{output}} file
+  stat: path="{{output}}.{{compress_ext}}"
+  register: o
+
+- name: Docker Pull "{{item}}"
+  docker_image:
+    name: "{{lregistry}}/{{ item }}"
+    state: present
+    archive_path: "{{output}}"
+  when: not o.stat.exists
+
+- debug:
+    msg: "compression type: {{compress_type}} and compression extension: {{compress_ext}}"
+
+- name: "Compress {{item}}"
+  archive:
+    format: "{{compress_type}}"
+    path: "{{output}}"
+    dest: "{{output}}.{{compress_ext}}"
+    remove: true
+  when: compress_type != 'lz4' and false and not o.stat.exists 
+
+- name: "Compress {{output}}"
+  command: "{{compress_cmd}} {{compress_args}} {{output}} "
+  when: not o.stat.exists 
+

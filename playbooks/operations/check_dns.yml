@@ -1,0 +1,46 @@
+#!/usr/bin/env ansible-playbook
+---
+
+- name: Verify DNS query times against system before installation
+  hosts: all
+  become: yes
+  tasks:
+  - name: "Check DNS query time for each host"
+    command: dig {{ ansible_hostname }}
+    register: dig_results
+
+  - name: set dig query time
+    set_fact:
+      dig_query_time: "{{ dig_results.stdout | regex_search(query_time_regex, '\\1') | first }}"
+
+  - debug:
+      msg: "Dig Query Time: {{dig_query_time}}"
+
+  - name: "Networking Error: DNS query time is too long.  Installation will never complete."
+    command: /bin/false
+    when: dig_query_time|int > query_time_threshold|int
+
+- name: Verify DNS query times against system before installation
+  hosts: localhost
+  become: yes
+  tasks:
+  - name: "Check general wildcard dns entries"
+    command: "dig {{ item }}.{{ default_subdomain }}"
+    with_items: "{{ other_dns_entries }}"
+    register: wildcard_dig_results
+
+  - set_fact:
+      wildcard_dig_times: "{{ wildcard_dig_times|default([]) + [ {'name': item.item, 'query_time': item.stdout | regex_search(query_time_regex, '\\1') | first } ] }}"
+    with_items:
+      - "{{wildcard_dig_results.results}}"
+
+  - debug:
+      msg: "Dig Query Time: {{item.name}}: {{item.query_time}}"
+    with_items:
+      - "{{wildcard_dig_times}}"
+
+  - name: "Networking Error: DNS query time is too long or wildcard entry is missing.  Installation will never complete."
+    command: /bin/false
+    when: item|int > query_time_threshold|int
+    with_items:
+      - "{{wildcard_dig_times}}"

@@ -1,0 +1,5 @@
+#!/usr/bin/env ansible-playbook
+---
+# Run system tests against a newly installed system before the `harden` tasks
+- include: playbooks/operations/ping.yml
+- include: playbooks/security/fips_check.yml

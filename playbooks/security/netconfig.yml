@@ -1,0 +1,18 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: /etc/netconfig Configuration
+  hosts: all:localhost
+  tasks:
+    - name: Disable support for RPC IPv6, UDP
+      lineinfile:
+        create: yes
+        dest: /etc/netconfig
+        regexp: ^udp6
+        line: '#udp6       tpi_clts      v     inet6    udp     -       -'
+
+    - name: Disable support for RPC IPv6, TCP
+      lineinfile:
+        create: yes
+        dest: /etc/netconfig
+        regexp: ^tcp6
+        line: '#tcp6       tpi_cots_ord  v     inet6    tcp     -       -'

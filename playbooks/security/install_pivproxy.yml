@@ -1,0 +1,11 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Setup PIV Proxy
+  hosts: masters
+  tasks:
+    - name: Install CAC Proxy
+      include_role:
+        name: install_cac_proxy
+      when: install_piv_proxy is defined and install_piv_proxy
+
+

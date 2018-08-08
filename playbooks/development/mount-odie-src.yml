@@ -1,0 +1,32 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Mount NFS Drives
+  hosts: jumphost
+  vars:
+    odie_source_src: "/opt/odie/src"
+    odie_source_dest: "/opt/odie/src"
+    odie_config_src: "/opt/odie/config"
+    odie_config_dest: "/opt/odie/config"
+    odie_dist_src: "/opt/odie/src/dist"
+    odie_dist_dest: "/opt/odie/isos"
+  tags:
+    - nfs
+  tasks:
+
+    - name: Mount Config Dir
+      include: mount_dir_nfs.yml
+      vars:
+        nfs_source: "{{ odie_config_src }}"
+        nfs_dest: "{{ odie_config_dest }}"
+
+    - name: Mount Source Directory
+      include: mount_dir_nfs.yml
+      vars:
+        nfs_dest: "{{ odie_source_src }}"
+        nfs_source: "{{ odie_source_dest }}"
+#
+    - name: Mount Dist directory
+      include: mount_dir_nfs.yml
+      vars:
+        nfs_source: "{{ odie_dist_src }}"
+        nfs_dest: "{{ odie_dist_dest }}"

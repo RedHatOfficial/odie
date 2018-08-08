@@ -1,0 +1,240 @@
+apiVersion: v1
+kind: Template
+labels:
+  release: v1
+  template: odie-runtime-objects
+metadata:
+  name: "odie-runtime-objects"
+  annotations:
+    description: '${APPLICATION_NAME} Runtime Objects'
+    iconClass: icon-shadowman
+    tags: org,odie
+    version: v1
+objects:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      description: EAPs https port.
+      service.alpha.openshift.io/dependencies: '[{"name":"${APPLICATION_NAME}-postgresql","namespace":"","kind":"Service"}]'
+    labels:
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}-services-https
+  spec:
+    ports:
+    - port: 8443
+      targetPort: 8443
+    selector:
+      deploymentConfig: ${APPLICATION_NAME}
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: '${APPLICATION_NAME}'
+    labels:
+      app: '${APPLICATION_NAME}'
+    annotations:
+      description: '${APPLICATION_NAME} image'
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+  spec:
+    pause: true
+    replicas: 1
+    selector:
+      deploymentConfig: ${APPLICATION_NAME}
+    strategy:
+      type: Recreate
+    triggers:
+      - type: ImageChange
+        imageChangeParams:
+          automatic: true
+          containerNames:
+            - ${APPLICATION_NAME}
+          from:
+            kind: ImageStreamTag
+            namespace: ${PROJECT_NAME}
+            name: ${APPLICATION_NAME}:latest
+      - type: ConfigChange
+    template:
+      metadata:
+        labels:
+          app: ${APPLICATION_NAME}
+          deploymentConfig: ${APPLICATION_NAME}
+        name: ${APPLICATION_NAME}
+      spec:
+        initContainers:
+        - name: db-stig-init
+          image: rhel7/rhel-tools:latest
+          command: ["sh", "-c", "while ! exec 6<>/dev/tcp/${APPLICATION_NAME}-postgresql/5432; do echo '$(date) - still trying to connect to the DB at ${APPLICATION_NAME}-postgresql 5432' sleep 1; done"]
+        containers:
+        - name: ${APPLICATION_NAME}
+          image: ${APPLICATION_NAME}
+          resources:
+            requests:
+              memory: ${GUARANTEED_POD_MEMORY}
+            limits:
+              memory: ${GUARANTEED_POD_MEMORY}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8778
+              name: jolokia
+              protocol: TCP
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+            - containerPort: 8443
+              name: https
+              protocol: TCP
+            - containerPort: 8888
+              name: ping
+              protocol: TCP
+          env:
+            - name: OPENSHIFT_DATA_DIR
+              value: ${OPENSHIFT_DATA_DIR}
+            - name: JGROUPS_CLUSTER_PASSWORD
+              value: ${JGROUPS_CLUSTER_PASSWORD}
+            - name: OPENSHIFT_KUBE_PING_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: OPENSHIFT_KUBE_PING_LABELS
+              value: 'app=${APPLICATION_NAME}'
+            - name: DB_HOST
+              value: '${APPLICATION_NAME}-postgresql'
+            - name: DB_PORT
+              value: '5432'
+            - name: DB_DATABASE
+              value: dbms
+            - name: DB_USERNAME
+              value: '${DB_USERNAME}'
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ${APPLICATION_NAME}-postgresql
+                  key: DB_PASSWORD
+            - name: MQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: broker-amq
+                  key: MQ_PASSWORD
+            - name: MQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: broker-amq
+                  key: MQ_USERNAME
+            - name: MQ_HOST
+              value: broker-amq
+            - name: MQ_PORT
+              value: '61616'
+            - name: MQ_HOST_SSL
+              value: broker-amq-ssl
+            - name: MQ_PORT_SSL
+              value: '61617'
+            - name: KEYSTORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ${APPLICATION_NAME}-eap-keystore-strings
+                  key: KEYSTORE_PASSWORD
+            - name: KEYSTORE_ALIAS
+              valueFrom:
+                secretKeyRef:
+                  name: ${APPLICATION_NAME}-eap-keystore-strings
+                  key: KEYSTORE_ALIAS
+            - name: TRUSTSTORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ${PROJECT_NAME}-truststore-password
+                  key: TRUSTSTORE_PASSWORD
+            - name: KEYSTORE_FILE
+              value: '/security/ssl/keystore/KEYSTORE_FILE'
+            - name: TRUSTSTORE_FILE
+              value: '/security/ssl/truststore/TRUSTSTORE_FILE'
+          livenessProbe:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - date
+            initialDelaySeconds: 60
+          readinessProbe:
+            httpGet:
+              path: ${EAP_READINESS_PROBE_PATH}
+              port: 8080
+            initialDelaySeconds: 60
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: ${APPLICATION_NAME}-volume
+              mountPath: ${OPENSHIFT_DATA_DIR}
+            - name: eap-keystore-volume
+              mountPath: /security/ssl/keystore
+              readOnly: true
+            - name: truststore-volume
+              mountPath: /security/ssl/truststore
+              readOnly: true
+        serviceAccountName: ${SERVICE_ACCOUNT_NAME}
+        serviceAccount: ${SERVICE_ACCOUNT_NAME}
+        securityContext: {}
+        terminationGracePeriodSeconds: 60
+        volumes:
+          - name: ${APPLICATION_NAME}-volume
+            persistentVolumeClaim:
+              claimName: ${APPLICATION_NAME}-persistent-storage
+          - name: eap-keystore-volume
+            secret:
+              secretName: ${APPLICATION_NAME}-eap-keystore-file
+          - name: truststore-volume
+            secret:
+              secretName: ${PROJECT_NAME}-truststore-file
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    annotations:
+      description: '${APPLICATION_NAME} persistent storage for application configuration files'
+    labels:
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}-persistent-storage
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${OPENSHIFT_DATA_DIR_SIZE}
+    selector:
+      matchLabels:
+        app: ${APPLICATION_NAME}
+        project: ${PROJECT_NAME}
+parameters:
+  - description: Project Name
+    name: PROJECT_NAME
+    required: true
+  - description: App Name
+    name: APPLICATION_NAME
+    required: true
+  - description: Service Account Name
+    name: SERVICE_ACCOUNT_NAME
+    required: true
+  - description: Customer Persistent Data Directory
+    name: OPENSHIFT_DATA_DIR
+    required: true
+  - description: Customer Persistent Data Directory pvc size
+    name: OPENSHIFT_DATA_DIR_SIZE
+    required: true
+    value: 10Mi
+  - description: JGroups cluster password
+    name: JGROUPS_CLUSTER_PASSWORD
+    from: '[\d\a]{1}[\w]{30}[\d\a]{1}'
+    generate: expression
+    required: true
+  - description: Database user name
+    name: DB_USERNAME
+    value: dbuser
+  - description: Path without the hostname to a health check page
+    name: EAP_READINESS_PROBE_PATH
+    value: /${APPLICATION_NAME}/
+  - description: Guaranteed memory for EAP pod
+    name: GUARANTEED_POD_MEMORY
+    value: 1024M
+    required: false

@@ -1,0 +1,41 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Updating ansible.cfg to support remote users
+  hosts: localhost
+  connection: local
+  vars:
+    cfg_file: "{{odie_src_dir}}/ansible.cfg"
+
+  tasks:
+    - name: Configure ansible.cfg file for login
+      lineinfile:
+        dest: "{{cfg_file}}"
+        state: present
+        regexp: "{{item.regexp}}"
+        line: "{{item.line}}"
+
+      with_items:
+        - { regexp: "^#?remote_user", line: "remote_user = {{my_username}}" }
+        - { regexp: "^#?ask_pass", line: "ask_pass = True" }
+        - { regexp: "^#?become=", line: "become=True" }
+        - { regexp: "^#?become_method=", line: "become_method=sudo" }
+        - { regexp: "^#?become_user=", line: "become_user=root" }
+        - { regexp: "^#?become_ask_pass=", line: "become_ask_pass=True" }
+
+    - name: Configure ansible.cfg file for login
+      lineinfile:
+        dest: "{{odie_properties_output_dir}}/odie.yml"
+        state: present
+        regexp: "^#?ansible_ssh_user"
+        line: "ansible_ssh_user: {{my_username}}"
+
+    - name: Setting skip-worktree on {{cfg_file}}
+      command: "git update-index --skip-worktree {{cfg_file}}"
+
+- name: Deleting authorized_keys on root
+  hosts: all:!jumphost
+  tasks:
+    - name: Removing authorized_keys
+      file:
+        path: /root/.ssh/authorized_keys
+        state: absent

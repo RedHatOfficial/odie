@@ -1,0 +1,35 @@
+
+=== Software Versions
+
+This list includes all of the content on the ODIE installation media.
+
+
+TIP: We intend to support "patch" release which just contain the contents of the ODIE git repository for smaller incremental release.
+
+
+==== Docker Images
+
+The ODIE build process uses the `container_images/pull.yml` Ansible playbook to retrieve all the base Docker images necessary for the platform.  These images are GZip'd and stored in the `images` directory on the DVD.
+
+These images are directly retrieved using this configuration file and this will always be in step with the latest DVD release:
+
+[source]
+.Container Versions
+----
+include::../../../playbooks/container_images/pull.yml[]
+----
+
+
+==== Red Hat RPMs
+
+To support a disconnected installation, the ODIE build process uses the `conf/source-rpms.txt` file to retrieve the necessary installation dependencies.  The contents of this file is determined by performing
+an installation against a OpenShift cluster that is directly attached to Red Hat channels.
+
+
+[source]
+.Disconnected RPMs
+----
+include::../../../conf/source-rpms.txt[]
+----
+
+

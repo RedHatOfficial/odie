@@ -1,0 +1,12 @@
+- name: delete_cpio
+  file:
+    name: "{{cpio_dir}}"
+    state: absent 
+
+- name: unmount_rhel
+  mount:
+    name: "{{ rhel_mount }}"
+    state: absent
+
+- name: restart_dnsmasq
+  shell: "systemctl stop dnsmasq ; sleep 5 ; systemctl enable --now dnsmasq"

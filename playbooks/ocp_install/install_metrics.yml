@@ -1,0 +1,16 @@
+#!/usr/bin/env ansible-playbook
+---
+
+- name: BUGFIX - Copy workaround for htpasswd support
+  hosts: localhost
+  tasks:
+    - copy:
+        dest: /usr/share/ansible/openshift-ansible/playbooks/common/openshift-cluster/roles/openshift_metrics/tasks/generate_hawkular_certificates.yaml
+        src: /opt/odie/src/contrib/ocp_patched_tasks/generate_hawkular_certificates.yaml
+
+    - name: set logging facts
+      set_fact:
+        openshift_metrics_cassandra_replicas: "{{ groups['infra'] | length }}"
+        openshift_metrics_cassandra_storage_type: emptydir
+
+- include: /usr/share/ansible/openshift-ansible/playbooks/byo/openshift-cluster/openshift-metrics.yml

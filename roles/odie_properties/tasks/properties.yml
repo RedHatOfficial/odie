@@ -1,0 +1,33 @@
+---
+  - name: Delete Directory
+    file:
+      state: absent
+      path: "{{odie_properties_output_dir}}/fragments"  
+
+
+  - name: Copy Existing config files
+    include: ../tasks/copy_config.yml
+    with_items:
+      - "{{config_files}}"
+
+  - name: Assemble actual fragments
+    assemble:
+      src: "{{item.root}}/{{item.path}}"
+      dest: "{{odie_properties_output_dir}}/{{item.path}}"
+      backup: "{{ odie_properties_backup }}"
+    with_filetree: "{{odie_properties_output_dir}}/fragments/"
+    when: item.state == 'directory'
+
+  - name: "Initial File {{item}} {{targeted_upgrade_version}}"
+    lineinfile:
+      dest: "{{item}}"
+      regexp: "^{{version_header}}.*$"
+      line: "{{version_header}}{{targeted_upgrade_version}}"
+      state: present
+    with_fileglob:
+      - "{{odie_properties_output_dir}}/*.yml"
+
+  - name: Delete Directory
+    file:
+      state: absent
+      path: "{{odie_properties_output_dir}}/fragments"

@@ -1,0 +1,4 @@
+- name: restart_masters_cluster
+  service: 
+    name: atomic-openshift-master
+    state: restarted

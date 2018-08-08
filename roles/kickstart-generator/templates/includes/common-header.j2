@@ -1,0 +1,44 @@
+# This file was created automatically from the kickstart-generator Ansible role.
+install
+keyboard 'us'
+
+{% include "./templates/includes/common-user.j2" %}
+
+{% if kickstart_media or (enable_pxe is defined  and enable_pxe ) %}
+# Use network installation
+url --url="http://{{ my_repo_host }}/media/"
+{% else %}
+# Disabled network installation - use boot media
+#url --url="http://{{ my_repo_host }}/media/"
+{% endif %}
+
+# System language
+lang en_US
+
+# System authorization information
+auth  --useshadow  --passalgo=sha512
+# Use text mode install
+text
+firstboot --disable
+# SELinux configuration
+selinux --enforcing
+# Do not configure the X Window System
+skipx
+
+
+# Network information
+network  --bootproto=static --gateway={{ gateway }} --ip={{ ip }} --nameserver={{ dns }} --netmask={{ netmask }} --hostname={{ hostname }}
+# Firewall configuration
+firewall --enabled --ssh
+
+# Reboot after installation
+reboot --eject
+# System timezone
+timezone {{ my_timezone }}
+
+# System bootloader configuration
+bootloader --location=mbr
+zerombr
+
+# Partition clearing information
+clearpart --all --initlabel

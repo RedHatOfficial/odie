@@ -1,0 +1,60 @@
+- name: Check whether {{project.name}} exists
+  command: "oc get dc {{app.name}} -n {{project.name}}"
+  ignore_errors: true
+  register: oc_dc
+
+- name: Marker File
+  set_fact:
+    marker_file: "{{app.path}}/.odie-app-provision"
+
+- name: Configuring Application Secrets
+  include: secret_setup.yml tags=secret
+  tags:
+    - secrets
+
+- name: Provision app {{app.name}}
+  shell: "INTERACTIVE=0 MARKER_FILE={{marker_file}} {% for e in app.config.env %} {{ e }} {% endfor %} {{odie_src_dir}}/scripts/provision-app.sh {{project.name}} \
+         {{ app.name }} {{app.path}}/{{ app.config.properties.keystore_file}} {{ app.config.properties.keystore_password}} \
+         {{ app.config.properties.keystore_alias}}"
+  args:
+    creates: "{{marker_file}}"
+  environment:
+    PROJECT_PATH: "{{project.path}}/"
+    APP_PATH: "{{app.path}}/"
+    POSTGRESQL_KEY_FILE: "{{ app.config.properties.postgresql_key_file }}"
+    POSTGRESQL_CERTIFICATE_FILE: "{{ app.config.properties.postgresql_certificate_file }}"
+    POSTGRESQL_CA_FILE: "{{ app.config.properties.postgresql_ca_file }}"
+    POSTGRESQL_CRL_FILE: "{{ app.config.properties.postgresql_crl_file }}"
+  register: create_app
+
+- name: Start rollout of PostgreSQL Deploment Config in {{project.name}}
+  command: "oc rollout resume dc {{app.name}}-postgresql -n {{project.name}}"
+  when: create_app.rc == 0
+  ignore_errors: true
+
+- name: Start rollout of EAP Deploment Config in {{project.name}}
+  command: "oc rollout resume dc {{app.name}} -n {{project.name}}"
+  when: create_app.rc == 0
+  ignore_errors: true
+
+- name: Create app Marker file
+  file:
+    path: "{{marker_file}}"
+    state: touch
+  when: create_app.rc == 0
+
+- name: Setting Source registry {{route_url}}
+  set_fact:
+    target_registry: "{{ route_url }}"
+    images_target: "{{ app.path }}/images"
+
+- name: Deploy Images
+  include_role:
+    name: docker_push
+  vars:
+    ocp_project: "{{project.name}}"
+  loop_control:
+    loop_var: registry
+  when: app.images is defined and app.images
+  with_items:
+    - "{{ app.images }}"

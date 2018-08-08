@@ -1,0 +1,10 @@
+
+- name: "Waiting for {{hostname}} to be {{state}}"
+  virt:
+    name: "{{ hostname }}"
+    command: status
+    uri: "{{kvm_uri}}"
+  register: result
+  until: result.status == 'shutdown'
+  delay: "{{delay}}"
+  retries: "{{ timeout }}"

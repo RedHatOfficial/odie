@@ -1,0 +1,37 @@
+
+- name: Check whether {{project.name}} exists
+  command: "oc get project {{project.name}}"
+  ignore_errors: true
+  register: oc_project
+
+- name: Create new project {{project.name}}
+  command: "oc new-project {{project.name}}"
+  when: oc_project.rc == 1
+
+- name: Marker File
+  set_fact:
+    marker_file: "{{project.path}}/.odie-project-provision"
+# TODO: add validity check for all the objects (nuke otherwise?)
+
+  # - name: Configuring Project Secrets
+  #   include: secret_setup.yml tags=secret
+#   tags:
+#     - secrets
+
+- name: Create project {{project.name}}
+  shell: "{% for e in project.config.env%} {{ e }} {% endfor %} {{odie_src_dir}}/scripts/provision-project.sh {{project.name}} {{project.path}}/{{project.config.properties.amq_keystore_file}} {{project.config.properties.amq_keystore_password}} {{project.path}}/{{project.config.properties.truststore_file}} {{project.config.properties.truststore_password}}"
+  args:
+    creates: "{{marker_file}}"
+  environment:
+    INTERACTIVE: 0
+    MARKER_FILE: "{{marker_file}}"
+    PROJECT_PATH: "{{project.path}}/"
+#    SKIP_S2I_BUILD: "1"
+    AMQ_BUILD_PATH: "{{project.amq_build_path}}"
+  register: create_project
+
+- name: Create Marker file
+  file:
+    path: "{{marker_file}}"
+    state: touch
+  when: create_project.rc == 0

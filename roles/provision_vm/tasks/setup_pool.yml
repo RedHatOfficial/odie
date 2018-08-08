@@ -1,0 +1,7 @@
+- name: "Check whether {{pv_name}} exists"
+  shell: "virsh vol-info --pool {{ lvm_pool }}  {{pv_name}} && virsh vol-delete --pool {{ lvm_pool }} {{pv_name}}"
+  ignore_errors: true
+
+- name: "Setup {{ pv_name }} PV"
+  command: "virsh vol-create-as --pool {{ lvm_pool }}  {{ pv_name }} {{ disk_size }}G --allocation 5G --format qcow2"
+

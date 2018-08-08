@@ -1,0 +1,51 @@
+---
+- name: Defining TAR variable
+  set_fact:
+    output: "{{odie_images_dir}}/{{registry.name}}.tar"
+
+- name: Defining Credentials
+  set_fact:
+    creds: "{{credentials[registry.name]}}"
+  when: credentials is defined and credentials[registry.name] is defined
+
+- name: Login to {{ registry.source_registry }}
+  command: docker login -u {{ creds.username }} -p "{{ creds.password }}" {{ registry.source_registry }}
+  when: creds is defined and creds.username is defined and creds.password is defined
+
+- name: Using defined source_registry
+  set_fact:
+      source_registry: "{{ registry.source_registry }}"
+  when:
+    - "registry.source_registry is defined"
+
+- name: Using OCP
+  set_fact:
+      source_registry: "{{ ocp_route_url }}"
+  when:
+    - "registry.source_registry is not defined"
+    - "registry.ocp_registry is defined and registry.ocp_registry == True"
+
+- name: Create Directory
+  file:
+    path: "{{odie_images_dir}}" 
+    state: directory
+
+- block:
+  - name: Create Manifest
+    template:
+      src: manifest.yml
+      dest: "{{odie_images_dir}}/{{registry.name}}.yml"
+    register: manifest
+
+
+  - name: Pull Archive
+    include: pull_image_archive.yml
+    when: manifest.changed == true
+
+  rescue:
+  - name: Delete manifest
+    file:
+      src: "{{odie_images_dir}}/{{registry.name}}.yml"
+      state: absent
+
+

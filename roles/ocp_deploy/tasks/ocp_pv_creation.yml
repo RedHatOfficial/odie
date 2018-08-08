@@ -1,0 +1,19 @@
+---
+  - name: PV Creation {{ project.name }}
+    debug:
+      msg: "{{ project }} {{app }}"
+    tags: 
+      - pv
+
+  - debug:
+      var: project
+
+  - name: Configuring PV
+    include: pv_setup.yml tags=pv
+    vars:
+      jumphost_dir: "{{root_dir}}/{{project.name}}/apps/{{app.name}}/pvs/{{pv}}"
+    loop_control:
+      loop_var: pv
+    with_items:
+      - "{{ app.pvs }}"
+

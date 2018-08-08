@@ -1,0 +1,23 @@
+---
+- name: Download All the Docker images
+  hosts: localhost
+  vars:
+      image_types:
+        - base
+        - xpaas
+        - dockerio
+        - cfme
+      images_file: base-images.yml
+
+  tasks:
+    - include_vars: "{{ images_file }}"
+
+    - name: Download Images {{ registries[outer].name }}
+      with_items:
+        - "{{ image_types }}"
+      include_role:
+        name: docker_pull
+      loop_control:
+          loop_var: outer
+      vars:
+        registry: "{{ registries[outer] }}"

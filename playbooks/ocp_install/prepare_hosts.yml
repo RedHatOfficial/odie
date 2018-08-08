@@ -1,0 +1,173 @@
+---
+# This playbook prepares the OCP hosts for the installer and ensures all
+# of the prerequisites are ready.
+
+- name: Install common  packages
+  hosts: all:localhost
+  vars:
+    jumphost_gpg_key: /etc/pki/rpm-gpg/RPM-GPG-KEY-odie-build-server
+    common_package_list:
+      - libselinux-python
+      - vim-*
+      - git
+      - bash-completion
+      - tmux
+      - screen
+      - chrony
+      - ntp
+      - wget
+      - net-tools
+      - yum-versionlock
+      - iptables-services
+      - gcc
+      - nfs-utils
+      - tree
+
+
+  tasks:
+
+    - name: Copy jumphost public GPG key to host
+      copy:
+        dest: "{{ jumphost_gpg_key }}"
+        src: "{{ jumphost_gpg_key }}"
+
+    - name: Import GPG keys
+      command: "rpm --import {{ item }}"
+      with_items:
+        - "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+        - "{{ jumphost_gpg_key }}"
+
+    - name: Ensure yum imports gpg key
+      command: "yum -y repolist"
+
+    - name: Install common package set
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - "{{ common_package_list }}"
+
+
+- name: Install Packages on local
+  vars:
+     jumphost_package_list:
+       - docker
+       - nfs-utils
+       - tree
+
+  hosts:
+    - localhost
+
+  tasks:
+    - name: Install local packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - "{{ jumphost_package_list }}"
+
+    - name: Enable docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+
+- name: Install OCP packages on OCP hosts
+  vars:
+     openshift_package_list:
+       - bind-utils
+       - bridge-utils
+       - httpd-tools
+
+  hosts:
+    - masters
+    - nodes
+    - infra
+
+  tasks:
+    - name: Install OCP packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - "{{ openshift_package_list }}"
+
+- name: Prepare the infra and app nodes
+  hosts:
+    - infra
+    - nodes
+    - masters
+  tasks:
+    - name: Install docker and the atomic packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - docker
+        - nfs-utils
+        - python-ipaddress
+
+    - name: Configure docker
+      lineinfile:
+        # Ansible 2.3 uses path: /etc/sysconfig/docker
+        dest: /etc/sysconfig/docker # Ansible <= 2.3
+        regexp: '^OPTIONS='
+        line: 'OPTIONS="--selinux-enabled"'
+
+    - name: Configure insecure registry for docker
+      copy:
+        content: "{ \"insecure-registries\":[\"{{ groups.registry[0] }}:5000\"] }"
+        dest: /etc/docker/daemon.json
+
+    - name: Configure registries search block
+      copy:
+        dest: /etc/containers/registries.conf
+        content: "[registries.search]\nregistries = [\"{{ groups.registry[0] }}:5000\"]"
+
+    - name: Configure docker storage
+      copy:
+        src: "{{odie_src_dir}}/files/docker-storage-setup"
+        dest: /etc/sysconfig/docker-storage-setup
+
+    - name: Restart docker
+      service:
+        name: docker
+        state: restarted
+
+    - name: Start and enable services
+      systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      with_items:
+        - nfs
+        - rpcbind
+        - nfs-lock
+        - nfs-idmap
+
+- name: Prepare the registry host
+  hosts: registry
+  tasks:
+    - include: prepare_registry.yml
+      when: deploy_registry
+
+- name: Prepare the lbnfs host
+  hosts:
+    - lb_nfs
+  tasks:
+    - name: Install required python packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+      - python-yaml
+      - python-ipaddress
+
+- name: Prepare jumpbox to install OpenShift
+  hosts: localhost
+  tasks:
+    - name: Install the OpenShift installer package
+      yum:
+        name: atomic-openshift-utils
+        state: present

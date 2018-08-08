@@ -1,0 +1,61 @@
+- set_fact:
+    primary_pv: "{{hostname}}-rhel"
+    alt_pv: "{{hostname}}-secondary"
+    cns_pv: "{{hostname}}-cns"
+
+- name: Setup Main disk
+  include: setup_pool.yml
+  vars:
+    pv_name: "{{primary_pv}}"
+    disk_size: "{{hostvars[hostname].disk1}}"
+
+- name: Delete CNS
+  shell: |
+    pvs -q | grep "\-cns" | while  read line ;  do  PV=$(echo $line | awk '{print $1}') ; VG=$(echo $line | awk '{print $2}'); echo Deleting $VG-$PV ..;  lvremove -y $VG;  vgremove $VG; pvremove $PV; done
+  when: deploy_cns == True
+
+- name: Setup Secondary disk
+  include: setup_pool.yml
+  vars:
+    pv_name: "{{alt_pv}}"
+    disk_size: "{{hostvars[hostname].disk2}}"
+  when: hostvars[hostname].disk2 is defined
+
+- name: Setup Gluster disk
+  include: setup_pool.yml
+  vars:
+    pv_name: "{{cns_pv}}"
+    disk_size: "{{hostvars[hostname].disk3}}"
+  when: hostvars[hostname].disk3 is defined
+
+# make sure DNSMasq is properly setup before proceeding
+- meta: flush_handlers
+
+- name: "Create VM {{hostname}}"
+  shell: >
+    virt-install
+    --name {{hostname}}
+    --ram {{hostvars[hostname].memory}}
+    --vcpus={{hostvars[hostname].cpu}}
+    {{ graphics }}
+    --network bridge={{ bridge_name }},mac={{mac_address}}
+    --check all=off
+    --disk vol={{lvm_pool}}/{{primary_pv}}
+    {% if hostvars[hostname].disk2 is defined %} --disk vol={{lvm_pool}}/{{alt_pv}} {% endif %}
+    {% if hostvars[hostname].disk3 is defined %} --disk vol={{lvm_pool}}/{{cns_pv}} {% endif %}
+    --os-variant=rhel7.0
+    {% if extra_args is defined %} --extra-args "{{extra_args}} console=tty0 console=ttyS0,115200n8 fips=1" {% endif %}
+    {% if cd_boot is defined and cd_boot %}
+    --cdrom {{ boot_iso }}
+    {% else %}
+    --location {{ boot_iso }}
+    {% endif %}
+    --wait=-1
+    --noautoconsole
+
+- name: Wait for active SSH
+  wait_for:
+    port: 22
+    host: "{{hostname}}"
+    timeout: 120
+    search_regex: OpenSSH

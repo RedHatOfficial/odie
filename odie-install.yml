@@ -1,0 +1,6 @@
+#!/usr/bin/env ansible-playbook
+---
+- include: "./playbooks/ocp_install/prepare_hosts.yml"
+- include: "./playbooks/ocp_install/setup_rsyslog.yml"
+- include: "./playbooks/ocp_install/setup_ntp.yml"
+

@@ -1,0 +1,15 @@
+{% include './templates/includes/common-header.j2' %}
+{% include './templates/includes/disk-rhel.j2' %}
+
+%packages
+{% include './templates/includes/common-packages.j2' %}
+%end
+
+%addon com_redhat_kdump --disable --reserve-mb='128'
+%end
+
+%post
+{% include './templates/includes/common-footer.j2' %}
+
+eject -i 0
+%end

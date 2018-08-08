@@ -1,0 +1,12 @@
+- name: Start VM
+  include: vm_state.yml
+  vars:
+    state: "running"
+    command: "start"
+
+- name: Wait for active SSH
+  wait_for:
+    port: 22
+    host: "{{hostname}}"
+    timeout: 600
+    search_regex: OpenSSH

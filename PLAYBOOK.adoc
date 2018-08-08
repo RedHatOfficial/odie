@@ -1,0 +1,158 @@
+== ODIE Site Playbooks
+
+:rootdir: /opt/odie/projects
+
+This directory contains all of the Ansible playbooks to provision the ODIE application in a disconnected environment.
+
+These playbooks rely upon the `inventory/app-structure.py` to produce a dynamic inventory of this directory structure.  This script assumes that the applications are hosted at `/opt/odie/projects`, however this directory can be modified by using
+the `ODIE_PARENT_PROJECT_PATH` environment path into the `ansible-playbook` script.
+
+
+See also <<bookmark-app-conventions,OpenShift Project and Application Directory Structure>>
+
+
+== Plays
+
+The following categories
+
+[options="header",cols">s,^m,e"]
+|===
+| Playbook Category |  Wrapper Command | Description
+| Stage |  `odie stage` |  Copy/update the source from installation media
+| Jumphost Setup (**SOON**) |  `odie setup` |  Configure the JumpHost
+| Generate Configuration | `odie generate` | Produce static configuration from the site-specific files (e.g. OCP inventory, Kickstart files)
+ |OCP Install | `odie install` | Run the OCP BYO playbook.  Configure the playbook
+ |Security | `odie secure` | Apply the DISA STIG remediation scripts and restrict Ansible login mechanism
+| Smoketest | `odie smoketest` | Run (doesn't use playbooks)
+| App Deployment | `odie app provision` | Provision the application
+|===
+
+TIP: Note some playbooks are only invoked from other playbooks or via other processes (e.g. `media_preparation`) and are not directly usable from the wrapper script.
+
+=== Jumphost Setup
+
+This series of plays is intended to prepare the JumpHost, and then the installer.  These will configure
+
+=== Generate Config
+
+
+==== Kickstart
+
+The Kickstart file for each host will install a minimal installation of the operating system and a small selection of additional packages. In addition, the contents of `~/.ssh/id_rsa.pub` on the jump host will be automatically added to each server's `/root/authorized_keys` file.
+
+==== Create Inventory from CSv
+
+`scripts/csv2`
+
+=== OCP Install
+
+
+==== Prepare Hosts
+
+`playbooks/ocp_install/prepare_hosts.yml`
+
+   - Install common and OCP packages
+   - Configure the NFS server
+   - Configure Docker services on the appropriate nodes
+
+
+
+==== Prepare Registry
+
+`playbooks/ocp_install/prepare_registry.yml`
+
+   - Prepare the Docker image registry server
+    - NOTE: This only happens if `deploy_registry` is set to `true` in `group_vars/all.yml`
+    - Configure and start the `docker-distribution` service
+    - Configure the firewall
+
+
+This also calles the <<bookmark-container-pull,Container Pull role>>
+
+
+==== Setup NTP
+
+Source: `playbooks/ocp_install/setup_ntp.yml`
+
+This script will configure a chrony NTP server on the `lb` node.  It will then configure the remainin nodes to point to this server as its NTP server.
+
+CAUTION: The server configuration is not fully tested nor supported.  This is not executed via the `odie` installer.
+
+
+==== OCP BYO Installation
+
+ODIE is based on the OpenShift BYO (_Bring your Own_) Ansible Playbook.  These are provided by the `openshift-ansible-playbook` and `openshift-ansible-roles` installed on the JumpHost.
+
+These playbooks are located under `/usr/share/ansible/openshift-ansible/playbooks/byo`.  In general, is is not necessary or appropriate to directly modify these playbooks.  However, if it becomes necessary to debug installation problems the files are avaiable for reference.
+
+TIP: Consider using the `ag` tool provided in the `contrib/scripts` directory to quickly navigate the directory structure.
+
+==== HTPasswd
+
+`playbooks/ocp_install/htpasswd.yml`
+
+Create an adminitrative user on the OpenShift cluster
+
+Configures the HTPasswd using `..` and `..` variables
+
+
+=== Container Images
+
+==== Pull Role
+
+==== Push Role
+
+==== OCP Push
+
+=== Security
+
+
+==== OSCP Scans
+
+Runs the OpenSCAP tool on the hosts for the DISA RHEL 7 STIG via the `playbooks/security/oscap.yml` playbook.
+
+remediation=no
+
+The variable `remediation` with the value of `yes` will perform scan.  Any other value will just perform the scan.
+
+The results of the scan or remediation results will be returned to `/var/www/html/oscap-results` on the jumphost.  They should be available at `http://jumphost/oscap-results/`.  This output directory can be overriden with the `output_dir` variable.`
+
+
+=== Application Deployment
+
+This will provide a high level break down of the various plays used for provisioning & deployment of project and application metadata.
+
+TIP: This documentation is intended for advanced usage and development context.  The `odie.sh` wrapper utility is intended to provide a streamlined experience for common use cases.
+
+==== Setup PVs
+
+This playbook will identify the directories matching this pattern  `/opt/odie/projects/\*/apps/*/pvs/*` (effectively, this is not how the code actually works).
+
+For each directory, the following operations are performed:
+
+* Directory on the NFS server is created (the NFS server already exports all paths under `/ocp/pvs`)
+* a PersistentVolume is created within OpenShift with a matching label
+* A NFS mount is created to the new directory
+
+This script also supports parameterization of the NFS mounting method via the `nfs_mount_state` variable.  While the script defaults to *mounted*, it supports all the options allowed by the the `mount` ansible module:
+
+
+```
+	= state
+        If `mounted' or `unmounted', the device will be actively mounted or unmounted as needed and
+        appropriately configured in `fstab'.
+        `absent' and `present' only deal with `fstab' but will not affect current mounting.
+        If specifying `mounted' and the mount point is not present, the mount point will be created.
+        Similarly, specifying `absent' will remove the mount point directory.
+        (Choices: present, absent, mounted, unmounted)
+```
+
+CAUTION: This option only impacts the mount and `/etc/fstab` entry on the jumphost.  The NFS directory and the OCP PV will not be impacted by the status of the jumphost mount.
+
+
+=== Misc
+
+==== RHN Subscription
+
+This function will subscribe the host to Red Hat access.  This is necessary for connected environments with external internet access.  To process: `make connected`
+

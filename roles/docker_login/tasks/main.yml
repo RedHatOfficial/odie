@@ -1,0 +1,50 @@
+
+- name: Are we logged in
+  command: oc whoami
+  delegate_to: localhost
+  register: login
+
+- name: Get OAuth token
+  register: oc_oauth_token
+  command: oc whoami -t
+  delegate_to: localhost
+  when: login.stdout != "system:jumphost"
+
+- set_fact:
+    token: "{{oc_oauth_token.stdout}}"
+  when: login.stdout != "system:jumphost"
+
+- name: Get Cert token
+  register: oc_sa_token
+  shell: oc sa get-token builder -n openshift
+  delegate_to: localhost
+  when: login.stdout == "system:jumphost"
+
+- set_fact:
+    token: "{{oc_sa_token.stdout}}"
+  when: login.stdout == "system:jumphost"
+
+- name: Get registry route
+  command: oc get route/docker-registry -n default --template=\{\{.spec.host\}\}
+  register: oc_route
+  delegate_to: localhost
+
+- set_fact:
+    route_url: "{{oc_route.stdout}}"
+    ocp_route_url: "{{oc_route.stdout}}"
+
+- name: Configure insecure registry for docker
+  copy:
+    content: "{ \"insecure-registries\":[\"{{ groups.registry[0] }}:5000\", \"{{ route_url }}\"] }"
+    dest: /etc/docker/daemon.json
+  register: docker
+  ignore_errors: true
+
+- service:
+    name: docker
+    state: restarted
+  when: docker.changed
+
+- name: Login to {{ route_url }}
+  command: docker login -u unused -p {{ token }} {{ route_url }}
+  when: route_url is defined and token is defined

@@ -1,0 +1,11 @@
+hostname,ip,netmask,dns,gateway,flavor,env
+ocp-master01.lab.local,192.168.1.21,255.255.255.0,192.168.1.2,192.168.1.1,master,lab
+ocp-master02.lab.local,192.168.1.22,255.255.255.0,192.168.1.2,192.168.1.1,master,lab
+ocp-master03.lab.local,192.168.1.23,255.255.255.0,192.168.1.2,192.168.1.1,master,lab
+ocp-infra01.lab.local,192.168.1.31,255.255.255.0,192.168.1.2,192.168.1.1,infra,lab
+ocp-infra02.lab.local,192.168.1.32,255.255.255.0,192.168.1.2,192.168.1.1,infra,lab
+ocp-node01.lab.local,192.168.1.41,255.255.255.0,192.168.1.2,192.168.1.1,node,lab
+ocp-node02.lab.local,192.168.1.42,255.255.255.0,192.168.1.2,192.168.1.1,node,lab
+ocp-node03.lab.local,192.168.1.43,255.255.255.0,192.168.1.2,192.168.1.1,node,lab
+ocp-lbnfs.lab.local,192.168.1.51,255.255.255.0,192.168.1.2,192.168.1.1,lb_nfs,lab
+ocp-registry.lab.local,192.168.1.61,255.255.255.0,192.168.1.2,192.168.1.1,registry,lab

@@ -1,0 +1,11 @@
+hostname,ip,flavor,env,cns,disk1,disk2,disk3,cpu,memory
+registry01.full.local,192.168.124.30,registry,full,,150,1000,,2,4096
+master01.full.local,192.168.124.1,master,full,,150,,,4,16384
+master02.full.local,192.168.124.2,master,full,,150,,,4,16384
+master03.full.local,192.168.124.3,master,full,,150,,,4,16384
+infra01.full.local,192.168.124.10,infra,full,,150,50,,6,24576
+infra02.full.local,192.168.124.11,infra,full,,150,50,,6,24576
+node01.full.local,192.168.124.100,node,full,x,150,50,50,8,65536
+node02.full.local,192.168.124.101,node,full,x,150,50,50,8,65536
+node03.full.local,192.168.124.102,node,full,x,150,50,50,8,65536
+lbnfs01.full.local,192.168.124.20,lb_nfs,full,,150,1000,,8,32768

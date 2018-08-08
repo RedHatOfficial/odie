@@ -1,0 +1,80 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Sync images to registry
+  hosts: registry
+  vars:
+    images_source: /opt/odie/images/
+    images_target: /opt/openshift/images
+    clean_deploy: False
+  tasks:
+  - name: Install docker-pycreds
+    yum:
+      name:
+        - python-docker-py
+        - python-docker-pycreds
+      state: present
+
+  - name: Create registry image temp dir
+    file:
+      path: "{{images_target}}"
+      state: absent
+    when:
+      - clean_deploy == True
+
+  - name: Create registry image temp dir
+    file:
+      path: "{{images_target}}"
+      state: directory
+      recurse: yes
+
+  - name: Sync images up to image temp dir on registry machine
+    synchronize:
+      src: "{{ images_source }}"
+      dest: "{{ images_target }}"
+      compress: no
+      set_remote_user: False
+      rsync_path: "sudo rsync"
+    become: no
+
+- name: Push all the images into the Cluster Registry
+  hosts: "{{ host_target | default('localhost') }}"
+  vars:
+      target_registry: "{{ cluster_registry }}"
+      import_images: True
+      images_target: /opt/openshift/images
+      images_source: /opt/odie/delta_images/
+
+  tasks:
+
+    - include_vars: 
+        name: registry
+        file: "{{ images_file }}"
+
+    - debug:
+        var: registry
+
+    - name: push images {{ registry.name }}
+      include_role:
+        name: docker_push
+
+
+- name: Push all the images into the OCP Registry
+  hosts: "{{ host_target | default('localhost') }}"
+  vars:
+      import_images: False
+      ocp_project: openshift
+      images_target: /opt/openshift/images
+      images_source: /opt/odie/delta_images/
+  roles:
+    - docker_login
+  tasks:
+    - include_vars: 
+        file: "{{ images_file }}"
+        name: registry
+
+    - set_fact:
+        target_registry: "{{ route_url }}"
+
+    - name: Push Images {{ registry.name }}
+      include_role:
+        name: docker_push

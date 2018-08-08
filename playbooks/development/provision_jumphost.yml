@@ -1,0 +1,11 @@
+#!/usr/bin/env ansible-playbook
+#
+- name: Setup JumpHost
+  hosts: jumphost
+  connection: local
+  tags:
+    - jumphost
+  vars:
+    graphics: "--graphics spice"
+  roles:
+    - provision_vm

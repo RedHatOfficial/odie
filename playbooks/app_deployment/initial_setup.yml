@@ -1,0 +1,19 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Setup PVs
+  hosts: lb
+  vars:
+    - nfs_mount_state: mounted
+  tasks:
+    - debug:
+        var: projects
+
+    - name: Setup PVs
+      include_role:
+        name: ocp_pv_creation
+      vars:
+        project: "{{item.0}}"
+        app: "{{ item.1 }}"
+      with_subelements:
+        - "{{ projects }}"
+        - apps

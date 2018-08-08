@@ -1,0 +1,68 @@
+---
+- set_fact:
+    file_basename: "{{item | basename()}}"
+    file_path: "{{odie_properties_output_dir}}/{{item}}"
+
+- set_fact:
+    output_dir: "{{ odie_properties_output_dir }}/fragments/{{file_basename}}"
+
+- name: Create Directory
+  file:
+    path: "{{dir}}"
+    state: directory
+  loop_control:
+    loop_var: dir
+  with_items:
+    - "{{output_dir}}"
+    - "{{ odie_properties_output_dir}}"
+    - "{{ odie_group_all_vars_dir }}"
+
+- name: Symlink file
+  file:
+    src: "{{odie_properties_output_dir}}/{{file_basename}}"
+    dest: "{{ odie_group_all_vars_dir }}/{{file_basename}}"
+    state: link
+    force: yes
+
+- name: Check for file {{item}}
+  stat:
+    path: "{{file_path}}"
+  register: config_file
+
+- name: Initial File {{item}} {{initial_build_version}}
+  lineinfile:
+    dest: "{{file_path}}"
+    regexp: "{{version_header}}"
+    line: "{{version_header}}{{initial_build_version}}"
+    state: present
+    create: yes
+  when: config_file.stat.exists is defined and config_file.stat.exists == False
+
+- name: Copy Configuration
+  copy:
+    src: "{{file_path}}"
+    dest: "{{output_dir}}/+initial"
+
+- shell: "head -1 {{file_path}} | perl -pe 's/{{version_header}}//; exit 1 if not defined $&;'"
+  register: version_head
+  ignore_errors: true
+
+- set_fact:
+    current_build_version: "{{version_head.stdout }}"
+  when: version_head.stdout and version_head.rc == 0
+
+- set_fact:
+    current_build_version: "{{initial_build_version}}"
+  when: version_head.rc == 1
+
+- include: ../tasks/property_fragments.yml
+  loop_control:
+    loop_var: target_build_version
+  with_dict: "{{version}}"
+
+- name: Setting the correct permissions for the configuration files
+  file:
+    path: '{{ file_path }}'
+    mode: 0600
+    owner: admin
+    group: admin

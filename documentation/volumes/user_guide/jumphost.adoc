@@ -1,0 +1,69 @@
+
+= Jumphost server install
+== Overview
+
+This section outlines the steps necessary to manually install Red Hat
+Enterprise Linux 7 on a server to be used as the "jumphost". Throughout
+the process of deploying the solution created by this runbook, the
+jumphost will be used to deploy and configure the other servers, software,
+and systems.
+
+IMPORTANT: The contents of DVD1 are the Red Hat Enterprise Linux 7.3 installation
+media ISO. This DVD will be used as the boot media for the installation
+on all servers. In virtual environments, such as VMWare, where a DVD
+drive is not physically connected to the virtual machine, the ISO file
+will need to be made available to the virtual machines.
+
+== Install steps
+// . &#9744; Creates an ordered list with a checkbox (Unicode) after
+// each number
+
+. &#9744; Insert DVD1 (RHEL7.3) into the DVD drive for the jumphost and select
+it as the boot target when booting the server.
+
+. &#9744; At the boot menu, press the [Up Arrow] key to select "Install ..." and
+press the [Enter] key.
+
+. &#9744; When the Welcome to Red Hat Enterprise Linux 7.3 window opens, select English in the left panel and then English (United States) in the right panel and press Continue
+
+. &#9744; In the System Section, select INSTALLATION DESTINATION and in the new window that pops up select HDD that represents the primary drive for the Jumphost and press Done
+
+. &#9744; In the System Section, select KDUMP and in the new window that pops up uncheck ‘Enable kdump’ and press done.
+
+. &#9744; In the System Section, select NETWORK & HOST NAME and in the new window toggle the Ethernet Switch to ‘On’ (in the top right of the window)
+
+. &#9744; Then click ‘Configure’, select the General tab, and check ‘Automatically connect to this network when it is available’.
+
+. &#9744; Select the IPv4 Settings tab and in the Method dropdown, select ‘Manual’
+
+. &#9744; Then, in the Addresses section, press Add and in the new row that appears and <JUMPHOST_IP>, <NETMASK>, and <GATEWAY_IP> in the three respective columns
+
+. &#9744; Then, in the DNS servers section, enter the <DNS_SERVER_IP> and press Save
+
+. &#9744; In the window that opens, edit the ‘Host name’ field to be <JUMPHOST_HOSTNAME> and hit Apply
+
+. &#9744; Then press Done
+
+. &#9744; Press Begin Installation
+
+. &#9744; In the Configuration Window, under User Settings, select Root Password
+
+. &#9744; In the window that pops up, enter **<ROOT_PASSWORD>** in the Root Password and Confirm fields and click Done
++
+Note:  Follow local site procedures to document this password for historical use.
+
+. &#9744; In the Configuration Window, under User Settings, select USER CREATION
+
+. &#9744; In the window that pops up enter **<RH_ADMIN>** in the full name and user name fields and **<RH_ADMIN_PASSWORD>** in the password and confirm password fields.
+
+. &#9744; Ensure that ‘Make this user administrator’ is checked.
+
+. &#9744; Press Done.
+
+. &#9744; In the Configuration window, press ‘Finish Configuration’.
+
+. &#9744; When the previous step finishes, press the blue ‘Reboot’ button that appears.
+
+. &#9744; At the command prompt that appears, log in as root with password **<ROOT_PASSWORD>**
+
+// vim: tw=72 lbr

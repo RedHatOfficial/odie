@@ -1,0 +1,10 @@
+#!/usr/bin/env ansible-playbook
+
+- name: Install ODIE
+  hosts: jumphost
+  gather_facts: false
+  tags:
+    - odie
+  tasks:
+    - name: Run Install
+      shell: "INTERACTIVE=0 /opt/odie/src/odie.sh install"

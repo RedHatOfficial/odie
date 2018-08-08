@@ -1,0 +1,20 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Configure PIV Proxy roles
+  hosts: localhost
+  tasks:
+    - name: Disable Self-Service Provisioning
+      command: "oc adm policy remove-cluster-role-from-group self-provisioner system:authenticated system:authenticated:oauth"
+      when:  install_piv_proxy is defined and install_piv_proxy == True
+
+    - name: Configure Administrators
+      command: "oc adm policy add-cluster-role-to-user cluster-admin {{item}}"
+      with_items:
+        - "{{ openshift_cluster_admins }}"
+      when: openshift_cluster_admins is defined and install_piv_proxy is defined and install_piv_proxy == True
+
+    - name: Configure Read-Only Auditors
+      command: "oc adm policy add-cluster-role-to-user view {{item}}"
+      with_items:
+        - "{{ openshift_read_only_users }}"
+      when: openshift_read_only_users is defined and install_piv_proxy is defined and install_piv_proxy == True

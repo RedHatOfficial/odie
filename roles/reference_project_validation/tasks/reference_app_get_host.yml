@@ -1,0 +1,15 @@
+- name: Check whether Host is set for route
+  shell: oc get route/reference-app-services-internal -o template --template=\{\{.spec.host\}\}
+#      shell: |
+#        stringarray=(`oc describe route/reference-app-services-internal | grep "Requested Host"`)
+#        echo ${stringarray[2]}
+  register: requestedHostPage
+
+- debug:
+    msg: "{{ requestedHostPage.stdout }}"
+- debug:
+    msg: "{{ requestedHostPage }}"
+
+- name: Verify route on reference-app has a non-empty Host
+  fail:
+  when: requestedHostPage.stdout is undefined

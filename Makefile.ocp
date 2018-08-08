@@ -1,0 +1,50 @@
+install_openshift:
+	ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml --skip-tags glusterfs
+
+install_certificates:
+	ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/openshift-master/certificates.yml
+
+install_gluster:
+	ansible-playbook playbooks/ocp_install/install_gluster.yml -i /opt/odie/src/inventory/inventory
+
+install_metrics:
+	ansible-playbook playbooks/ocp_install/install_metrics.yml  -e openshift_hosted_metrics_deploy=true
+
+install_logging:
+	ansible-playbook playbooks/ocp_install/install_logging.yml -e openshift_hosted_logging=true
+
+registry_console_cert:
+	ansible-playbook playbooks/security/configure_registry_console_certs.yml
+
+install_cfme:
+	ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/byo/openshift-cfme/config.yml
+
+install_htpasswd:
+	ansible-playbook playbooks/ocp_install/htpasswd.yml
+
+admin:
+	ansible-playbook playbooks/ocp_install/install_jumphost_cert.yml
+
+stig:
+	ansible-playbook playbooks/security/oscap.yml -e "remediation=True"
+
+scan:
+	ansible-playbook playbooks/security/oscap.yml -e "remediation=no"
+
+yum_clean:
+	ansible all:\!jumphost -m command -a 'yum clean all'
+
+uninstall:
+	ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/adhoc/uninstall.yml
+
+push:
+	./scripts/migrate-images.sh push --all
+
+push_ocp:
+	./scripts/migrate-images.sh push_ocp --xpaas
+	./scripts/migrate-images.sh push_ocp --odie
+
+
+patch_origin_dns:
+	ansible-playbook playbooks/ocp_install/patch_99-origin-dns.yml
+

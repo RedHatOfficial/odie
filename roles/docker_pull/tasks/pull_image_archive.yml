@@ -1,0 +1,41 @@
+- set_fact:
+    output: "{{odie_images_dir}}/{{registry.name}}.tar"
+
+- name: Delete TAR
+  file:
+    path: "{{output}}"
+    state: absent
+
+- name: Delete TAR.{{compress_ext}}
+  file:
+    path: "{{output}}.{{compress_ext}}"
+    state: absent
+
+- name: Docker Pull {{ registry.name }}
+  docker_image:
+    name: "{{source_registry}}/{{ item }}"
+    state: present
+  with_items:
+  - "{{ registry.repos }}"
+
+
+- name: Check for {{output}} file
+  stat: path="{{output}}"
+  register: o
+
+- name: Docker Save
+  command: docker save -o {{output}} {% for repo in repos  %} {{ url }}/{{repo}} {% endfor %}
+  vars:
+    repos: "{{registry.repos}}"
+    url: "{{source_registry}}"
+  args:
+    creates: "{{output}}"
+  when: not o.stat.exists
+
+- debug:
+    msg: "{{output}} compression type: {{compress_type}} and compression extension: {{compress_ext}}"
+
+- name: "Compress {{output}}"
+  command: "{{compress_cmd|quote}} {{compress_args}} {{output|quote}} "
+  when: not o.stat.exists
+

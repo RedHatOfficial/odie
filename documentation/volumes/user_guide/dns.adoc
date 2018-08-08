@@ -1,0 +1,21 @@
+== DNS
+
+. **DNS** +
+DNS resolution (both forward and reverse lookups) must function properly between all hosts. +
+. **Wildcard DNS Entry** +
+Wildcard DNS entry must be in place and point to the load balancer to properly route requests to the OpenShift routers. +
+. **Example DNS Wildcard Entry** (assuming example.com is the domain name): +
+*.apps 300 IN A 10.1.7.109 +
+
+. **Entry in /etc/origin/master/master-config.yaml:** +
+routingConfig: +
+  subdomain:  "apps.example.com"
+
+. **Test of default route** (Success equals: the IP address of the loadbalancer is returned) +
+Anything could be substituted for `test-app` in the following example. +
+nslookup `test-app`.app.example.com +
+Server:		10.1.7.254 +
+Address:	10.1.7.254#53 +
++
+Name:	test-app.apps.example.com +
+Address: 10.1.7.109

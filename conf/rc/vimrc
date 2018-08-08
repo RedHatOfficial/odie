@@ -1,0 +1,6 @@
+set ts=2 sw=2 et ai
+set mouse=a
+set nu
+
+
+map <leader>y  :%!perl -n -e 'next unless /packagereq/; s/\s*//; s/<.*?>//g; print;'  | sort -u <CR>

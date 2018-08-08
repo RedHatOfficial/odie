@@ -1,0 +1,30 @@
+- name: Copy Log Rotation Script
+  copy:
+    src: "./files/rotate_var_log_messages.sh"
+    dest: "/usr/local/bin/rotate_var_log_messages.sh"
+    mode: 0755
+
+- name: Remove default rsyslog
+  lineinfile:
+    dest: "/etc/rsyslog.conf"
+    regexp:  "/var/log/messages$"
+    state: absent
+  notify: restart rsyslog
+
+- name: Add custom outchannel (line 1)
+  lineinfile:
+    dest: "/etc/rsyslog.conf"
+    state: present
+    insertafter: "authentication messages!"
+    regexp: '^\$outchannel log_rotation.*'
+    line: "$outchannel log_rotation,/var/log/messages, {{ rsyslog_var_log_size}},/usr/local/bin/rotate_var_log_messages.sh"
+  notify: restart rsyslog
+
+- name: Activate custom outchannel (line 2)
+  lineinfile:
+    dest: "/etc/rsyslog.conf"
+    state: present
+    insertafter: "log_rotation,/var/log/messages"
+    line: "*.info;mail.none;authpriv.none;cron.none                :omfile:$log_rotation"
+  notify: restart rsyslog
+

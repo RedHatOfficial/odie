@@ -1,0 +1,4 @@
+---
+# tasks file for ocp_properties
+- include: properties.yml tags=properties
+

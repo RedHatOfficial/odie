@@ -1,0 +1,21 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: PAM configuration
+  hosts: all:localhost
+  tasks:
+
+    - name:
+      lineinfile:
+        dest: /etc/pam.d/system-auth
+        state: present
+        regexp: '^auth      	required	pam_faillock.so'
+        insertafter: '^auth      	sufficient	pam_unix.so'
+        line: 'auth      	required	pam_faillock.so preauth silent even_deny_root deny=3 unlock_time=never fail_interval=900'
+
+    - name:
+      lineinfile:
+        dest: /etc/pam.d/password-auth
+        state: present
+        regexp: '^auth      	\[default=die\]	pam_faillock.so'
+        insertafter: '^auth      	sufficient	pam_unix.so'
+        line: 'auth      	[default=die]	pam_faillock.so authfail even_deny_root deny=3 fail_interval=900 unlock_time=never'

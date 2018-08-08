@@ -1,0 +1,20 @@
+                 Networking Guide
+
+   To configure static networking, replace the example reference with
+         information for your environment:
+
+                     Syntax
+ip=<TARGETHOST_IP>::<GATEWAY_IP>:<NETMASK>::<INTERFACE_NAME>:none
+
+                     Legend
+
+    - <TARGETHOST_FQDN>  =  FQDN of the target host
+    - <TARGETHOST_IP>  =  IP of the target host
+    - <GATEWAY_IP>  =  IP of the network gateway.
+    - <NETMASK> =  broadcast netmask for the host.
+    - <INTERFACE_NAME>  =  name of the network adapter to use.
+
+                     Sample
+ip=10.0.0.2::10.0.0.1:255.255.255.0::ens192:none
+
+          PRESS ENTER TO EDIT and ENTER again to boot

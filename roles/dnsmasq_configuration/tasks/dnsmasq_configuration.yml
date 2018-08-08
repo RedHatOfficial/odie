@@ -1,0 +1,167 @@
+
+- name: Install DNSMasq
+  yum:
+    name: dnsmasq
+    state: latest
+  when: enable_dhcp
+  notify: 
+    - restart_dnsmasq
+
+- name: Add secondary IP address to ethernet interface
+  command: "ip addr add {{ temp_dhcp_ip }}/24 dev {{ ansible_default_ipv4.interface }}"
+  ignore_errors: true
+  when: temp_dhcp_ip is defined
+
+- name: Setup FW for DHCP
+  firewalld:
+    service: dhcp
+    state: enabled
+    immediate: yes
+    permanent: yes
+  when: enable_dhcp
+
+- name: Setup FW for TFTP
+  firewalld:
+    service: tftp
+    state: enabled
+    immediate: yes
+    permanent: yes
+  when: enable_pxe
+
+- name: Setup selinux context
+  shell: |
+    semanage fcontext -a -t httpd_sys_content_t "/opt/odie/install_media(/.*)?"
+    restorecon -R /opt/odie/install_media/
+
+- name: Create symlink
+  file:
+    src: /opt/odie/install_media
+    dest: /var/www/html/media
+    state: link
+
+- name: Create Temporary project
+  command: mktemp -d 
+  register: tmp
+  when: stage_pxe
+
+- set_fact:
+    cpio_dir: "{{tmp.stdout}}"
+  when: stage_pxe
+  notify: 
+    - delete_cpio
+
+- name: Extract the RPM
+  shell: "rpm2cpio /opt/odie/repo/odie-custom/syslinux-4.05-13.el7.x86_64.rpm  | cpio -dimv"
+  args:
+    chdir: "{{cpio_dir}}"
+  when: stage_pxe
+
+- name: Create TFTP Directories
+  file:
+    path: "{{item}}"
+    state: directory
+    recurse: yes
+  when: stage_pxe
+  with_items:
+    - "{{tftp_root}}/pxelinux/images/RHEL-7.5"
+    - "{{tftp_root}}/images/RHEL-7.5"
+    - "{{tftp_root}}/pxelinux/pxelinux.cfg"
+
+- name: Copy TFTP Artifacts
+  copy:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+    directory_mode: true
+  with_items:
+    - { src: "{{rhel_mount}}/images/pxeboot/vmlinuz", dest: "{{tftp_root}}/pxelinux/images/RHEL-7.5/vmlinuz"}
+    - { src: "{{rhel_mount}}/images/pxeboot/initrd.img", dest: "{{tftp_root}}/pxelinux/images/RHEL-7.5/initrd.img"}
+    - { src: "{{rhel_mount}}/images/pxeboot/vmlinuz", dest: "{{tftp_root}}/images/RHEL-7.5/vmlinuz"}
+    - { src: "{{rhel_mount}}/images/pxeboot/initrd.img", dest: "{{tftp_root}}/images/RHEL-7.5/initrd.img"}
+    - { src: "{{cpio_dir}}/usr/share/syslinux/pxelinux.0",  dest: "{{tftp_root}}/pxelinux/pxelinux.0"}
+    - { src: "{{cpio_dir}}/usr/share/syslinux/vesamenu.c32",  dest: "{{tftp_root}}/pxelinux/vesamenu.c32"}
+  when: stage_pxe
+
+- name: Prepare DNSConfg
+  copy:
+    content: |-
+      expand-hosts
+      domain=dhcp-subnet
+      dhcp-range={{ip_range_start}},{{ip_range_end}},12h
+      address=/{{default_subdomain}}/{{hostvars[groups['infra'][0]].ip}}
+      {% if enable_pxe %} 
+      dhcp-boot=pxelinux/pxelinux.0
+      enable-tftp
+      tftp-root={{tftp_root}}
+      {% endif %}
+    dest: /etc/dnsmasq.conf
+  when: enable_dhcp
+  notify:
+    - restart_dnsmasq
+
+- name: Setup menu
+  copy:
+    content: |-
+      default vesamenu.c32
+      #prompt 1
+      timeout 300
+
+      display boot.msg
+
+      label Local
+        menu label Boot from local HD
+        menu default
+        localboot 0
+
+      {% for server in groups['all'] %}
+
+      label {{server}}
+        menu label Install {{server}}
+        kernel images/RHEL-7.5/vmlinuz
+        append initrd=images/RHEL-7.5/initrd.img ip=dhcp inst.repo=http://{{my_repo_host}}/media  inst.ks=http://{{my_repo_host}}/pub/{{server}}.cfg fips=1
+
+      {% endfor %}
+    dest: "{{tftp_root}}/pxelinux/pxelinux.cfg/default"
+  when: enable_pxe
+
+- name: Setup menu per VM - PXE Hex IP convention
+  copy:
+    content: |-
+      default vesamenu.c32
+      #prompt 1
+      timeout 30
+
+      display boot.msg
+
+      label {{item}}
+        menu label Install {{item}}
+        menu default
+        kernel images/RHEL-7.5/vmlinuz
+        append initrd=images/RHEL-7.5/initrd.img ip=dhcp inst.repo=http://{{my_repo_host}}/media  inst.ks=http://{{my_repo_host}}/pub/{{item}}.cfg fips=1
+
+    dest: "{{tftp_root}}/pxelinux/pxelinux.cfg/{% for i in hostvars[item].ip.split('.') %}{{ '%02X'|format(i|int) }}{% endfor %}"
+  with_items: "{{ groups['all'] }}"
+  when: enable_pxe
+
+- name: Setup menu per VM - PXE MAC Address convention
+  copy:
+    content: |-
+      default vesamenu.c32
+      #prompt 1
+      timeout 30
+
+      display boot.msg
+
+      label {{item}}
+        menu label Install {{item}}
+        menu default
+        kernel images/RHEL-7.5/vmlinuz
+        append initrd=images/RHEL-7.5/initrd.img ip=dhcp inst.repo=http://{{my_repo_host}}/media  inst.ks=http://{{my_repo_host}}/pub/{{item}}.cfg fips=1
+
+    dest: "{{tftp_root}}/pxelinux/pxelinux.cfg/01{% for i in hostvars[item].mac.split(':') %}-{{ i }}{% endfor %}"
+  with_items: "{{ groups['all'] }}"
+  when: enable_pxe and "mac" in hostvars[hostvars | first]
+
+- name: Set the Kickstart to use network media
+  set_fact:
+    kickstart_media: True
+  when: enable_pxe

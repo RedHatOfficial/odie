@@ -1,0 +1,35 @@
+
+== Hardware Requirements
+
+This section of the document outlines what requirements are needed at a minimum for the underlying Hardware or VMs.
+
+The sizing for for the disks are in GB and the memory is in MB.
+
+=== Lab Install
+
+[format="csv", cols="2,2,1,1,1,1,1,1,1,2" options="header"]
+|===
+include::../../../contrib/env-config/lab/hosts.csv[]
+jumphost01.lab.local,192.168.124.254,jumphost,default,,500,,,2,8096
+dnsserver01.lab.local,192.168.124.19,dns,default,,500,,,2,4048
+|===
+
+=== Lite Install
+
+[format="csv", cols="2,2,1,1,1,1,1,1,1,2" options="header"]
+|===
+include::../../../contrib/env-config/default/hosts.csv[]
+jumphost01.default.local,192.168.124.254,jumphost,default,,500,,,2,8096
+|===
+
+=== Full Install
+
+[format="csv", cols="2,2,1,1,1,1,1,1,1,2" options="header"]
+|===
+include::../../../contrib/env-config/full/hosts.csv[]
+jumphost01.full.local,192.168.124.254,jumphost,default,,500,,,2,8096
+|===
+
+
+<<<
+

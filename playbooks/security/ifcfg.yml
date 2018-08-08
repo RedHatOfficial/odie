@@ -1,0 +1,18 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Network interface configuration
+  hosts: all:localhost
+  tasks:
+    - name: Determine ethernet device name
+      shell: "nmcli dev | grep connected | grep ethernet | cut -d' ' -f 1"
+      register: ethernet_device
+    - debug: msg="{{ item }}"
+      with_items: "{{ ethernet_device.stdout_lines }}"
+    - name: Use privacy extensions for addresses
+      lineinfile:
+        create: no
+        dest: "/etc/sysconfig/network-scripts/ifcfg-{{ item }}"
+        regexp: ^IPV6_PRIVACY
+        line: 'IPV6_PRIVACY=rfc3041'
+      with_items: "{{ ethernet_device.stdout_lines }}"
+

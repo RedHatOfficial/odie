@@ -1,0 +1,59 @@
+#!/bin/bash
+
+export ENABLE_REPLICATION=${ENABLE_REPLICATION:-false}
+export ENABLE_SYSLOG=${ENABLE_SYSLOG:-false}
+export POSTGRESQL_SYSLOG_FACILITY=${POSTGRESQL_SYSLOG_FACILITY:-LOCAL0}
+
+
+set -eu
+export_vars=$(cgroup-limits) ; export $export_vars
+
+source "${CONTAINER_SCRIPTS_PATH}/common.sh"
+source "${CONTAINER_SCRIPTS_PATH}/stig.sh"
+
+set_pgdata
+if [ -f "$PGDATA/healthchecks.enabled" ]; then
+  rm -f $PGDATA/healthchecks.enabled
+fi
+check_env_vars
+generate_passwd_file
+generate_postgresql_config
+generate_postgresql_config_preload_pgaudit
+
+# Is this brand new data volume?
+PG_INITIALIZED=false
+
+if [ ! -f "$PGDATA/postgresql.conf" ]; then
+  initialize_database
+  PG_INITIALIZED=:
+else
+  try_pgupgrade
+fi
+
+pg_ctl -w start -o "-h ''"
+if $PG_INITIALIZED ; then
+    migrate_db
+    create_users
+fi
+set_passwords
+pg_ctl -w restart -o "-h ''"
+
+# enable pgaudit
+generate_postgresql_config_append_stig
+if [ ! -f "$PGDATA/pgaudit.enabled" ]; then
+  initialze_database_pgaudit
+  pg_ctl -w restart -o "-h ''"
+fi
+
+#enable pgcrypto
+link_secrets_to_data_dir
+if [ ! -f "$PGDATA/pgcrypto.enabled" ]; then
+  initialze_database_pgcrypto
+fi
+
+pg_ctl stop
+
+touch $PGDATA/healthchecks.enabled
+
+unset_env_vars
+exec postgres "$@"

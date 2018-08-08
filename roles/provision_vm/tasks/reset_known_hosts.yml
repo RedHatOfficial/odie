@@ -1,0 +1,18 @@
+- name: Lookup known hosts
+  set_fact:
+    ssh_known_hosts_file: "{{ lookup('env','HOME') + '/.ssh/known_hosts' }}"
+
+# BUGFIX: Had a lot of issues with the `known_hosts` ansible module
+# found this at https://serverfault.com/questions/132970/can-i-automatically-add-a-new-host-to-known-hosts
+- name: For each host, scan for its ssh public key
+  shell:
+    cmd: |
+      ssh-keygen -R {{hostname}}
+      ssh-keygen -R {{ip}}
+      ssh-keygen -R {{hostname}},{{ip}}
+      ssh-keyscan -t rsa {{hostname}} >> {{ssh_known_hosts_file}}
+      #ssh-keyscan -H {{ip}} >> {{ssh_known_hosts_file}}
+      #ssh-keyscan -H {{hostname}} >> {{ssh_known_hosts_file}}
+  delegate_to: localhost
+
+

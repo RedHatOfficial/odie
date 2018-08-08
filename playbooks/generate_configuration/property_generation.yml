@@ -1,0 +1,61 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: ODIE Property Generation
+  hosts: localhost
+  connection: local
+  become: false
+
+#  vars:
+#    odie_src_dir: /opt/odie/src
+
+  pre_tasks:
+    - name: Set default ODIE SRC Dir
+      set_fact:
+        odie_src_dir: "{{ odie_src_dir | default('/opt/odie/src') }}"
+
+    - name: Set Config & Group Vars facts
+      set_fact:
+        odie_config_dir: "/opt/odie/config"
+        odie_group_vars_dir: "{{odie_src_dir}}/inventory/group_vars/all"
+
+    - name: debug
+      debug:
+        var: odie_src_dir
+
+
+    - name: Include the Properties Manifest
+      include_vars:
+        file: "{{odie_src_dir}}/conf/manifest.yml"
+
+    - name: Query for the installer version
+      command: "cat {{odie_src_dir}}/INSTALLER_VERSION"
+      register: v
+
+    - name: Set the targeted upgrade version
+      set_fact:
+        targeted_upgrade_version: "{{v.stdout}}"
+
+    # This is a 0.4 Upgrade move
+    - name: Check whether /opt/odie/config is symlink
+      stat:
+        path: "{{odie_config_dir}}"
+      register: properties_dir
+      ignore_errors: true
+
+    - name: Check whether group_vars is symlink
+      stat:
+        path: "{{ odie_group_vars_dir }}"
+      register: group_all_dir
+      ignore_errors: true
+
+    - name: Migrate properties
+      shell: >
+        rm {{odie_config_dir}}
+        mkdir {{odie_group_vars_dir}}
+        mv {{odie_group_vars_dir}}/* {{odie_config_dir}}
+        rm -rf {{odie_group_vars_dir}}
+      when: properties_dir.stat.exists == True and properties_dir.stat.islnk and group_all_dir.stat.isdir
+
+  roles:
+    - odie_properties
+

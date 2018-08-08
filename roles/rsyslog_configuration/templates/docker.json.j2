@@ -1,0 +1,6 @@
+{
+  "log-driver": "syslog",
+  "log-opts": {
+    "syslog-address": "udp://{{ remote_rsyslog_export_hostname }}:{{ rsyslog_export_port }}"
+  }
+}

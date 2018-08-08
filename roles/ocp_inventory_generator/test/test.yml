@@ -1,0 +1,14 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Create Properties
+  hosts: all
+  connection: local
+  gather_facts: false
+  roles:
+    - ocp_inventory_generator
+  vars:
+    deploy_logging: true
+    deploy_metrics: true:w
+
+
+

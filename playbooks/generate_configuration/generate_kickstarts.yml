@@ -1,0 +1,41 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Generate kickstart files
+  hosts: all:!jumphost
+  tags:
+    - kickstart
+  connection: local
+  gather_facts: yes
+
+  pre_tasks:
+    - name: Check to make sure we have an ssh private key
+      shell: ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa -q -N ""
+      args:
+        creates: ~/.ssh/id_rsa
+      run_once: True
+      delegate_to: localhost
+
+    - name: Create Directory
+      file:
+        path: /opt/odie/kickstart
+        state: directory
+      delegate_to: localhost
+
+  roles:
+    - kickstart-generator
+
+- name: Configure Apache HTTPD Kickstart Server
+  hosts: localhost
+  connection: local
+  tags:
+    - kickstart
+  roles:
+    - httpd-configure
+
+- name: Create OCP Inventory file
+  hosts: localhost
+  connection: local
+  tags:
+    - ocp_inventory
+  roles:
+    - ocp_inventory_generator

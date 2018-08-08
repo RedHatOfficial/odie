@@ -1,0 +1,10 @@
+{% if prop.header_text %}
+{{ prop.header_text }}
+{% endif %}
+{% if prop.description_text is defined and prop.description_text%}
+{{ prop.description_text | regex_replace('^#*','# ' ) | regex_replace('\n', '\n# ')| regex_replace('^\n$','') }}
+{% endif %}
+{% for key,value in prop.props.items() | sort %}
+{% if not prop.required %}#{% endif %}{%if key != "literal"%}{{key}}:{%endif%} {{value | regex_replace('<','{') | regex_replace('>','}') }}
+{% endfor %}
+

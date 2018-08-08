@@ -1,0 +1,50 @@
+---
+  - set_fact:
+      # this is the version found in the header of the property file
+      current_release: "{{current_build_version}}"
+      # this is the version of the yaml
+      property_version: "{{  target_build_version.key }}"
+      # this is the version found in INSTALLER_VERSION
+      targeted_upgrade_version: "{{ targeted_upgrade_version }}"
+      properties: "{{ target_build_version.value.properties }}"
+      config_file: "{{file_basename}}"
+      output_dir: "{{output_dir }}"
+
+
+    #  compare  Compare <version> with <other_version>, output to stdout the
+    #           following values: -1 if <other_version> is newer, 0 if equal, 1 if
+    #           older."
+    # Scenarios:
+    # 
+
+  - command: "{{odie_semver}} compare {{current_release}} {{property_version}}"
+    register: semver_add_property
+
+  - command: "{{odie_semver}} compare {{targeted_upgrade_version}} {{property_version}}" 
+    register: semver_upper_version
+
+
+#  - debug:
+#      var: "{{debug_item}}"
+#    loop_control:
+#      loop_var: debug_item
+#    with_items:
+#      - semver_add_property 
+#      - semver_upper_version 
+#      - current_release
+#      - property_version
+#      - targeted_upgrade_version
+
+
+  - name: Setup Property Fragment
+    template:
+      src: property_fragment.j2
+      dest: "{{output_dir}}/{%if prop.prefix is defined and prop.prefix %}{{ prop.prefix }}{% endif %}{{prop.name | replace(' ', '_') | lower() }}"
+    loop_control:
+      loop_var: prop
+    with_items:
+      - "{{ properties }}"
+    when:
+      - "semver_add_property.stdout == '-1'"
+      - "semver_upper_version.stdout != '-1'"
+      - "prop.yml_file ==  config_file"

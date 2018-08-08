@@ -1,0 +1,198 @@
+
+
+== ODIE Installation Process
+
+=== Overview
+
+This section outlines the process needed to install an OCP environment using the ODIE disconnected OCP installer.
+
+WARNING: Before proceeding the VMs or hardware must be provisioned. If not, please consult the Unified Installation Guide.
+
+=== Jumphost Installation Steps
+
+The first step in the process of installing ODIE is configuring the jumphost. The jumphost will be used to deploy and configure the other servers, software, and systems.
+
+The instructions for this section outline how to install the jumphost using the bootable ODIE ISO.
+
+ . &#9744; Insert the ODIE bootable DVD into the DVD drive for the jumphost and select it as the boot target when booting the server.
+
+ . &#9744; At the "Red Hat ODIE JumpHost {revnumber}" boot menu, using the [Down Arrow] key to select "Install ODIE JumpHost (GUI) and press the [Enter] key.
+
+. &#9744; The system will boot into the **INSTALLATION SUMMARY** screen with a yellow line at the bottom.  Click on the **INSTALLATION DESTINATION** option in the **SYSTEM** section.
+
+. &#9744; Then click "Done" in the upper left
+
+. &#9744; A new window, **DISK ENCRYPTION PASSPHRASE** will appear and you will be prompted for the passphrase for the disk encryption.  Please enter the **luks_passphrase** pass phrase and then enter against for confirmation.  Click **Save Passphrase** in the bottom right.
++
+NOTE:  Follow local site procedures to document this luks whole-disk encryption passphrase for historical use.
+
+. &#9744; In the System Section, select NETWORK & HOST NAME and in the new window toggle the Ethernet Switch to ‘On’ (in the top right of the window)
+
+. &#9744; Then click ‘Configure’, select the General tab, and check ‘Automatically connect to this network when it is available’.
+
+. &#9744; Select the **IPv4 Settings** tab and in the Method dropdown, select ‘Manual’
+
+. &#9744; Then, in the Addresses section, press Add and in the new row that appears and enter the <JUMPHOST_IP>, <NETMASK>, and <GATEWAY_IP> in the three respective columns
+
+. &#9744; Then, in the DNS servers section, enter the <DNS_SERVER_IP> and press Save
+
+. &#9744; In the bottom left of the window edit the ‘Host name’ field to be <JUMPHOST.FQDN> and click Apply
+
+. &#9744; Then press Done in the upper left corner
+
+. &#9744; Press Begin Installation in the lower right corner
+
+. &#9744; After installation, the system will reboot.  You will prompted for the disk encryption passphrase during the boot process.  Enter the previously entered value.
++
+NOTE:  You may need to manually unmount the ODIE iso file using the VM management utilities if the system attempts to boot from the ISO again
+
+. &#9744; At the command prompt that appears, log in as `admin` with the password **odie**.
+
+. &#9744; You will be prompted to change this password.  Please enter the **<ADMIN_PASSWORD>**
+
+. &#9744; Type `exit` to logout of this command terminal.
+
+. &#9744; At the command prompt that appears, log in as `root` with the password **odie**.
+
+. &#9744; You will be prompted to change this password.  Please enter the **<ROOT_PASSWORD>**
+
+. &#9744; Type `exit` to logout of this command terminal.
++
+NOTE:  Follow local site procedures to document the user passwords for historical use.
+
+=== ODIE Patching
+
+If you are installing a further patch iso on top of the base iso install, complete this section before proceeding on to **ODIE Configuration**
+
+. &#9744; Ensure you have gone into your VM hypervisor and mounted the DVD for ODIE patch iso into the VM or inserted the ODIE patch DVD into the tray
+
+. &#9744; Type `mkdir /mnt/odie` and press [Enter]
+
+. &#9744; Type `mount /dev/cdrom /mnt/odie/`
+
+. &#9744; Type `cd /mnt/odie` and press [Enter]
+
+. &#9744; Type `./odie.sh stage` and press [Enter]
+
+. &#9744; Once the prior command completes type `cd /` and press [Enter]
+
+. &#9744; Type `ummount /mnt/odie` and press [Enter]
+
+. &#9744; Go into the VM hyper visor unmount the ODIE patch iso or eject the DVD from the tray
+
+=== ODIE Configuration
+
+During this section, you will modify the configuration files necessary to install ODIE.
+
+TIP: It is expected that this section is run on the Jumphost server
+
+. &#9744; At the command prompt that appears, log in as `root` with password.
+
+. &#9744; Type `cd /opt/odie/config/` to navigate into the configuration directory
++
+TIP: This documentation uses `nano` as this is simple to use text editor for novice Linux system administrator, other text editors such as `vi`, `vim`, or `emacs` may also be used.  Use Ctrl+X to save and exit in `nano`.
+
+. &#9744; Copy the reference file by typing `cp hosts-full.csv.sample hosts.csv`
+
+. &#9744; Type `nano /opt/odie/config/hosts.csv` and press Enter
++
+NOTE: It may be easiest to modify the contents of this csv file by using a common spreadsheet editor such as Mircosoft Excel or Google Sheet and exporting to csv.
+
+. &#9744; Edit hosts.csv according to **hosts.csv Reference Table** and ensure you save changes on exit.
+
+. &#9744; Type `nano /opt/odie/config/odie.yml` and press Enter
+
+. &#9744; Edit `/opt/odie/config/odie.yml` according to the **odie.yml Reference Table** and ensure you save the changes on exit.
+
+. &#9744; Type `nano /opt/odie/config/env.yml` and press Enter
+
+. &#9744; Edit `/opt/odie/config/env.yml` according to the **env.yml Reference Table** and ensure you save the changes on exit.
+
+. &#9744; Type `nano /opt/odie/config/ks.yml` and press Enter
+
+. &#9744; Edit `/opt/odie/config/ks.yml` according to the **ks.yml Reference Table** and ensure you save the changes on exit.
+
+. &#9744; Type `nano /opt/odie/config/secret.yml` and press Enter
+
+. &#9744; Edit `/opt/odie/config/secret.yml` according to the **secret.yml Reference Table** and ensure you save the changes on exit.
+
+. &#9744; Type `odie configure` and press Enter.
+
+
+=== Installing Non-Jumphost Servers
+
+This next section outlines the steps needed to configure the non-jump hosts.
+
+NOTE: The following section will need to be run for each of the remaining hosts individually.
+
+. &#9744; Boot the host with the ODIE DVD mounted and selected as the boot target.
+
+. &#9744; Select [Down] twice to highlight the **Kickstart ODIE VM Prompt** Option and press [Tab].
+
+. &#9744; Pull up the interactive legend by pressing [F2] then [Enter]
+
+. &#9744; Modify the placeholder values on this line.  Once complete press the [Enter] key. The host will reboot upon successful completion of the kickstart process
+
+* `<JUMPHOST_FQDN>` is the FQDN of the jumphost.  If `<JUMPHOST_FQDN>` can't be resolved in DNS, then `<JUMPHOST_IP>` may be used instead.
+* `<TARGETHOST_FQDN>` is the FQDN of the host on which you are making these boot-parameter changes. This is the value `hostname` in `hosts.csv` on the jumphost.
+* `<TARGETHOST_IP>` is the IP of the host on which you are making these boot-parameter changes. This is the value `ip` in `hosts.csv` on the jumphost.
+* `<GATEWAY_IP>` is the IP of the network gateway. This is the value for `gateway` in `/opt/odie/config/env.yml` on the jumphost.
+* `<NETMASK>` is the network netmask for the host. This is the value for `netmask` in `/opt/odie/config/env.yml` on the jumphost.
+* `<INTERFACE_NAME>` is the name of the network adapter to use. This can be retrieved from a RHEL 7 system by running the `ifconfig` command.
++
+TIP:  If you’re using a RHEL VM on VMWare, the default interface name is `ens192`
+
+. &#9744; If LUKS whole disk encryption has been enabled, you will be prompted for the passphrase during the boot process. Enter the value as defined in `/opt/odie/config/secret.yml`
+
+. &#9744; Repeat this process for the remaining hosts. Once all hosts have been kickstarted, proceed to the next section.
+
+=== ODIE Installation
+
+After the VMs have been kickstarted, you may begin the actual installation of OpenShift and all related components.  After this is completed, the system will be hardened to comply with DoD regulations.
+
+. &#9744; Type `odie ping` and press [Enter].
+
+. &#9744; Type `odie install` and press [Enter].
++
+WARNING: Do not lock the screen during the `odie install` step
+
+. &#9744; This should return with **SUCCESS** indicating that all of the servers have been properly installed.
+
+//. &#9744; Type `odie harden` and press [Enter].
+//+
+//IMPORTANT: This step will restart all of the hosts.  Remember that you will need to login to each VM via the WMWare console and enter the `luks_passphrase` in `/opt/odie/config/secret.yml` that was created previously.
+//+
+//WARNING: Do not lock the screen during the `odie harden` step
+
+//. &#9744; If prompted, type `y`, for yes, and press [Enter] to proceed.
+//+
+//TIP: The `odie harden` step will prompt at least twice for the value of `my_password` in `/opt/odie/config/secret.yml` that was created previously.
+
+
+=== ODIE Verification
+
+At this point, the system has been fully installed and hardened.  Perform these manual steps to verify that the system is functional.
+
+. &#9744; Verify that the reference application components have been properly deployed.  Type `watch oc get pod`  and press [Enter].  This will open an interactive program that allows you to observe the real-time changes as the components deploy.
++
+```
+[root@jumphost01 src]# watch oc get pod
+Every 2.0s: oc get pod                                                                         Thu Jan 18 16:11:55 2018
+
+NAME                               READY     STATUS	 RESTARTS   AGE
+broker-amq-2-bp6pd                 1/1       Running     0          25m
+broker-amq-2-build                 0/1       Completed   0          25m
+reference-app-1-3d3vn              1/1       Running     0          25m
+reference-app-2-build              0/1       Completed   0          25m
+reference-app-postgresql-1-c6f13   1/1       Running     1          25m
+```
+
+. &#9744; Watch this output until the screen looks like the above and the pods are in the "Running" state.  Once completed, Enter Ctrl + C to terminate the `watch` command.
+
+. &#9744;These pods have built in readiness probes, once they are *Ready*, then OpenShift is correctly installed and configured.
+
+. &#9744; Lastly unprovision the *reference-project* that is created by `odie install` by running the following command.
++
+```
+ odie app unprovision reference-project
+```

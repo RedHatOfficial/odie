@@ -1,0 +1,13 @@
+#!/usr/bin/env ansible-playbook
+#
+# Generate the kickstart file for the JumpHost.
+# This uses the root_password and admin_password to define the proper password
+# Roles:
+#   - kickstart-generator
+---
+- name: Generate kickstart files
+  hosts: jumphost
+  connection: local
+  gather_facts: yes
+  roles:
+    - kickstart-generator

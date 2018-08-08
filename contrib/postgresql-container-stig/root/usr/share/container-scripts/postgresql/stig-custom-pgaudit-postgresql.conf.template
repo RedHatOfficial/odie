@@ -1,0 +1,3 @@
+
+# enable pgaudit for STIG
+shared_preload_libraries = 'pgaudit'

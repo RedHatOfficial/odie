@@ -1,0 +1,32 @@
+- block:
+  - name: Confirm that amq cert file is PEM format
+    command: openssl x509 -in {{ project.path }}/{{ project.config.properties.amq_pem_cert_file }}
+    register: results
+    ignore_errors: yes
+
+  - name: Convert amq cert file from DER to PEM format
+    command: openssl x509 -inform der -in {{ project.path }}/{{ project.config.properties.amq_pem_cert_file }} -out {{ project.path }}/{{ project.config.properties.amq_pem_cert_file }}
+    when: "results.rc != 0"
+
+  - name: Convert cert to imtermediate p12 format
+    command: openssl pkcs12 -export -inkey {{ project.path }}/{{ project.config.properties.amq_pem_key_file }} -in {{ project.path }}/{{ project.config.properties.amq_pem_cert_file }} -certfile {{ project.path }}/{{ project.config.properties.amq_pem_cert_file }} -password pass:{{ project.config.properties.amq_keystore_password }} -out {{ project.path }}/{{ project.config.properties.amq_pem_cert_file }}.p12
+
+  - name: Convert p12 to JKS format
+    command: keytool -importkeystore -destkeystore {{ project.path }}/{{ project.config.properties.amq_keystore_file }} -srckeystore {{ project.path }}/{{ project.config.properties.amq_pem_cert_file }}.p12 -srcstoretype PKCS12 -srcalias 1 -destalias 1 -srcstorepass {{ project.config.properties.amq_keystore_password }} -deststorepass {{ project.config.properties.amq_keystore_password }} -noprompt
+
+  - name: Delete intermediate p12 cert
+    file:
+      path: "{{ project.path }}/{{ project.config.properties.amq_pem_cert_file }}.p12"
+      state: absent
+
+  - name: Set ownership of JKS file
+    file:
+      path: "{{ project.path }}/{{ project.config.properties.amq_keystore_file }}"
+      state: file
+      owner: admin
+      group: admin
+      mode: 0640
+
+  when: project.config.properties.amq_pem_cert_file is defined and project.config.properties.amq_pem_key_file is defined and project.config.properties.amq_keystore_file is defined and project.config.properties.amq_keystore_password is defined
+  tags:
+    - cert_conversion

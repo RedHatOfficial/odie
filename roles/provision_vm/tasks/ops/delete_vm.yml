@@ -1,0 +1,25 @@
+- name: "Checking {{hostname}} result"
+  virt:
+    name: "{{ hostname }}"
+    command: status
+    uri: "{{kvm_uri}}"
+  register: result
+  ignore_errors: true
+
+
+- name: Shutdown VM
+  include: vm_state.yml
+  vars:
+    state: "shutdown"
+    command: "destroy"
+  ignore_errors: true
+  when: result is defined and result.status == "running"
+
+- name: Sleeping 5 seconds
+  pause:
+    seconds: 5
+
+- name: "Undefining {{hostname}}"
+  command: "virsh undefine {{hostname}} --remove-all-storage"
+  when: result is defined
+  ignore_errors: true

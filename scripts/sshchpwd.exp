@@ -1,0 +1,237 @@
+#!/usr/bin/expect -f
+#
+# /usr/local/bin/sshchpwd.exp
+#
+# Expect script to change login passwords using SSH, with support for one-time
+# tokens (like SecurID), expired passwords (changed before arriving at the
+# prompt), on Solaris, AIX, Linux, etc.
+#
+# License: GPLv3
+# License URI: http://www.gnu.org/licenses/gpl.txt
+#
+# Copyright 2012-2016 Jean-Sebastien Morisset (http://surniaulula.com/)
+#
+# Example:
+#
+#	$ export OLD_PASSWORD="oldpwd"
+#	$ export NEW_PASSWORD="newpwd"
+#	$ ./sshchpwd {server} {port} {token}
+#
+# The {port} and {token} command-line parameters are optional. If the server
+# uses SecurID (or another one-time password), enter it on the command-line as
+# the third parameter.
+
+set timeout 15
+set server [lindex $argv 0]
+set port [lindex $argv 1]
+set tokpwd [lindex $argv 2]
+set oldpwd $env(OLD_PASSWORD)
+set newpwd $env(NEW_PASSWORD)
+set prompt "\[>%\\$#\] "
+
+if { $port == "" }  { set port "22" }
+if { $tokpwd == "" }  { set tokpwd $oldpwd }
+
+send_user "connecting to $server on port $port\n"
+spawn ssh -p $port $server
+
+# Mission of this first expect - get to the shell command prompt. If the
+# password is expired and we have to change it before getting to the prompt,
+# then exit 0 (success).  
+
+expect {
+	"(yes/no)? " { 
+		send_user " (detected unknown host key - accepting)\n"
+		send "yes\n"
+		send_user " (continuing expect loop)\n"
+		exp_continue
+	}
+	"assword:" { 
+		send_user " (detected password login prompt - possibly token)\n"
+		send "$tokpwd\n" 
+		expect {
+			" UNIX password:" {
+				send_user " (detected additional password prompt - old password)\n"
+				send "$oldpwd\n" 
+				send_user " (continuing expect loop)\n"
+				exp_continue
+			}
+			-nocase "old password:" {
+				send_user " (detected password expired prompt)\n"
+				send "$oldpwd\n" 
+				send_user " (continuing expect loop)\n"
+				exp_continue
+			}
+			-re "not match the|password mismatch" {
+				send_user " (assuming expired password change failed)\n"
+				send "passwd\n" 
+				expect {
+					-nocase "old password:" {
+						send_user " (trying with new password)\n"
+						send "$newpwd\n" 
+						expect {
+							-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:" {
+								send_user "\nPassword is current.\n"
+								exit 0
+							}
+							"not match the" {
+								send_user "\nPassword change failed.\n"
+								exit 1
+							}
+							default {
+								send_user "\nPassword change failed.\n"
+								exit 1
+							}
+						}
+					}
+					default {
+						send_user "\nPassword change failed.\n"
+						exit 1
+					}
+				}
+			}
+			-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:" {
+				send "$newpwd\n" 
+				expect {
+					"between changes." {
+						send_user "\nPassword change failed.\n"
+						exit 1
+					}
+					-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:" {
+						send "$newpwd\n" 
+						expect {
+							-re "$prompt" { 
+								send_user " (detected shell command prompt)\n"
+								send_user "Password successfully changed.\n"
+								exit 0
+							}
+							"Connection to " { 
+								send_user " (detected connection closed - assuming password change successful)\n"
+								send_user "Password successfully changed.\n"
+								exit 0
+							}
+							default {
+								send_user "\nPassword change failed.\n"
+								exit 1
+							}
+						}
+					}
+				}
+			}
+			"assword:" {
+				send "$newpwd\n" 
+				expect {
+					" UNIX password:" {
+						send_user "\nNew password is expired!\n"
+						exit 1
+					}
+					-nocase "old password:" {
+						send_user "\nNew password is expired!\n"
+						exit 1
+					}
+					"assword:" {
+						send_user "\nAutomated login failed.\n"
+						exit 1
+					}
+					-re "$prompt" { 
+						send_user " (detected shell command prompt)\n"
+						send_user "Password is current.\n"
+						exit 0
+					}
+					default {
+						send_user "\nAutomated login failed.\n"
+						exit 1
+					}
+				}
+			}
+			-re "$prompt" { send_user " (detected shell command prompt)\n" }
+		}
+	}
+	-re "$prompt" { send_user " (detected shell command prompt)\n" }
+}
+
+send "\n"
+
+expect {
+	-re "$prompt" {
+		send_user " (changing password at prompt)\n"
+		send "passwd\n" 
+		expect {
+			-re "\[oO\]ld \[pP\]assword:| UNIX \[pP\]assword:" {
+				send "$oldpwd\n" 
+				expect {
+					"You must wait longer" {
+						send_user "\nPassword change failed.\n"
+						exit 1
+					}
+					-re "not match the|password mismatch" {
+						send "passwd\n" 
+						expect {
+							-nocase "old password:" {
+								send_user " (trying with new password)\n"
+								send "$newpwd\n" 
+								expect {
+									-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:" {
+										send_user "\nPassword is current.\n"
+										exit 0
+									}
+									"not match the" {
+										send_user "\nPassword change failed.\n"
+										exit 1
+									}
+									default {
+										send_user "\nPassword change failed.\n"
+										exit 1
+									}
+								}
+							}
+							default {
+								send_user "\nPassword change failed.\n"
+								exit 1
+							}
+						}
+					}
+					-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:" {
+						send "$newpwd\n" 
+						expect {
+							"between changes." {
+								send_user "\nPassword change failed.\n"
+								exit 1
+							}
+							-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:" {
+								send "$newpwd\n" 
+								expect {
+									-re "$prompt" { 
+										send_user " (detected return to shell command prompt)\n"
+										send_user "Password successfully changed.\n"
+										exit 0
+									}
+									default {
+										send_user "\nPassword change failed.\n"
+										exit 1
+									}
+								}
+							}
+							"BAD PASSWORD" {
+								send_user "\nPassword change failed.\n"
+								exit 1
+							}
+							default {
+								send_user "\nPassword change failed.\n"
+								exit 1
+							}
+						}
+					}
+					default {
+						send_user "\nPassword change failed.\n"
+						exit 1
+					}
+				}
+			}
+		}
+	}
+	default {
+		send_user "\nAutomated login failed.\n"
+		exit 1
+	}
+}

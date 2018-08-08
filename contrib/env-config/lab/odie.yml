@@ -1,0 +1,66 @@
+# ODIE Version - 0.5.1
+
+#odie_properties_backup: True
+
+#ansible_ssh_user: admin
+
+deploy_openshift: True
+deploy_registry: True
+install_openshift: True
+deploy_logging: False
+deploy_metrics: True
+deploy_cns: true
+deploy_cloudforms: false
+
+setup_htpasswd_accounts: True
+
+enable_audit_log: True
+
+# The primary directories for ODIE
+odie_root_dir: /opt/odie/
+odie_src_dir: "{{odie_root_dir}}/src"
+odie_inventory_dir: "{{odie_src_dir}}/inventory"
+odie_output_dir: "{{odie_src_dir}}/output"
+kickstart_dir: /opt/odie/kickstart
+odie_contrib_bin: "{{odie_src_dir}}/contrib/bin"
+odie_images_dir: "{{odie_output_dir}}/images"
+odie_properties_output_dir: "{{odie_inventory_dir}}/group_vars/all"
+
+# The setup of rsyslog exporting defaults to OFF. You must uncomment this variable
+# and set it to 'true' to enable rsyslog exporting.
+setup_rsyslog_export: False
+
+# The hostname of the rsyslogd server to export to
+# 
+# External rsyslog server to export to. This MUST BE UNCOMMENTED AND
+# SET manually if setup_rsyslog_export is set to 'true' as there
+# is no default.
+#rsyslog_export_hostname: lbnfs01.lab.local
+
+# The protocol to use for the external rsyslogd server
+# 
+# Specify either udp or tcp for the external rsyslog server. If this
+# variable is left commented or not set at all, it will default to
+# udp to export to.
+#rsyslog_export_protocol: udp
+
+# The port to use for the external rsyslogd server
+# 
+# Specify the port for the external rsyslog server. If this
+# variable is left commented or not set at all, it will default
+# to 514.
+#rsyslog_export_port: 514
+
+#Configure a storage location for captured logs on the host defined by rsyslog_export_hostname
+#remove_rsyslog_files: /var/log/hosts/
+
+enable_dhcp: true
+#temp_dhcp_ip: '172.27.168.1'
+ip_range_start: '192.168.124.100'
+ip_range_end: '192.168.124.200'
+
+#enable_pxe: false
+#stage_pxe: true
+rhel_iso: /var/iso/rhel-server-7.5-x86_64-dvd.iso
+#kickstart_media: true
+

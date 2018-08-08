@@ -1,0 +1,2 @@
+- include: dnsmasq_configuration.yml tags=dhcp,pxe
+

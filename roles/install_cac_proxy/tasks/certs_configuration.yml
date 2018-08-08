@@ -1,0 +1,113 @@
+---
+- name: Attempt to change into project
+  shell: /usr/bin/oc project {{pivproxy_namespace}} {{oc_config}}
+  ignore_errors: true
+  register: project_change
+
+- name: Delete if {{pivproxy_namespace}} exists
+  command: /opt/odie/src/scripts/delete-project.sh {{pivproxy_namespace}}
+  delegate_to: localhost
+  when: project_change.rc == 0
+
+- name: Create project {{pivproxy_namespace}}
+  shell: /usr/bin/oc new-project {{pivproxy_namespace}} {{oc_config}}
+  ignore_errors: true
+  register: project_creation
+
+- name: Failout if project creation fails
+  fail:
+    msg: "Couldn't create {{pivproxy_namespace}} :: {{ project_creation.stdout }}"
+  when: project_creation.rc == 1
+
+- name: Removing {{certs_output_dir}}
+  file:
+    path:  "{{certs_output_dir}}"
+    state: absent
+
+- name: Recreate {{certs_output_dir}}
+  file:
+    path:  "{{certs_output_dir}}"
+    state: directory
+
+
+- name: Copy over Certificates
+  synchronize:
+    src: "{{ certs_dir }}"
+    dest: "/opt/odie/config/"
+    compress: no
+    set_remote_user: False
+    rsync_path: "sudo rsync"
+  become: no
+
+- name: Create PIV Proxy - Signer Cert
+  shell: >
+    /usr/bin/oc adm ca create-signer-cert --cert={{certs_output_dir}}/proxyca.crt --key={{certs_output_dir}}/proxyca.key --name='openshift-proxy-signer@$(date +%s)' --serial={{certs_output_dir}}/proxyca.serial.txt {{oc_config}}
+
+- name: Get proxyca.crt onto jumphost
+  fetch:
+    src: "{{certs_output_dir}}/proxyca.crt"
+    dest: "{{certs_output_dir}}/proxyca.crt"
+    flat: true
+    fail_on_missing: yes
+
+- name: Create PIV Proxy - API Client Config
+  shell: >
+    /usr/bin/oc adm create-api-client-config --certificate-authority={{certs_output_dir}}/proxyca.crt --client-dir={{certs_output_dir}} --signer-cert={{certs_output_dir}}/proxyca.crt --signer-key={{certs_output_dir}}/proxyca.key --signer-serial={{certs_output_dir}}/proxyca.serial.txt --user='system:proxy' {{oc_config}}
+- name: Merge PIV Proxy - PIV Proxy PEM
+  shell: >
+    /usr/bin/cat {{certs_output_dir}}/system:proxy.crt {{certs_output_dir}}/system:proxy.key > {{certs_output_dir}}/piv_proxy.pem
+
+- name: PIV Proxy - OCP Client Secrets
+  shell: >
+      /usr/bin/oc secret new ose-pivproxy-client-secrets piv_proxy.pem={{certs_output_dir}}/piv_proxy.pem master-ca.crt=/etc/origin/master/ca.crt {{oc_config}}
+
+
+- name: Smartcard CA Secret > Convert DoD P7B format
+  shell: >
+    openssl pkcs7 -in {{pivproxy_ca_file}} -print_certs -out {{certs_output_dir}}/ca_chain.crt
+#
+- name: PIV Proxy - Smartcard CA Secret
+  shell: >
+      /usr/bin/oc secret new ose-pivproxy-smartcard-ca smartcard-ca.crt={{certs_output_dir}}/ca_chain.crt {{oc_config}}
+#
+- name: PIV Proxy - OCP Server Secrets
+  shell: >
+      /usr/bin/oc secret new ose-pivproxy-certs tls.key={{pivproxy_hostname_key}} tls.crt={{pivproxy_hostname_cert}} {{oc_config}}
+
+
+- name: Copy template over
+  copy:
+    src: files/ose-pivproxy-deployment-template.yml
+    dest: /tmp/ose-pivproxy-deployment-template.yml
+
+- name: Install Template
+  shell: >
+    /usr/bin/oc apply -f /tmp/ose-pivproxy-deployment-template.yml {{oc_config}}
+
+- name: Deploy template
+  shell: >
+    /usr/bin/oc new-app --template=ose-pivproxy -p P_PIVPROXY_PUBLIC_URL={{piv_hostname}} -p P_MASTER_PUBLIC_URL={{public_hostname}}:8443 -p P_NAMESPACE=odie -p P_IMAGE_NAME=cac-proxy {{oc_config}}
+
+- name: Setup YAML Identity Provider
+  delegate_to: localhost
+  copy:
+    dest: "{{temp_file}}"
+    content: |
+      oauthConfig.identityProviders:
+      - name: "ocp_pivproxy"
+        login: true
+        challenge: false
+        mappingMethod: add
+        provider:
+          apiVersion: v1
+          kind: RequestHeaderIdentityProvider
+          challengeURL: 'https://{{piv_hostname}}/challenging-proxy/oauth/authorize?${query}'
+          loginURL: 'https://{{piv_hostname}}/login-proxy/oauth/authorize?${query}'
+          #clientCA: /etc/origin/master/proxyca.crt
+          #clientCommonNames:
+          # - {{piv_hostname}}
+          # - system:proxy
+          headers:
+          - X-Remote-User
+          nameHeaders:
+          - X-Remote-User-Display-Name

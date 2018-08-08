@@ -1,0 +1,17 @@
+=== Contrib Bin
+
+This is a collection of open source utilties that are directly used by the ODIE installer or are generally useful for administrators.
+
+
+|===
+
+| Executable Name| Project | License | Description
+
+
+| 7z | ||
+| ag | ||
+| jq | ||
+| pigz | ||
+| `semver` | link:https://github.com/fsaintjacques/semver-tool[fsaintjacque/semver-tool] |link:https://github.com/fsaintjacques/semver-tool/blob/master/LICENSE[GPL 3.0] | Bash script for comparing link:http://semver.org/[Semver] strings
+| yaml  | ||
+|===

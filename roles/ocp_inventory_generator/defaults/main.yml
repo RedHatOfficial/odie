@@ -1,0 +1,43 @@
+# default 
+odie_playbook_dir: /opt/odie/src
+
+# These are used to put the versions into the docker image loading
+ocp_version: 3.9
+ocp_short_version: 3.9
+
+# Security Features
+#openshift_master_ldap_ca_file: /opt/odie/config/ldap-ca-cert # a path to your CA local from the jumphost
+
+common_package_list:
+  - libselinux-python
+  - vim-*
+  - git
+  - bash-completion
+  - tmux
+  - screen
+  - chrony
+  - ntp
+  - wget
+  - net-tools
+  - yum-versionlock
+  - iptables-services
+  - gcc
+
+openshift_package_list:
+  - bind-utils
+  - bridge-utils
+  - httpd-tools
+
+
+deploy_cns: "{{ groups['glusterfs']|length >= 3 }}"
+
+disk_prefix: "{% set vm_tech = lookup('pipe', 'dmidecode -s system-product-name' ) %} {% if vm_tech == 'KVM' or vm_tech == 'RHEV Hypervisor' %}/dev/vd{% else %}/dev/sd{% endif %}"
+
+# Logging / Metric Defaults
+logging_host_path: "/var/efk-logging"
+logging_elasticsearch_replica_count: "{{ groups['infra'] | length }}"
+metrics_host_path: "/var/efk-logging"
+metrics_cassandra_replica_count: "{{ groups['infra'] | length }}"
+
+
+inventory_output_path: "{{odie_playbook_dir}}/inventory/inventory"

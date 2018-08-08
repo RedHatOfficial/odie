@@ -1,0 +1,19 @@
+---
+- name: Include variables form install_cac_proxy role
+  include_vars: 
+    file: /opt/odie/src/roles/install_cac_proxy/defaults/main.yml
+
+- name: Delete ose-pivproxy configmap
+  shell: "oc delete configmap/ose-pivproxy -n {{ pivproxy_namespace }}"
+
+- name: Copy group-sync and whitelist files to /tmp/
+  template:
+    src: "/opt/odie/src/contrib/ldap/pivproxy.conf"
+    dest: "/opt/odie/config/pivproxy.conf"
+    force: false
+
+- name: Create new ose-pivproxy configmap
+  shell: "oc create configmap ose-pivproxy --from-file=/opt/odie/config/pivproxy.conf -n {{ pivproxy_namespace }}"
+
+- name: Rollout latest deployment config after updating configmap
+  shell: "oc rollout latest ose-pivproxy -n {{ pivproxy_namespace }}"

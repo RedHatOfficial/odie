@@ -1,0 +1,9 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Unprovision Application/Project Components
+  hosts: localhost
+  roles:
+    - ocp_undeploy
+  tasks:
+    - debug:
+        var: projects

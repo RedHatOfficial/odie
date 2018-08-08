@@ -1,0 +1,106 @@
+#!/usr/bin/env ansible-playbook
+- name: Configure KVM host
+  hosts: localhost
+  connection: local
+  tags:
+    - passwd
+  tasks:
+
+    - name: Ensure 'expect' is installed
+      yum:
+        name: expect
+        state: present
+
+    - name: Reset jumphost's initial password
+      shell: OLD_PASSWORD=odie NEW_PASSWORD=odiejumphost /opt/odie/src/scripts/sshchpwd.exp root@{{ groups['jumphost'][0] }}
+      register: password_reset
+      retries: 5
+      until: password_reset.rc == 0
+
+    - name: Ensure nfs service is enabled in firewall
+      firewalld:
+        service: nfs
+        permanent: true
+        state: enabled
+
+    - name: Reload firewalld
+      command: firewall-cmd --reload
+      
+    - name: Ensure NFS mount points exist
+      file:
+        dest: "{{ item }}"
+        mode: 0744
+        state: directory
+        owner: nfsnobody
+        group: nfsnobody
+      with_items:
+        - "/opt/odie/config"
+        #- "/opt/odie/src"
+        #- "/var/iso"
+
+    - name: Copy exports
+      copy:
+        content: "{{ exports }}"
+        dest: /etc/exports
+      when: exports is defined
+
+    - name: Start NFS server
+      service:
+        name: "{{ item }}"
+        state: started
+      with_items:
+        - nfs
+        - nfs-server
+
+- name: Configure Jumphost
+  hosts: jumphost
+  gather_facts: false
+  tags:
+    - ssh
+  tasks:
+
+    - name: Configure host->jumphost ssh key
+      command: "sshpass -p 'odiejumphost' ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@{{ hostname }}"
+      delegate_to: localhost
+
+    - name: Make Directory
+      file:
+        dest: "~/.ssh"
+        mode: 0700
+        state: directory
+
+    - name: Sync SSH Key
+      copy:
+        src: "~/.ssh/id_rsa"
+        dest: "/root/.ssh/id_rsa"
+
+    - name: Sync SSH Key Public
+      copy:
+        src: "~/.ssh/id_rsa.pub"
+        dest: "/root/.ssh/id_rsa.pub"
+
+    - name: Copy authorized_keys
+      copy:
+        src: "~/.ssh/id_rsa.pub"
+        dest: "~/.ssh/authorized_keys"
+        mode: 0600
+
+    - name: Set File permissions on SSH keys
+      shell: "chmod 600 ~/.ssh/*"
+
+    - name: Mount Config Dir
+      include: mount_dir_nfs.yml
+      vars:
+        nfs_source: "/opt/odie/config/"
+        nfs_dest: "/opt/odie/config/"
+
+- name: Configure Jumphost
+  hosts: jumphost
+  gather_facts: false
+  tags:
+    - odie
+    - configure
+  tasks:
+
+    - name: Run Configure 
+      shell: "INTERACTIVE=0 /opt/odie/src/odie.sh configure"

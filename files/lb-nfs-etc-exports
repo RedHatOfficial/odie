@@ -1,0 +1,4 @@
+/ocp/registry *(rw,sync,no_all_squash,no_root_squash)
+/ocp/pvs *(rw,sync,no_all_squash,no_root_squash)
+/ocp/metrics *(rw,sync,no_all_squash,no_root_squash)
+/ocp/logging *(rw,sync,no_all_squash,no_root_squash)

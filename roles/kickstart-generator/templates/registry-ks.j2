@@ -1,0 +1,34 @@
+{% include './templates/includes/common-header.j2' %}
+{% include './templates/includes/disk-rhel.j2' %}
+
+# Second disk
+
+part pv.2 --fstype="lvmpv" --grow --size=10000 {{ luks_encryption  }}
+volgroup docker-vg pv.2
+
+%packages
+{% include './templates/includes/common-packages.j2' %}
+%end
+
+%addon com_redhat_kdump --disable --reserve-mb='128'
+%end
+
+%post
+{% include './templates/includes/common-footer.j2' %}
+
+{% include './templates/includes/docker-setup.j2' %}
+# TODO: Ansibilize everything below this line
+yum clean all
+#yum install -y docker-distribution firewalld
+
+#systemctl enable docker-distribution firewalld
+#systemctl start docker-distribution firewalld
+
+%end
+%post --nochroot
+
+#firewall-cmd --add-port 5000/tcp --permanent
+#firewall-cmd --reload
+
+eject -i 0
+%end

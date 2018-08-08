@@ -1,0 +1,34 @@
+---
+# Default variables file for kickstart-generator
+# ==============================================
+#
+# The values in this file should be overridden by group vars or
+# included vars in your main playbook.
+
+my_root_password: changeme123 # Plaintext/unencrypted password
+my_password_salt: mysalt # Keep this below 10 characters
+my_username: user
+my_password: 123changeme # Plaintext/unencrypted password
+my_repo_host: "{{ ansible_default_ipv4.address }}"
+my_timezone: UTC
+my_ssh_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+kickstart_dir: /tmp
+
+kickstart_media: false
+
+# disabled by default
+luks_encryption: ''
+
+# partition sizes
+partition_root: 35000
+partition_home: 10000
+partition_tmp: 10000
+partition_var: 40000
+partition_var_log: 20000
+partition_var_log_audit: 20000
+partition_swap: 8000
+
+disk_prefix: "{% set vm_tech = lookup('pipe', 'dmidecode -s system-product-name' ) %} {% if vm_tech == 'KVM' or vm_tech == 'RHEV Hypervisor' %}/dev/vd{% else %}/dev/sd{% endif %}"
+
+gpg_path: "/etc/pki/rpm-gpg/RPM-GPG-KEY-odie-build-server"

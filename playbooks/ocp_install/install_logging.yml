@@ -1,0 +1,22 @@
+#!/usr/bin/env ansible-playbook
+
+- name: Create PVs
+  hosts: infra
+  vars:
+    host_path: "{{ logging_host_path | default('/var/efk-logging') }}"
+    logging_pv_size: 10G
+  tasks:
+    - name: Create Directory
+      file:
+        path: "{{ host_path }}"
+        setype: 'svirt_sandbox_file_t'
+        state: directory
+        mode: 0777
+
+    - name: Set facts
+      set_fact:
+        openshift_hosted_logging_storage_kind: hostpath
+        openshift_logging_elasticsearch_hostmount_path: "/var/efk-logging"
+        openshift_logging_elasticsearch_replica_count: "{{ groups['infra'] | length }}"
+
+- include: /usr/share/ansible/openshift-ansible/playbooks/byo/openshift-cluster/openshift-logging.yml

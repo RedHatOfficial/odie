@@ -1,0 +1,5 @@
+---
+odie_group_all_vars_dir: /opt/odie/src/inventory/group_vars/all/
+odie_properties_output_dir: /opt/odie/config
+odie_properties_backup: no
+odie_semver: /opt/odie/src/contrib/bin/semver

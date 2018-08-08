@@ -1,0 +1,8 @@
+ODIE OpenShift Disconnected Installer for Enterprise
+====================================================
+
+OpenShift Disconnected Installer for Enterprise (ODIE) is a automated and fully self-contained installer for deployment of an OpenShift Container Platform (OCP) in a disconnected environment.
+
+It is built using Red Hat supported products and requires appropriate
+entitlements for usage.  Contact a Red Hat team member for additional
+information

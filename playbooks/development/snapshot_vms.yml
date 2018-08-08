@@ -1,0 +1,82 @@
+#!/usr/bin/env ansible-playbook
+#
+# This playbook will snapshot all of the VMs for the *-rhel block device
+#
+#
+# After this play runs, you will have the following hierarchy:
+#
+#   - hostname-base.qcow2
+#     - hostname-layer.qcow2
+#       - hostname-rhel.qcow2
+#
+#
+# Logic is as follows
+#   - Check whether the base layer exists
+#     - if it doesn't then hostname-rhel.qcow2 is moved to hostname-base.qcow2
+#
+#   - Check whether the layer image exists
+#     - If it does not:
+#       Create an empty image with a parent of the base image
+#
+#     - If it does:
+#       - rebase the layer image and the rhel image (EXPERIMENTAL)
+#
+#   - Create a new rhel image with a parent of qcow2
+#
+#
+---
+
+- name: Snapshot VMs
+  hosts: all
+  connection: local
+  vars:
+    pool_dir: "/images"
+    commit_layer: True
+  tasks:
+    - name: Shutdown VM
+      shell: "virsh destroy {{hostname}}; sleep 5"
+
+    - set_fact:
+        actual_disk: "{{pool_dir}}/{{hostname}}-rhel"
+        base_rhel: "{{pool_dir}}/{{hostname}}-base-rhel"
+        base_layer: "{{pool_dir}}/{{hostname}}-base-layer"
+
+    - name: Check if base_rhel exists
+      stat:
+        path: "{{base_rhel}}"
+        get_checksum: no
+      register: backup
+      ignore_errors: true
+
+    - name: No base layer found, use {{actual_disk}}
+      command: "mv {{actual_disk}} {{base_rhel}}"
+      when: backup.stat.exists == False
+
+    - name: Check if base layer exists
+      stat:
+        path: "{{base_layer}}"
+        get_checksum: no
+      register: layer
+      ignore_errors: true
+
+    - name: No ODIE backing layer found, create one
+      shell: "qemu-img create -f qcow2 -o backing_file={{base_rhel}} {{base_layer}}"
+      when: layer.stat.exists == False
+
+    - name: Commit layers
+      shell: "qemu-img commit {{actual_disk}} ; rm -f {{actual_disk}}"
+      when: layer.stat.exists == True and commit_layer == True
+
+    - name: Create new actual layer
+      shell: "rm -f {{actual_disk}} ; qemu-img create -f qcow2 -o backing_file={{base_layer}} {{actual_disk}}"
+
+    - name: Fixup Permissions
+      command: "chown qemu:qemu {{item}}"
+      with_items:
+        - "{{base_layer}}"
+        - "{{actual_disk}}"
+        - "{{base_rhel}}"
+
+    - name: Startup VM
+      shell: "virsh start {{hostname}}; sleep 1"
+

@@ -1,0 +1,11 @@
+- name: Start Up AMQ Pods
+  shell: "oc get dc -o name | grep amq | xargs oc scale --replicas=1 --timeout=5m"
+  register: startup_all_amq
+
+- name: Start Up PostgreSQL Pods
+  shell: "oc get dc -o name | grep postgres | xargs oc scale --replicas=1 --timeout=5m"
+  register: startup_all_postgres
+
+- name: Start Up EAP Pods
+  shell: "oc get dc -o name | grep app | grep -v postgres | xargs oc scale --replicas=1 --timeout=5m"
+  register: startup_all_eap

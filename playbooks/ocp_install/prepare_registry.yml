@@ -1,0 +1,62 @@
+- name: Install docker registry and firewall packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - docker
+    - docker-distribution
+    - firewalld
+
+- name: Open firewall ports for docker registry
+  firewalld:
+    port: 5000/tcp
+    permanent: true
+    state: enabled
+    immediate: yes
+
+# Per @stephen.palmer
+# make sure the /etc/sysconfig/docker file on the registry box has this entry:
+# INSECURE_REGISTRY='--insecure-registry registry.XXXXXXX:5000'
+
+# TODO: Do the pushing and tagging from the jumphost
+#
+#- name: Configure docker insecure registry settings
+#  lineinfile:
+#    # Ansible 2.3 uses path: /etc/sysconfig/docker
+#    dest: /etc/sysconfig/docker # Ansible <= 2.3
+#    regexp: '^INSECURE_REGISTRY='
+#    line: "INSECURE_REGISTRY='--insecure-registry localhost:5000'"
+
+
+- name: BUGFIX - Invalid systemd unit for docker-distribution https://access.redhat.com/solutions/3296561
+  lineinfile:
+    dest: /usr/lib/systemd/system/docker-distribution.service
+    state: absent
+    line: 'After=network.target'
+
+- name: BUGFIX - Invalid systemd unit for docker-distribution https://access.redhat.com/solutions/3296561
+  lineinfile:
+    dest: /usr/lib/systemd/system/docker-distribution.service
+    state: present
+    insertbefore: '\[Service\]'
+    line: 'After=network.target'
+
+- name: Start and enable docker-distribution services
+  systemd:
+    name: "{{ item }}"
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+  with_items:
+    - docker-distribution
+    - firewalld
+
+- name: Start and enable docker service
+  systemd:
+    name: "{{ item }}"
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+  with_items:
+    - docker
+

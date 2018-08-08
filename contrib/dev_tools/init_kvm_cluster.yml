@@ -1,0 +1,12 @@
+#!/usr/bin/env ansible-playbook
+#
+- name: Reboot bootableTest
+  hosts: localhost
+  tasks:
+  - name: define vm
+    virt:
+        name: bootableTest
+        state: running
+        uri: 'qemu+ssh://root@gateway/system'
+
+

@@ -1,0 +1,3 @@
+- name: restart_dnsmasq
+  include: restart_dnsmasq.yml
+

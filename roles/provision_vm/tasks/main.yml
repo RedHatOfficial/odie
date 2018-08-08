@@ -1,0 +1,17 @@
+---
+- include: config_etc_hosts.yml
+  tags: dns
+
+- name: Delete VM
+  include: ops/delete_vm.yml
+  tags:
+    - delete
+
+- include: setup_kvm.yml
+  tags: kvm
+
+- include: reset_known_hosts.yml
+  tags: hosts
+
+#- include: add_ssh_authorized_key.yml
+#  when: add_ssh_keys

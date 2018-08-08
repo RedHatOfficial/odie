@@ -1,0 +1,124 @@
+
+
+== config.yml Reference
+
+[[bookmark-config-yml]]
+
+=== Overview
+
+Within the new application convention, there are going to be two variations or types of `config.yml` files, one at the project level and one at the application level. For example in the reference-app there are two `config.yml` files, one at the project level, and one at the application level.
+
+```
+/opt/c2sb/projects/
+└── reference-project
+    ├── apps
+    │   └── reference-app
+    │       ├── certs
+    │       ├── **config.yml**
+    │       ├── helloworld-mdb-dc.envvars
+    │       ├── images
+    │       │   └── helloworld-images.tar.gz
+    │       ├── properties
+    │       │   └── helloworld.properties
+    │       └── templates
+    │           └── c2sb-routes.yaml
+    ├── build.properties
+    ├── certs
+    │   ├── broker-amq-ssl.jks
+    │   ├── jboss-helloworld-mdb.lab.iad.consulting.redhat.com.jks
+    │   └── trusts.jks
+    └── **config.yml**
+```
+=== Project Level config.yml
+
+The project level `config.yml` defines the variables and values to be used at the project level. These options will be used project wide and across all applications.
+
+[width="100%"]
+|=======
+|*Variable Type*  | *Variable Name* | *Required*  | *Description* |*Example*
+.4+| properties   | amq_keystore_file | *Required* | Java Keystore File containing the private/public certificate entry for the AMQ Broker | `certs/broker-amq-ssl.jks`
+                  | amq_keystore_password | *Required* | Password for the Java Keystore File specified by the `amq_keystore_file` | `brokerPassword`
+                  | truststore_file | *Required* | Java Keystore File containing the public certificates to use to verify in two-way TLS | `certs/trusts.jks`
+                  | truststore_password | *Required* | Password for the Java Keystore File specified by the `truststore_file` | `trustsPassword`
+.2+| env          | AMQ_IMAGE_NAME | *Required* | OCP Docker image name to be used for AMQ, this will likely not need to be changed | `amq62-openshift:latest`
+                  | AMQ_ROUTE_HOST | Optional | FQDN to use for the route servicing EAP, if not set, defaults to  `broker-amq-ssl-${PROJECT_NAME}.<default_subdomain>` | `broker-amq-ssl-reference-project.aoc.rhc-lab.iad.redhat.com`
+|=======
+
+Below is the project-level `config.yml` file for the reference-project (`/opt/c2sb/projects/reference-project/config.yml`)
+
+```
+properties:
+  amq_keystore_file: certs/broker-amq-ssl.jks
+
+  # AMQ_KEYSTORE_PASSWORD: Password for the Java Keystore File specified by the AMQ_KEYSTORE_PASSWORD
+  #   REQUIRED
+  amq_keystore_password: brokerPassword
+
+  # TRUSTSTORE_FILE: Java Keystore File containing the public certificates to use to verify in two-way TLS.
+  #   REQUIRED
+  truststore_file: certs/trusts.jks
+
+  # TRUSTSTORE_PASSWORD: Password for the Java Keystore File specified by the *<java-truststore-file-file>*
+  #   REQUIRED
+  truststore_password: trustsPassword
+
+env:
+  # AMQ_IMAGE_NAME: OCP image stream name to be used for AMQ, this will likely not need to be changed
+  #   REQUIRED
+  - AMQ_IMAGE_NAME=amq62-openshift:latest
+  #AMQ_IMAGE_NAME=jboss-amq-62:latest
+```
+
+=== Application Level config.yml
+
+The application level `config.yml` defines the variables and values to be used at the individual application level. These options will be used specifically for that application.
+
+
+[width="100%"]
+|=======
+|*Variable Type*  | *Variable Name* | *Required*  | *Description* |*Example*
+| image_streams   | reference-app | *Required* | This is the name of the image-stream that will be created by the `c2sb app export` command | `reference-app:latest`
+.3+| properties   | keystore_file | *Required* | Java Keystore File containing the private/public certificate entry for the EAP server to use | `certs/jboss-helloworld-mdb.lab.iad.consulting.redhat.com.jks`
+                  | keystore_password | *Required* | Password for the Java Keystore File specified by the `keystore_file` | `eapPassword`
+                  | keystore_alias | *Required* | Alias for the private/public certificate entry in the Java Keystore File specified by the `keystore_file` | `jboss-helloworld-mdb-entry`
+.5+| env          | EAP_IMAGE_NAME | *Required* | OCP Docker image name to be used for EAP, this will likely not need to be changed | `eap64-openshift:1.5-14`
+                  | POSTGRES_IMAGE_NAME | *Required* | OCP Docker image name to be used for PostgreSQL, this will likely not need to be changed | `rhscl/postgresql-95-rhel7:latest`
+                  | EAP_OPENSHIFT_DATA_DIR | *Required* | The directory where the scripts will mount the PVC for the persistent storage for EAP, this will likely not need to be changed | `/data`
+                  | EAP_READINESS_PROBE_PATH | Optional | The url that the OCP readiness probe should use to ensure that the application is running and ready to take requests. If this is not set, it will default to `/${APPLICATION_NAME}/` | `./reference-app/`
+                  | EAP_ROUTE_HOST | Optional | FQDN to use for the route servicing EAP, if not set, defaults to `${APPLICATION_NAME}-services-internal-${PROJECT_NAME}.<default_subdomain>` | `reference-app-services-internal-reference-project.aoc.rhc-lab.iad.redhat.com`
+|=======
+
+```
+image_streams:
+  - reference-app:latest
+
+properties:
+
+  # KEYSTORE_FILE: Java Keystore File containing the private/public certificate entry for the EAP server to use
+  #   REQUIRED
+  keystore_file: certs/jboss-helloworld-mdb.lab.iad.consulting.redhat.com.jks
+
+  # KEYSTORE_PASSWORD: Password for the Java Keystore File specified by the *<java-keystore-file>*
+  #   REQUIRED
+  keystore_password: eapPassword
+
+  # KEYSTORE_ALIAS: Alias for the private/public certificate entry in the Java Keystore File specified by the *<java-keystore-file>*
+  #   REQUIRED
+  keystore_alias: jboss-helloworld-mdb-entry
+
+env:
+- EAP_IMAGE_NAME=eap64-openshift:1.5-14
+# POSTGRES_IMAGE_NAME: OCP Docker image name to be used for PostgreSQL, this will likely not need to be changed
+#   REQUIRED
+- POSTGRES_IMAGE_NAME=rhscl/postgresql-95-rhel7:latest
+- EAP_OPENSHIFT_DATA_DIR=/data
+
+# EAP_READINESS_PROBE_PATH: The url that the OCP readiness probe should use to ensure that the application is running and ready to take requests. If this is not set, it will default to `/${APPLICATION_NAME}/`
+#   OPTIONAL
+# - EAP_READINESS_PROBE_PATH=./reference-app/
+
+# EAP_ROUTE_HOST: FQDN to use for the route servicing EAP, if not set, defaults to  `broker-ssl-amq-${PROJECT_NAME}.<environment-domain-name>`
+#   OPTIONAL
+#EAP_ROUTE_HOST=helloworld-smoketest.cloudapps.rhc-lab.iad.redhat.com
+- MAX_CONNECTIONS=250
+```

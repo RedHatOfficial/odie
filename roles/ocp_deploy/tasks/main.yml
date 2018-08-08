@@ -1,0 +1,86 @@
+- name: Convert Project Certificates as needed
+  include: project_cert_conversion.yml
+  tags:
+    - cert_conversion
+  loop_control:
+    loop_var: project
+  with_items:
+    - "{{ projects }}"
+
+- name: Add trusted certificates to trusts.jks
+  include: ca_cert_conversion.yml
+  tags:
+    - cert_conversion
+  loop_control:
+    loop_var: project
+  with_items:
+    - "{{ projects }}"
+
+
+- name: Convert Application Certificates as needed
+  include: app_cert_conversion.yml
+  tags:
+    - cert_conversion
+  vars:
+   project: "{{item[0]}}"
+   app: "{{item[1]}}"
+  with_subelements:
+    - "{{ projects }}"
+    - apps
+
+- name: Create and provision Project Metadata
+  include: provision_project.yml
+  loop_control:
+    loop_var: project
+  tags:
+    - project
+  with_items:
+    - "{{ projects }}"
+
+- name: Configuring Project Level PVs
+  include: project_pv_creation.yml tags=pv
+  tags:
+    - pv
+  loop_control:
+    loop_var: project
+  with_items:
+    - "{{ projects }}"
+
+- include: ocp_pv_creation.yml tags=pv
+  tags:
+    - pv
+  vars:
+    project: "{{item[0]}}"
+    app: "{{item[1]}}"
+  with_subelements:
+    - "{{ projects }}"
+    - apps
+
+- name: Provision Application Metadata
+  include: provision_apps.yml
+  tags:
+    - app
+  vars:
+    project: "{{item[0]}}"
+    app: "{{item[1]}}"
+  with_subelements:
+    - "{{ projects }}"
+    - apps
+
+- name: Peform S2I Builds
+  include: start_builds.yml
+  tags:
+    - build
+  with_items:
+    - "{{ projects }}"
+
+- name: Check that the Repplication Controllers have reached a Complete phase
+  include: wait_for_dc.yml
+  tags:
+    - app
+  vars:
+    project: "{{item[0]}}"
+    app: "{{item[1]}}"
+  with_subelements:
+    - "{{ projects }}"
+    - apps

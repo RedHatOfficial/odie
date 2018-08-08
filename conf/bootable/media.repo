@@ -1,0 +1,6 @@
+[InstallMedia]
+name=Red Hat Enterprise Linux 7.5
+mediaid=1476915898.899142
+metadata_expire=-1
+gpgcheck=0
+cost=500

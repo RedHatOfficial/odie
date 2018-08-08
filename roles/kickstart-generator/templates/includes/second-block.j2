@@ -1,0 +1,4 @@
+{%  if luks_passphrase is defined and luks_passphrase %}
+BLOCK_UUID=$(blkid {{ disk_prefix }}b1 -o value | head -1  )
+echo "luks-${BLOCK_UUID} UUID=${BLOCK_UUID} none" >> /etc/crypttab
+{% endif %}

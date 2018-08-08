@@ -1,0 +1,14 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: localhost
+  become: false
+  vars:
+    odie_properties_output_dir: output/
+    odie_properties_backup: no
+    targeted_upgrade_version: 0.3.0
+
+  vars_files:
+    - props.yml
+
+  roles:
+    - role: ../..

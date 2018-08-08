@@ -1,0 +1,19 @@
+# User specific aliases and functions
+
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+#alias tailodie='tail -f "/tmp/\$(ls -1tr /tmp | grep odie | tail -1)"'
+#alias toodie='cd /opt/odie'
+
+# Source global definitions
+if [ -f /etc/bashrc  ]; then
+    . /etc/bashrc
+fi
+
+export ANSIBLE_CONFIG=/opt/odie/src/ansible.cfg
+
+
+source /opt/rh/rh-ruby22/enable
+source /opt/rh/rh-maven33/enable
+export PATH=/opt/rh/rh-ruby22/root/usr/local/bin:/opt/rh/rh-maven33/${PATH:+:${PATH}}

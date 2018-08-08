@@ -1,0 +1,9 @@
+os_firewall_use_firewalld: false
+os_firewall_allow:
+- service: ssh
+  port: 22/tcp
+- service: docker
+  port: 5000/tcp
+
+
+deployment_type: openshift-enterprise

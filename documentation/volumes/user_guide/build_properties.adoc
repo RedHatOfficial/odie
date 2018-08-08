@@ -1,0 +1,24 @@
+=== Build Properties Reference
+IMPORTANT: These properties are being refactored as many of them will be directly inferred by the ODIE script based on the new directory structure.
+
+[[bookmark-props]]
+[width="100%"]
+|=======
+|*Variable Name*            |*Required* |*Description* |*Example*
+|EAP_IMAGE_NAME             |*Required* |OCP Docker image name to be used for EAP, this will likely not need to be changed  | jboss-eap-6/eap64-openshift
+|AMQ_IMAGE_NAME             |*Required* |OCP Docker image name to be used for AMQ, this will likely not need to be changed  | jboss-amq-6/amq62-openshift
+|POSTGRES_IMAGE_NAME        |*Required* |OCP Docker image name to be used for PostgreSQL, this will likely not need to be changed  | rhscl/postgresql-95-rhel7
+|PROJECT_NAME               |*Required* |The OCP project that should be provisioned created via the `oc new-project <PROJECT_NAME>` command | smoketest
+|APPLICATION_NAME           |*Required* |The OCP application that will be created and provisioned by the scripts | helloworld-mdb
+|BUILD_PATH                 |Optional |The application-build-directory that contains the application to be deployed. If not set, this defaults to `./${APPLICATION_NAME}/` | ./helloworld-mdb
+|EAP_READINESS_PROBE_PATH   |Optional |The url that the OCP readiness probe should use to ensure that the application is running and ready to take requests. If this is not set, it will default to `/${APPLICATION_NAME}/` | /jboss-helloworld-mdb/
+|[[property-amq-keystore]]AMQ_KEYSTORE_FILE              |*Required* |Java Keystore File containing the private/public certificate entry for the AMQ Broker |example_ca/jboss-helloworld-mdb.lab.iad.consulting.redhat.com.jks
+|AMQ_KEYSTORE_PASSWORD          |*Required* |Password for the Java Keystore File specified by the *<java-keystore-file>*.. |ExamplePassword#2017
+|[[property-keystore]]KEYSTORE_FILE              |*Required* |Java Keystore File containing the private/public certificate entry for the EAP server to use |example_ca/jboss-helloworld-mdb.lab.iad.consulting.redhat.com.jks
+|KEYSTORE_PASSWORD          |*Required* |Password for the Java Keystore File specified by the *<java-keystore-file>*.. |ExamplePassword#2017
+|KEYSTORE_ALIAS             |*Required* |Alias for the private/public certificate entry in the Java Keystore File specified by the *<java-keystore-file>* |jboss-helloworld-mdb-entry
+|[[property-truststore]]TRUSTSTORE_FILE            |*Required* |Java Keystore File containing the public certificates to use to verify in two-way TLS. |example_ca/trusts.jks
+|TRUSTSTORE_PASSWORD        |*Required* |Password for the Java Keystore File specified by the *<java-truststore-file-file>* |ExamplePassword#2017
+|EAP_ROUTE_HOST             |Optional |FQDN to use for the route servicing EAP, if not set, defaults to  `broker-ssl-amq-${PROJECT_NAME}.<environment-domain-name>`| broker-ssl-amq-smoketest.192.168.1.189.xip.io/
+|AMQ_ROUTE_HOST             |Optional |FQDN to use for the route servicing AMQ, if not set, defaults to `${APPLICATION_NAME}-services-internal-${PROJECT_NAME}.<environment-domain-name>`| helloworld-mdb-services-internal-smoketest.192.168.1.189.xip.io
+|=======

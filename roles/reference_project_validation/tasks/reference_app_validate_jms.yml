@@ -1,0 +1,40 @@
+- name: Get active eap pod name for reference-app
+  shell: oc get po -l app=reference-app -o jsonpath='{.items[*].metadata.name}'
+  register: mdb_test_eapPodName
+
+- debug:
+    msg: "{{ mdb_test_eapPodName.stdout }}"
+
+- name: "Tail logs from reference-app on pod {{ mdb_test_eapPodName.stdout }} asynchronosly for 60 seconds"
+  shell: "oc logs -f {{ mdb_test_eapPodName.stdout }} > {{ mdb_test_temp_log_file }} &"
+  async: 60
+  poll:
+
+- name: Execute amq Test Servlet in reference App
+  uri:
+    url: https://{{ requestedHostPage.stdout }}/reference-app/ODIEMDBServletClient?msg_count={{ mdb_test_message_count }}&uuid={{ mdb_test_uuid }}
+    validate_certs: no
+    return_content: yes
+  register: amqPage
+
+- name: Check response from amq test client
+  fail:
+  when: "'Sending messages to' not in amqPage.content"
+
+- name: Check response from amq test client
+  fail:
+  when: "'A problem occurred' in amqPage.content"
+
+- debug:
+    msg: "{{ mdb_test_temp_log_file }} - {{ mdb_test_uuid }}"
+
+- name: "Wait until messages are in the temp log file before continuing"
+  wait_for:
+    path: "{{ mdb_test_temp_log_file }}"
+    search_regex: "{{ item }}"
+    timeout: 9
+  with_items:
+    - [ "{{ mdb_test_uuid }}-1", "{{ mdb_test_uuid }}-2", "{{ mdb_test_uuid }}-3", "{{ mdb_test_uuid }}-4", "{{ mdb_test_uuid }}-5" ]
+
+- name: Cleanup temp log file
+  file: path="{{ mdb_test_temp_log_file }}" state=absent

@@ -1,0 +1,23 @@
+---
+- name: Install cert for jumphost
+  hosts: masters[0] # Safe to run on all masters?
+  vars:
+    jumphost_user: "system:jumphost"
+    public_hostname: "{{ hostvars[groups['lb_nfs'][0]].hostname }}"
+    oc_config: " --config=/etc/origin/master/admin.kubeconfig"
+  tasks:
+    - name: Generate Cert for Jumphost
+      shell: oc adm create-api-client-config --user="system:jumphost" --client-dir=/root/ocp/  --certificate-authority=/etc/origin/master/ca-bundle.crt  --signer-cert=/etc/origin/master/ca.crt --signer-key=/etc/origin/master/ca.key --signer-serial=/etc/origin/master/ca.serial.txt --public-master="https://{{public_hostname}}:8443" --master="https://{{hostname}}:8443"
+    
+    - name: Grant admin privileges
+      shell: oc adm policy add-cluster-role-to-user cluster-admin {{ jumphost_user }} {{ oc_config }}
+    
+    - name: Configure Jumphost user with cert
+      fetch:
+        src: /root/ocp/system:jumphost.kubeconfig
+        dest: /root/.kube/config
+        flat: true
+    
+    - name: Delete existing htpasswd logins
+      command: oc delete identity/htpasswd_auth:ocpadmin user/ocpadmin
+      ignore_errors: true

@@ -1,0 +1,99 @@
+
+
+== REFERENCE TABLES
+
+=== hosts.csv Reference Table
+
+|=======
+| hostname | ip | flavor | env | cns | disk1 | disk2 | disk3 | cpu | memory
+| FQDN of the host | IP Address of the host | Type of OCP server | Environment Label | Mark `X` to enable Container Native Storage, CNS, on third Disk for `node` | Size of disk1 in GB | Size of disk2 in GB | Size of disk3 in GB | CPU Core # | RAM in MB
+|=======
+
+`flavor` refers to one of the following OCP server flavors: `master`, `infra`, `node` (for a application node), `lb_nfs`, and `registry`.
+
+`env` is the label. This is useful ,if you have multiple clusters, to segregate them, e.g. `DEV`, `TEST`, `ACCEPT`, `PROD` for phased deployments.
+
+<<<
+
+Example `hosts.csv` file contents for a full stage or production install:
+
+```
+include::../../../contrib/env-config/full/hosts.csv[]
+```
+
+TIP: Example files are also located at `/opt/c2sb/config/hosts-default.csv.sample`, `/opt/c2sb/config/hosts-lab.csv.sample`, and `/opt/c2sb/config/hosts-full.csv.sample`, which may be used as reference to help assist with writing the files.
+
+All of the `hosts.csv` example files assume that the hosts are all using the same dns, gateway, and netmask settings as defined in `/opt/c2sb/config/env.yml`. If your hosts do not share these settings, you can instead set it individually by adding the needed `gateway`, `dns`, and `netmask` columns in to the hosts.csv similar to below. Note that any settings in the hosts.csv will overwrite those in `env.yml`.
+
+```
+hostname,ip,flavor,env,cns,disk1,disk2,disk3,cpu,memory,dns,gateway,netmask
+master01.lab.local,192.168.124.2,master,lab,,150,,,4,12288,192.168.124.1,192.168.124.1,255.255.255.0
+infra01.lab.local,192.168.86.3,infra,lab,,150,20,,3,8192,192.124.168.86.2,192.124.168.86.2,255.255.255.224
+...
+```
+
+=== c2sb.yml Reference Table
+
+This only covers options that may be modified as part of a standard installation.
+
+|=======
+| **Property Name** | **Value Explanation** | **Required?** | **Example/Default Value**
+| `deploy_logging` | Deploy the EFK Stack | yes | `False`
+| `deploy_metrics` | Deploy the metrics subsystem to monitor PODs for utilization | yes | `False`
+| `enable_audit_log` | Enable audit logging to comply with DISA RHEL7 STIG | yes | `True`
+| `setup_rsyslog_export` | Set to true to enable the RHEL hosts to offload their logs to a Remote Syslog (rsyslog) server. If it is set to `true`, `rsyslog_export_hostname` must also be set. (Commented out by default) | no | `true`
+| `rsyslog_export_hostname` | Sets the hostname of the Remote Syslog server (rsyslog) for the RHEL hosts to use to offload their logs to. If `setup_rsyslog_export` is set to `true`, this must be set. (Commented out by default) | no | `lbnfs01.lab.local`
+| `rsyslog_export_protocol` | Set to the port to use for the external rsyslogd server. If it is set, `rsyslog_export_hostname` must also be set. (Commented out by default) | no | `514`
+| `setup_rsyslog_remote_server` | Configures a rsyslog server on the host defined by the rsyslog_export_hostname. (Commented out by default) | no | `True`
+|=======
+
+=== env.yml Reference Table
+
+|=======
+| **Property Name** | **Value Explanation** | **Required?** | **Example/Default Value**
+| `default_subdomain` | The default subdomain is used for the wildcard DNS routing. Per the Unified Install Guide this should be set to *<OCP_SUBDOMAIN>.<LDAP_DOMAIN>* This is used only as the default routes.  If preferred, administrators have the ability to explicitly define DNS entries and not rely upon a wildcard.  Please see the Architectural Blueprint for more information about this. | **yes** | `aoc.rhc-lab.iad.redhat.com`
+| `dns` | This is the DNS hostname to be used by the RHEL hosts. Optionally, these can be determined on a per-host basis via the hosts.csv file. (Commented out by default) | no if set in hosts.csv | `192.168.1.2`
+| `gateway` | This is the network gateway to be used by the RHEL hosts. Optionally, these can be determined on a per-host basis via the hosts.csv file. (Commented out by default) | no if set in hosts.csv | `192.168.1.1`
+| `netmask` | This is the netmask to be used by the RHEL hosts.  Optionally, these can be determined on a per-host basis via the hosts.csv file. (Commented out by default) | no if set in hosts.csv | `192.168.1.21`
+| `configure_ntp_clients` | Set to `true` if you want to use a NTP server to provide synchronized time support. If set to `true`, you must also set a value of `ntp_server`. (Commented out by default) | no | 'true'
+| `ntp_server` | If you are configuring NTP and `configure_ntp_clients` is set to `true` this property sets the value of the hostname of the NTP server to use. Uncomment and use this to set the NTO server hostname | no | 'time.lab.local'
+|=======
+
+=== ks.yml Reference Table
+
+|=======
+| **Property Name** | **Value Explanation** | **Required?** | **Example/Default Value**
+| `my_repo_host` | The YUM Repository configured for this disconnected environment on the JumpHost. This repository is automatically configured via the "c2sb setup" during the JumpHost. If not set, this is defaulted to the FQDN for the jumphost. Depending on the site, you may wish to host the YUM repository on a dedicated host or re-purpose an JumpHost.  You can point to that server here:. (Commented out by default) | no | `192.168.1.1`
+|=======
+
+<<<
+
+=== secret.yml Reference Table
+
+The contents of the `secret.yml` file should be updated to use passwords other than the default.
+
+|=======
+| **Property Name** | **Value Explanation** | **Required?**
+| `my_root_password` | The password to be used used for the root user on the RHEL Systems | **yes**
+| `my_username` | The user name to be used for the RHEL Systems | **yes**
+| `my_password` | The password to be used for the RHEL Systems, this should be STIG Compliant | **yes**
+| `my_password_salt` | The value to salt the `my_password` with. Must be between 6-10 characters, uppercase, lowercase, or numbers. | **yes**
+| `admin_username` | The username to be created as the primary admin account of the OpenShift cluster | **yes**
+| `admin_password` | The password to be created for the primary admin account, `admin_username` of the OpenShift cluster | **yes**
+| `luks_passphrase` | The passphrase used to encrypt the hard drive.  You will be prompted for this when booting the system. | **yes**
+|=======
+
+It is important that value of `my_password` and `my_root_password` properly conforms with the following DoD Requirements. Failure to do so will result in your cluster being in-accessible.  The default/example values of `my_password` and `my_root_password` are STIG compliant.
+
+* The password must contain at least one from each of the following character classes:
++
+** Uppercase letter/s
+** Lowercase letter/s
+** Base-10 digit/s
+** Nonalpanumeric special character/s
+
+* The password may have no have more than four consecutive characters from the same class.
+
+* The password may have no have more than two consecutive same characters.
+
+* The password must container at least 15 total characters.

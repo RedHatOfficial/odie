@@ -1,0 +1,48 @@
+image_streams:
+  - reference-app:latest
+
+properties:
+  # amq_pem_cert_file: This is the PEM format certificate to use for the AMQ Brokers SSL connection. this
+  #   is used in combination with amq_pem_key_file. If these are provided, ODIE will take these files, and
+  #   automatically convert them to the nessecary JKS format. The amq_keystore_file and amq_keystore_password
+  #   MUST still be set, as these will be used to set the filename and password for the resulting JKS file
+  #   that is produced using amq_pem_cert_file and amq_pem_key_file.
+  #   OPTIONAL
+  amq_pem_cert_file: certs/amq-reference-project.lab.iad.consulting.redhat.com.crt
+
+  # amq_pem_key_file: This is the private key to use for the AMQ Brokers SSL connection. this is used in
+  #   combination with amq_pem_cert_file. If these are provided, ODIE will take these files, and automatically
+  #   convert them to the nessecary JKS format. The amq_keystore_file and amq_keystore_password MUST still
+  #   be set, as these will be used to set the filename and password for the resulting JKS file that is
+  #   produced using amq_pem_cert_file and amq_pem_key_file.
+  #   OPTIONAL
+  amq_pem_key_file: certs/amq-reference-project.lab.iad.consulting.redhat.com.key
+
+  # amq_keystore_file: This is the JKS format certificate to use for the AMQ Brokers SSL connection
+  #   REQUIRED
+  amq_keystore_file: certs/amq-reference-project.lab.iad.consulting.redhat.com.jks
+
+  # amq_keystore_password: Password for the Java Keystore File specified by the AMQ_KEYSTORE_PASSWORD
+  #   REQUIRED
+  amq_keystore_password: ExamplePassword#2017
+
+  # truststore_file: Java Keystore File containing the public certificates to use to verify in
+  #   two-way TLS. Optionally, you can place PEM encoded certificates to be trusted in the
+  #   certs/CA/ directory. These certificates will be added to the truststore_file file specified
+  #   below. If the truststore_file specified below, does not exist, it will be created containing
+  #   the PEM certs in the certs/CA/ directory.
+  #   REQUIRED
+  truststore_file: certs/trusts.jks
+
+  # truststore_password: Password for the Java Keystore File specified by the *java-truststore-file-file*
+  #   REQUIRED
+  truststore_password: ExamplePassword#2017
+
+env:
+  # AMQ_IMAGE_NAME: OCP image stream name to be used for AMQ, this will likely not need to be changed
+  #   REQUIRED
+  - AMQ_IMAGE_NAME=amq62-openshift:latest
+  #AMQ_IMAGE_NAME=jboss-amq-62:latest
+  # AMQ_ROUTE_HOST: FQDN to use for the route servicing AMQ, if not set, defaults to `${APPLICATION_NAME}-services-internal-${PROJECT_NAME}.<environment-domain-name>`
+  #   OPTIONAL
+  #AMQ_ROUTE_HOST=amq-smoketest.rhc-lab.iad.redhat.com

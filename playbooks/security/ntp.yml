@@ -1,0 +1,25 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: NTP configuration
+  hosts: all:localhost
+  tasks:
+    - name: Check whether or not NTP is installed
+      yum:
+        name: ntp
+        state: present
+      register: ntp_installed
+
+    - name: Configure NTP Maxpoll Interval
+      lineinfile:
+        create: yes
+        dest: /etc/ntp.conf
+        regexp: ^#?maxpoll
+        line: maxpoll 10
+      notify: restart ntp
+
+  handlers:
+    - name: restart ntp
+      service:
+        name: ntpd
+        enabled: yes
+        state: restarted

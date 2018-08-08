@@ -1,0 +1,10 @@
+- include_vars: 
+    name: registry
+    file: "{{ item }}"
+
+- debug:
+    var: registry
+
+- name: push images {{ registry.name }}
+  include_role:
+    name: docker_push

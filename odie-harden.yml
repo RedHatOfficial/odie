@@ -1,0 +1,14 @@
+#!/usr/bin/env ansible-playbook
+---
+# CAC PRoxy must be installed seperately due to issues with
+#- include: playbooks/security/install_pivproxy.yml
+- include: playbooks/security/update_ansible_cfg.yml
+- include: playbooks/security/fips_check.yml
+- include: playbooks/security/oscap-remediation.yml
+- include: playbooks/security/ntp.yml
+- include: playbooks/security/aide.yml
+- include: playbooks/security/login_defs.yml
+- include: playbooks/security/firewalld.yml
+- include: playbooks/security/pam.yml
+- include: playbooks/security/ifcfg.yml
+- include: playbooks/security/netconfig.yml

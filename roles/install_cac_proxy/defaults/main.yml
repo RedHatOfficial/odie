@@ -1,0 +1,16 @@
+
+
+pivproxy_namespace: pivproxy
+
+certs_dir: /opt/odie/config/certs
+certs_output_dir: /opt/odie/config/certs-out
+
+pivproxy_ca_file: "{{certs_dir}}/ca.pem.p7b"
+pivproxy_hostname_cert: "{{certs_dir}}/pivproxy.crt"
+pivproxy_hostname_key: "{{certs_dir}}/pivproxy.key"
+
+
+ca_chain_cert: "{{certs_output_dir}}/ca_chain.crt"
+
+oc_config: " --config=/etc/origin/master/admin.kubeconfig"
+install_piv_proxy: False
