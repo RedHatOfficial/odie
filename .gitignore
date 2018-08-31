@@ -1,0 +1,51 @@
+# Project-specific
+secure.yml
+ssh/*
+last_log
+
+# Ansible retry files
+*.retry
+
+# swap
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-v][a-z]
+[._]sw[a-p]
+# session
+Session.vim
+# temporary
+.netrwhist
+*~
+# auto-generated tag files
+tags
+
+.idea
+
+#mac thing..
+.DS_Store
+
+#Atom Editor thing
+.remote-sync.json
+
+output/*
+output
+dist/*
+dist
+tmp/*
+output/*
+inventory/inventory
+inventory/hosts.csv
+inventory/group_vars/all
+
+
+# marker files for provisioning
+.odie-project-provision
+.odie-app-provision
+
+#ignore libreoffice  swp files
+*.csv#
+
+# ignore the built WAR file
+example_layout/projects/reference-project/apps/reference-app/build/reference-app/deployments/reference-app.war
+
+*.iml
