@@ -45,7 +45,7 @@
   rescue:
   - name: Delete manifest
     file:
-      src: "{{odie_images_dir}}/{{registry.name}}.yml"
+      path: "{{odie_images_dir}}/{{registry.name}}.yml"
       state: absent
 
 
