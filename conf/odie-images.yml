@@ -1,0 +1,10 @@
+registries:
+  odie:
+    name: odie
+    source_registry: localhost:5000
+    repos:
+      - odie/postgresql-95-rhel7-stig:{{psql_stig_version}}
+      - odie/postgresql-95-rhel7-stig:latest
+      - odie/cac-proxy:{{cac_proxy_version}}
+      - odie/cac-proxy:latest
+

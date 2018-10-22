@@ -58,35 +58,3 @@ registries:
 #      - rhgs3/rhgs-server-rhel7:latest
 #      - rhgs3/rhgs-volmanager-rhel7:latest
 
-  dockerio:
-    name: dockerio
-    source_registry: docker.io
-    repos:
-      - heketi/heketi:dev
-
-  xpaas:
-    name: xpaas
-    source_registry: registry.access.redhat.com
-    repos:
-      - jboss-eap-6/eap64-openshift:1.5-19
-      - jboss-eap-6/eap64-openshift:latest
-      - jboss-amq-6/amq62-openshift:1.5-4
-      - jboss-amq-6/amq62-openshift:latest
-      - rhscl/postgresql-95-rhel7:latest
-      - rhscl/postgresql-10-rhel7:latest
-  cfme:
-    name: cfme
-    source_registry: registry.access.redhat.com
-    repos:
-      - rhel7/rhel:latest
-      - rhel7/openscap:latest
-      - rhel7/rhel-tools:latest
-  odie:
-    name: odie
-    source_registry: localhost:5000
-    repos:
-      - odie/postgresql-95-rhel7-stig:{{psql_stig_version}}
-      - odie/postgresql-95-rhel7-stig:latest
-      - odie/cac-proxy:{{cac_proxy_version}}
-      - odie/cac-proxy:latest
-
