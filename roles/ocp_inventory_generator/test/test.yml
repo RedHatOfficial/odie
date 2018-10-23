@@ -8,7 +8,7 @@
     - ocp_inventory_generator
   vars:
     deploy_logging: true
-    deploy_metrics: true:w
+    deploy_metrics: true
 
 
 

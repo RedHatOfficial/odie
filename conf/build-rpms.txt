@@ -1,8 +1,5 @@
-createrepo
-docker
 expect
 genisoimage
-git
 isomd5sum
 java-1.7.0-openjdk-headless
 java-devel-openjdk
@@ -69,5 +66,4 @@ rh-ruby22-ruby-irb
 rh-ruby22-ruby-libs
 rh-ruby22-runtime
 rpm-sign
-xz
 yum-utils

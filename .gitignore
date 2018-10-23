@@ -50,3 +50,6 @@ example_layout/projects/reference-project/apps/reference-app/build/reference-app
 
 *.iml
 supplemental/
+
+# random files go in here
+scratch
