@@ -292,20 +292,11 @@ function copy_reference_project_bundle() {
   ln -sf ${BUNDLES_DIR}/${TAR_FILE} ${BUNDLES_DIR}/current
 }
 
-function configure() {
-  cd ${GIT_CLONE}
-
-  setup_web_server & spin $! "Setup web server"
-  run_cmd make import_pki & spin $! "Import Red Hat GPG Key"
-  run_cmd make webdirs & spin $! "Creating web directories for httpd content"
-  run_cmd make localrepos  & spin $! "Setting up local RPM repos"
-  test_local_repo & spin $! "Test local RPM Repo"
-  install_dependencies & spin $! "Install YUM dependencies"
+function generate_config() {
+  pushd ${GIT_CLONE}
   rm -f inventory/inventory
-  run_ansible_play "ODIE :: Configuration" ./odie-configure.yml
+  run_ansible_play "ODIE :: Generate Configuration Files" ./odie-generate.yml
   ${VERSION_SH} set configure ${INSTALLER_VERSION}
-
-  complete_message "JumpHost Configuration"
 
   cat <<GENERATEEOF
 
@@ -317,6 +308,20 @@ function configure() {
   ${bold}${yellow}WARNING:${normal} Any changes to these files will be overriden
 
 GENERATEEOF
+
+  popd
+}
+
+function setup() {
+  cd ${GIT_CLONE}
+
+  setup_web_server & spin $! "Setup web server"
+  run_cmd make import_pki & spin $! "Import Red Hat GPG Key"
+  run_cmd make webdirs & spin $! "Creating web directories for httpd content"
+  run_cmd make localrepos  & spin $! "Setting up local RPM repos"
+  test_local_repo & spin $! "Test local RPM Repo"
+  install_dependencies & spin $! "Install YUM dependencies"
+  complete_message "JumpHost Configuration"
 
 }
 
@@ -553,18 +558,21 @@ usage() {
 
         * ${bold}stage${normal}		-	copy the media from the ISO
         * ${bold}properties${normal}	-	generate the properties file based on the installed version
-        * ${bold}configure${normal}	-	configure the JumpHost and generate config files
-        * ${bold}diagnostics${normal}   -       run oc adm diagnostics with the current logged in user
+        * ${bold}setup${normal}		-	setup the JumpHost 
+        * ${bold}config${normal}	-	generate config files
         * ${bold}install${normal}	-	run the Ansible playbooks to install the cluster
         * ${bold}patch${normal}		-	patch the cluster
         * ${bold}harden${normal}	-	run the STIG remediation in the environment
         * ${bold}smoketest${normal}	-	deploy a reference application to verify the installation
-        * ${bold}validate${normal}	-	run the Ansible playbooks to validate the proper installation of the cluster
         * ${bold}ping${normal}		-	ping all the Ansible hosts to test configuration
         * ${bold}reboot${normal}	-	ping all the Ansible hosts to test configuration
         * ${bold}encrypt${normal}	-	encrypt the secret.yml and config.yml files
         * ${bold}decrypt${normal}	-	decrypt the secret.yml and config.yml files
         * ${bold}help${normal}		-	this help message
+
+      Broken:
+        * ${bold}diagnostics${normal}   -       run oc adm diagnostics with the current logged in user
+        * ${bold}validate${normal}	-	run the Ansible playbooks to validate the proper installation of the cluster
 
       Options:
         ${bold}--source DIR${normal}	-	the source directory of the ODIE media
@@ -711,16 +719,16 @@ do
       shift
       exit 0
       ;;
-    generate)
+    generate-config)
       header
-      echo "${bold}[${yellow}DEPRECATED${normal}${bold}] ${SCRIPT_NAME} generate${normal} command has been deprecated, use ${bold}${SCRIPT_NAME} configure${normal}"
       echo
-      configure
+      generate_config
       exit 0
       ;;
-    configure)
+    setup)
       header
-      configure
+      #echo "${bold}[${yellow}DEPRECATED${normal}${bold}] ${SCRIPT_NAME} setup${normal} command has been deprecated, use ${bold}${SCRIPT_NAME}what?${n}"
+      setup
       exit 0
       ;;
     harden)

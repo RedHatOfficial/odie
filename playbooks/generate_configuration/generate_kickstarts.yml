@@ -24,14 +24,6 @@
   roles:
     - kickstart-generator
 
-- name: Configure Apache HTTPD Kickstart Server
-  hosts: localhost
-  connection: local
-  tags:
-    - kickstart
-  roles:
-    - httpd-configure
-
 - name: Create OCP Inventory file
   hosts: localhost
   connection: local

@@ -74,6 +74,13 @@
         name: python-docker-py
         state: present
 
+- name: Configure Apache HTTPD Kickstart Server
+  hosts: localhost
+  connection: local
+  tags:
+    - kickstart
+  roles:
+    - httpd-configure
+
 - include: playbooks/operations/setup_dnsmasq.yml
-- include: playbooks/generate_configuration/generate_kickstarts.yml
 
