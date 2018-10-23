@@ -15,7 +15,6 @@ export EXPORT_DIR=${ODIE_EXPORT_DIRECTORY:-${OUTPUT_DIR}/exports}
 export PROJECTS_DIR=${ODIE_PROJECT_DIRECTORY:-${OUTPUT_DIR}/projects}
 export UPDATES_DIR=${ODIE_PLAYBOOK_UPDATES_DIRECTORY:-${OUTPUT_DIR}/src/playbooks/updates}
 export IMAGES_DIR=${ODIE_IMAGES_DIRECTORY:-${OUTPUT_DIR}/images}
-export BUNDLES_DIR=${ODIE_BUNDLES_DIRECTORY:-${OUTPUT_DIR}/bundles}
 export TARGET=master
 export LOG_NAME=/tmp/odie.log-`date +%Y-%m-%d-%H:%M:%S`
 export INTERACTIVE=${INTERACTIVE:-1}

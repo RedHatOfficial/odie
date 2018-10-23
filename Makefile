@@ -10,7 +10,7 @@ delta_media: setup_repos rpms pull_delta_images  pull_odie_images
 
 # everything is put into the same DVD now
 dvd: primary iso
-primary: clone_git_repo build_reference_app setup_scripts
+primary: clone_git_repo setup_scripts
 
 build: primary patch_iso
 
@@ -130,11 +130,6 @@ unsubscribe:
 
 clean_images:
 	rm -rf output/images
-
-build_reference_app:
-	cd contrib/reference-app && mvn clean install
-	mv contrib/reference-app/target/reference-app.war example_layout/projects/reference-project/apps/reference-app/build/reference-app/deployments/reference-app.war
-	./scripts/export-reference-bundle.sh
 
 build_postgres_stig:
 	VERSION=`cat contrib/postgresql-container-stig/VERSION` && docker build --no-cache -f contrib/postgresql-container-stig/Dockerfile.rhel7 contrib/postgresql-container-stig -t "localhost:5000/odie/postgresql-95-rhel7-stig:$${VERSION}" -t "localhost:5000/odie/postgresql-95-rhel7-stig:latest"

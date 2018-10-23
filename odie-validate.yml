@@ -23,26 +23,3 @@
         validate_certs: no
         return_content: yes
 
-- name: "Check access to registry-console-default"
-  hosts: all
-  tasks:
-    - uri:
-        url: "https://registry-console-default.{{ default_subdomain }}/"
-        validate_certs: no
-        return_content: yes
-
-- name: Check if reference-project is installed
-  hosts: localhost
-  tasks:
-    - name: Check if reference-project is installed
-      shell: |
-        if [ `oc projects -q | grep 'reference-project'` ]; then echo true; else echo false; fi
-      register: reference_project_available
-
-- name: Validate Reference Project
-  hosts: localhost
-  tasks:
-    - name: Validate Reference Project
-      include_role:
-        name: reference_project_validation
-      when: reference_project_available

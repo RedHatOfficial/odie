@@ -60,9 +60,6 @@ function git_update() {
     UNTRACKED=0
     cd ${GIT_CLONE}
 
-    # ignore all changes to the smoke test files
-    git update-index --skip-worktree example_layout/projects/reference-project/apps/reference-app/pvs/{broker-amq,reference-app-postgresql,reference-app}/.placeholder
-
     GIT_STATUS=$(git diff-index --quiet HEAD --)
     RES=$?
     [[ $RES -ne 0 ]] && UNTRACKED=1
@@ -200,13 +197,6 @@ function curl_test() {
   fi
 }
 
-function diagnostics() {
-  is_oc_logged_in
-  #run_ansible_play "ODIE :: Diagnostics" ./odie-diagnostics.yml
-  oc adm diagnostics --network-pod-image='localhost:5000/openshift3/ose:${version}' --network-test-pod-image='localhost:5000/openshift3/ose-deployer:${version}' --images='localhost:5000/openshift3/ose-${component}:${version}'
-}
-
-
 
 function stage() {
   verify_installer & spin $! "Verify installation content"
@@ -255,41 +245,12 @@ function stage() {
       cp -nf /opt/odie/src/contrib/bin/* /usr/bin/ & spin $! "Installing 3rd Party Utilities"
   fi
 
-  if [[  -d "${CONTENT_DIR}/bundles/" ]] ; then
-    # assume this is just the reference app, for now
-    PROJECT_BUNDLE=${CONTENT_DIR}/bundles/odie-export-reference-project-${INSTALLER_VERSION}.tar
-    APP_BUNDLE=${CONTENT_DIR}/bundles/odie-export-reference-project-reference-app-${INSTALLER_VERSION}.tar
-
-    copy_reference_project_bundle ${CONTENT_DIR}/bundles/odie-export-reference-project-${INSTALLER_VERSION}.tar & spin $! "Copying Reference Project"
-
-
-    if [[ -d "${PROJECTS_DIR}/reference-project" ]]; then
-        return 200 & spin $! "Creating reference-project (already exists)"
-    else
-        run_cmd INTERACTIVE=0 /opt/odie/src/odie-app.sh create reference-project & spin $! "Creating reference-project"
-    fi
-
-    if [[ -d "${PROJECTS_DIR}/reference-project/apps/reference-app" ]]; then
-        return 200 & spin $! "Importing reference-app (already exists)"
-    else
-        run_cmd INTERACTIVE=0 /opt/odie/src/odie-app.sh import ${APP_BUNDLE} --to=reference-project & spin $! "Importing reference-app"
-    fi
-  fi
-
   complete_message "Installation Media Staging"
   ${VERSION_SH} set stage ${INSTALLER_VERSION}
 
   if [[ "${UPGRADE_VERSION}" && -d "${CONTENT_DIR}/odie-ocp-installer.git" ]] ; then
       setup_properties
   fi
-}
-
-function copy_reference_project_bundle() {
-  TAR=$1
-  mkdir -p ${BUNDLES_DIR}
-  cp -f $TAR ${BUNDLES_DIR}/
-  TAR_FILE=$(basename ${TAR})
-  ln -sf ${BUNDLES_DIR}/${TAR_FILE} ${BUNDLES_DIR}/current
 }
 
 function generate_config() {
@@ -365,7 +326,6 @@ function install_cluster() {
   fi
 
   install_footer
-  smoketest
 }
 
 function run_update_playbooks() {
@@ -416,31 +376,6 @@ function patch_footer() {
 
 function install_footer() {
     complete_message "OCP Cluster :: Installation"
-}
-
-function smoketest_footer() {
-    complete_message "OCP Cluster :: Smoketest Verification"
-}
-
-function unsmoketest_footer() {
-    complete_message "OCP Cluster :: Smoketest Unprovisioning"
-}
-
-function smoketest() {
-  cd ${GIT_CLONE}
-
-  if [[ "${APP_UNPROVISION}" -ne "1" ]]; then
-    NO_HEADER=1 LOG_FILE=${LOG_FILE} ./odie-app.sh provision reference-project
-    if [ $? = 0 ]; then
-      smoketest_footer
-    fi
-  else
-    NO_HEADER=1 LOG_FILE=${LOG_FILE} ./odie-app.sh unprovision reference-project
-    if [ $? = 0 ]; then
-      unsmoketest_footer
-    fi
-  fi
-
 }
 
 function ping_hosts() {
@@ -563,7 +498,6 @@ usage() {
         * ${bold}install${normal}	-	run the Ansible playbooks to install the cluster
         * ${bold}patch${normal}		-	patch the cluster
         * ${bold}harden${normal}	-	run the STIG remediation in the environment
-        * ${bold}smoketest${normal}	-	deploy a reference application to verify the installation
         * ${bold}ping${normal}		-	ping all the Ansible hosts to test configuration
         * ${bold}reboot${normal}	-	ping all the Ansible hosts to test configuration
         * ${bold}encrypt${normal}	-	encrypt the secret.yml and config.yml files
@@ -594,12 +528,6 @@ usage() {
 EOF
         #${bold}--target BRANCH${normal}	-	The branch to checkout (current: ${TARGET})
 }
-
-if [[ $1 == "app" ]]; then
-    shift
-    LOG_FILE=${LOG_FILE} ${BASEDIR}/odie-app.sh $@
-    exit $?
-fi
 
 export params="$(getopt -o dhs:t: -l reinit,harden,target:,dryrun,help,clean,stash,source:,unprovision,kickstart,skip-git,skip-yum,password,loop --name ${SCRIPT_NAME} -- "$@")"
 
@@ -744,11 +672,6 @@ do
     patch)
       header
       patch_cluster
-      exit 0
-      ;;
-    smoketest)
-      header
-      smoketest
       exit 0
       ;;
     ping)

@@ -1,9 +1,0 @@
----
-# defaults file for reference_project_validation
-
-# By default, this role will be turned OFF. You must manually
-# set this boolean to "true" for the role to be applied
-reference_project_available: false
-mdb_test_message_count: 5
-mdb_test_uuid: "{{ 'odie uuid' | to_uuid }}"
-mdb_test_temp_log_file: "/tmp/{{ mdb_test_uuid }}.log"
