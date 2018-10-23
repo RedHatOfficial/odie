@@ -24,14 +24,12 @@ apr-util
 at
 atk
 atomic
-atomic-openshift-clients-${OCP_VERSION}
-atomic-openshift-docker-excluder-${OCP_VERSION}
-atomic-openshift-excluder-${OCP_VERSION}
-atomic-openshift-master-${OCP_VERSION}
-atomic-openshift-node-${OCP_VERSION}
-atomic-openshift-${OCP_VERSION}
-atomic-openshift-sdn-ovs-${OCP_VERSION}
-atomic-openshift-utils-${OCP_VERSION}
+atomic-openshift
+atomic-openshift-clients
+atomic-openshift-docker-excluder
+atomic-openshift-excluder
+atomic-openshift-hyperkube
+atomic-openshift-node
 atomic-registries
 attr
 audispd-plugins
@@ -179,7 +177,6 @@ gdb
 gdbm
 gdisk
 gdk-pixbuf2
-genisoimage
 GeoIP
 gettext
 gettext-libs
@@ -309,7 +306,6 @@ libatomic
 libattr
 libbasicobjects
 libblkid
-libc
 libcap
 libcap-ng
 libcgroup
@@ -322,7 +318,6 @@ libcurl
 libdaemon
 libdb
 libdb-utils
-libdl
 libdnet
 libdrm
 libdwarf
@@ -350,8 +345,6 @@ libidn
 libini_config
 libitm
 libjpeg-turbo
-libkeyutils
-libkrb5
 libldb
 libmnl
 libmodman
@@ -369,7 +362,6 @@ libnl
 libnl3
 libnl3-cli
 libogg
-libostree
 libpath_utils
 libpcap
 libpciaccess
@@ -536,10 +528,10 @@ openldap
 openscap
 openscap-scanner
 openscap-utils
-openshift-ansible-docs-${OCP_VERSION}
-openshift-ansible-${OCP_VERSION}
-openshift-ansible-playbooks-${OCP_VERSION}
-openshift-ansible-roles-${OCP_VERSION}
+openshift-ansible
+openshift-ansible-docs
+openshift-ansible-playbooks
+openshift-ansible-roles
 openssh
 openssh-clients
 openssh-keycat
@@ -547,8 +539,6 @@ openssh-server
 openssl
 openssl-libs
 open-vm-tools
-openvswitch
-openvswitch-selinux-extra-policy
 os-prober
 ostree
 p11-kit
@@ -881,3 +871,11 @@ yum-utils
 zip
 zlib
 zsh
+container-storage-setup
+genisoimage
+libnet
+python2-jmespath
+python2-pysocks
+python2-urllib3
+python-gobject-base
+python-passlib
