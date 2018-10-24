@@ -65,6 +65,9 @@ find /opt/odie -name 'TRANS.TBL' -delete
 
 cp /opt/odie/src/conf/profile.d/odie-commands.sh /etc/profile.d/
 
+yum install -y openshift-ansible
+
+
 chage -d 0 root
 chage -d 0 admin
 eject -i 0

@@ -102,5 +102,8 @@
     - configure
   tasks:
 
-    - name: Run Configure 
-      shell: "INTERACTIVE=0 /opt/odie/src/odie.sh configure"
+    - name: Run Configure
+      shell: "INTERACTIVE=0 /opt/odie/src/odie.sh setup"
+
+    - name: Run Configure
+      shell: "INTERACTIVE=0 /opt/odie/src/odie.sh generate-config"

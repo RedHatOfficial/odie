@@ -300,13 +300,13 @@
       <packagereq type="mandatory">openldap</packagereq>
       <packagereq type="mandatory">openscap</packagereq>
       <packagereq type="mandatory">openscap-scanner</packagereq>
-      <packagereq type="mandatory">openshift-ansible</packagereq>
+      <!--<packagereq type="mandatory">openshift-ansible</packagereq>>
       <packagereq type="mandatory">openshift-ansible-callback-plugins</packagereq>
       <packagereq type="mandatory">openshift-ansible-docs</packagereq>
       <packagereq type="mandatory">openshift-ansible-filter-plugins</packagereq>
       <packagereq type="mandatory">openshift-ansible-lookup-plugins</packagereq>
       <packagereq type="mandatory">openshift-ansible-playbooks</packagereq>
-      <packagereq type="mandatory">openshift-ansible-roles</packagereq>
+      <packagereq type="mandatory">openshift-ansible-roles</packagereq>-->
       <packagereq type="mandatory">openssh</packagereq>
       <packagereq type="mandatory">openssh-clients</packagereq>
       <packagereq type="mandatory">openssh-server</packagereq>
