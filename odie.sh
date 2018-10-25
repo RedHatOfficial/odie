@@ -110,9 +110,10 @@ function setup_properties() {
 
   run_ansible_play  "Update Property Files for ${INSTALLER_VERSION}" ./playbooks/generate_configuration/property_generation.yml
   SAMPLE_DIR=/opt/odie/src/contrib/env-config/
-  cp -n ${SAMPLE_DIR}/default/hosts.csv /opt/odie/config/hosts-default.csv.sample
-  cp -n ${SAMPLE_DIR}/lab/hosts.csv /opt/odie/config/hosts-lab.csv.sample
-  cp -n ${SAMPLE_DIR}/full/hosts.csv /opt/odie/config/hosts-full.csv.sample
+
+#  cp -n ${SAMPLE_DIR}/default/hosts.csv /opt/odie/config/hosts-default.csv.sample
+ # cp -n ${SAMPLE_DIR}/lab/hosts.csv /opt/odie/config/hosts-lab.csv.sample
+  #cp -n ${SAMPLE_DIR}/full/hosts.csv /opt/odie/config/hosts-full.csv.sample
 
   wc -l ${CONFIG_DIR}/*.{yml,csv} 2>/dev/null | grep -v total > ${AFTER_FILE} 2>/dev/null
 
@@ -127,13 +128,12 @@ function setup_properties() {
 PROPERTIES
 
     declare -A PROPS
-    PROPS["${CONFIG_DIR}/odie.yml"]="Configuration options for the the ODIE installer"
+    PROPS["${CONFIG_DIR}/custom.yml"]="Advanced Configuration options for sophisicated use cases"
+    PROPS["${CONFIG_DIR}/odie.yml"]="Installation Parameters"
+    PROPS["${CONFIG_DIR}/build.yml"]="Parameters used to build ODIE and deploy via KVM"
     PROPS["${CONFIG_DIR}/env.yml"]="Specify site centric information about your environment "
     PROPS["${CONFIG_DIR}/hosts.csv"]="Static network information and cluster topology"
-    PROPS["${CONFIG_DIR}/images.yml"]="Docker registry configuration"
-    PROPS["${CONFIG_DIR}/ks.yml"]="Parameters used to generate the Kickstart files"
-    PROPS["${CONFIG_DIR}/ocp.yml"]="Parameters and features to enable during OCP installation"
-    PROPS["${CONFIG_DIR}/secret.yml"]="Specifies the credentials for your default users."
+    PROPS["${CONFIG_DIR}/secret.yml"]="Specifies the credentials for your default users. Encrypted via ${bold}odie encrypt${normal}"
     PROPS["${CONFIG_DIR}/certs.yml"]="Parameters used for SSL settings for the publically available OpenShift management endpoints"
 
      while read -r key; do
@@ -142,8 +142,8 @@ PROPERTIES
 
   cat <<PROPERTIES
 
-  ${bold}IMPORTANT${normal}: The ${bold}ansible-vault${normal} command can be used to encrypt these files at rest.
-                Please see the documentation for more information (${bold}man ansible-vault${normal})
+
+
 
 
 PROPERTIES

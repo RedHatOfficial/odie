@@ -24,7 +24,7 @@
 
     - name: Configure ansible.cfg file for login
       lineinfile:
-        dest: "{{odie_properties_output_dir}}/odie.yml"
+        dest: "{{odie_properties_output_dir}}/custom.yml"
         state: present
         regexp: "^#?ansible_ssh_user"
         line: "ansible_ssh_user: {{my_username}}"
