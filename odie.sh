@@ -156,26 +156,14 @@ PROPERTIES
   rm ${AFTER_FILE} ${BEFORE_FILE}
 }
 
-function install_dependencies() {
-  if [[ "${SKIP_YUM}" = 1 ]]; then
-    return
-  fi
-
-  run_cmd yum clean all
-  run_cmd yum install -y net-tools bind-utils vim-enhanced screen wget bash-completion ansible \
-    atomic-openshift-utils atomic-openshift-clients
-
-  RETURN=$?
-  return $RETURN
-}
-
 function setup_web_server() {
 
   #Generate certificate for Apache HTTPS encryption
-  openssl req -batch -x509 -nodes -days 1825 -newkey rsa:2048 -keyout /etc/pki/tls/private/localhost.key -out /etc/pki/tls/certs/localhost.crt
+  run_cmd openssl req -batch -x509 -nodes -days 1825 -newkey rsa:2048 -keyout /etc/pki/tls/private/localhost.key -out /etc/pki/tls/certs/localhost.crt
 
   ## Allow HTTPS traffic through firewall
   run_cmd firewall-cmd --permanent --add-port=443/tcp
+  run_cmd firewall-cmd --permanent --add-port=80/tcp
   run_cmd firewall-cmd --reload
 
   run_cmd systemctl enable httpd
@@ -280,10 +268,11 @@ function setup() {
   run_cmd make import_pki & spin $! "Import Red Hat GPG Key"
   run_cmd make webdirs & spin $! "Creating web directories for httpd content"
   run_cmd make localrepos  & spin $! "Setting up local RPM repos"
+
   test_local_repo & spin $! "Test local RPM Repo"
-  install_dependencies & spin $! "Install YUM dependencies"
   complete_message "JumpHost Configuration"
 
+  generate_config
 }
 
 function conditionally_run_play() {
@@ -305,9 +294,10 @@ function install_cluster() {
   MAKE_CMD="make -f Makefile.ocp"
 
   run_ansible_play "Yum Clean" ${MAKE_CMD} yum_clean
+  run_cmd yum -y install openshift-ansible & spin $! "Install openshift-ansible" 
   run_ansible_play "Cluster Install Steps" ./odie-install.yml
   run_ansible_play "Push images into Standalone Registry" ${MAKE_CMD} push
-  run_ansible_play "Installing OCP Cluster" ${MAKE_CMD} install_certificates
+  #run_ansible_play "Installing Certificates" ${MAKE_CMD} install_certificates
   run_ansible_play "Installing OCP Cluster" ${MAKE_CMD} install_openshift
   conditionally_run_play deploy_cns "Install Container Native Storage (Gluster)" ${MAKE_CMD} install_gluster
   conditionally_run_play deploy_metrics "Install Metrics Subsystem" ${MAKE_CMD} install_metrics
@@ -315,7 +305,7 @@ function install_cluster() {
   conditionally_run_play deploy_cloudforms  "Install CloudForms" ${MAKE_CMD} install_cfme
   run_ansible_play "Configuring Jumphost Certificate" ${MAKE_CMD} admin
   run_ansible_play "Configuring Registry Console" ${MAKE_CMD} registry_console_cert
-  run_ansible_play "Push images into OCP Registry" ${MAKE_CMD} push_ocp
+  #run_ansible_play "Push images into OCP Registry" ${MAKE_CMD} push_ocp
   run_ansible_play "Patch resolv.conf on Nodes" ${MAKE_CMD} patch_origin_dns
   conditionally_run_play setup_htpasswd_accounts  "Install HTPasswd authentication" ${MAKE_CMD} install_htpasswd
   # eventually add pivproxy here
@@ -494,7 +484,7 @@ usage() {
         * ${bold}stage${normal}		-	copy the media from the ISO
         * ${bold}properties${normal}	-	generate the properties file based on the installed version
         * ${bold}setup${normal}		-	setup the JumpHost 
-        * ${bold}config${normal}	-	generate config files
+        * ${bold}generate-config${normal}	-	generate config files
         * ${bold}install${normal}	-	run the Ansible playbooks to install the cluster
         * ${bold}patch${normal}		-	patch the cluster
         * ${bold}harden${normal}	-	run the STIG remediation in the environment
@@ -653,7 +643,7 @@ do
       generate_config
       exit 0
       ;;
-    setup)
+    setup|configure)
       header
       #echo "${bold}[${yellow}DEPRECATED${normal}${bold}] ${SCRIPT_NAME} setup${normal} command has been deprecated, use ${bold}${SCRIPT_NAME}what?${n}"
       setup

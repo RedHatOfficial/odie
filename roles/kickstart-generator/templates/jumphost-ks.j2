@@ -27,20 +27,12 @@ skipx
 firstboot --enable
 
 %packages
-@base
+{% include './templates/includes/common-packages.j2' %}
+
 @odie-jumphost
-open-vm-tools
-fuse
-fuse-libs
-xmlsec1
-xmlsec1-openssl
-python-pytoml
-grub2-pc
-grub2-pc-modules
-libdnet
-libtool-ltdl
-libmspack
+telnet
 mod_ssl
+vim-enhanced
 %end
 
 %post --nochroot
@@ -64,9 +56,6 @@ find /opt/odie -name 'TRANS.TBL' -delete
 /opt/odie/src/playbooks/operations/setup_dnsmasq.yml -e stage_pxe=true -e rhel_mount=/opt/odie/install_media
 
 cp /opt/odie/src/conf/profile.d/odie-commands.sh /etc/profile.d/
-
-yum install -y openshift-ansible
-
 
 chage -d 0 root
 chage -d 0 admin

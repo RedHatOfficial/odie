@@ -20,16 +20,11 @@ openshift_cockpit_deployer_version=v{{ ocp_version }}
 #openshift_pkg_version={{ ocp_version }}
 
 # ODIE Manages these directly so disable the safeties
-openshift_disable_check=disk_availability,docker_storage,memory_availability,docker_image_availability
+openshift_disable_check=disk_availability,docker_storage,memory_availability
 
-osm_use_cockpit=false
-openshift_master_cluster_method=native
-
-# default project node selector
-osm_default_node_selector='region=primary'
 
 openshift_clock_enable=true
-os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
+os_sdn_network_plugin_name='redhat/openshift-ovs-networkpolicy'
 
 openshift_master_default_subdomain={{ default_subdomain }}
 
@@ -40,7 +35,7 @@ openshift_install_examples=false
 openshift_enable_unsupported_configurations=True
 
 # Introduced in 3.7, will interfere with reference app deploy by claiming PV
-ansible_service_broker_install=False
+ansible_service_broker_install=false
 openshift_enable_service_catalog=false
 
 ###### Container Native Storage #######
