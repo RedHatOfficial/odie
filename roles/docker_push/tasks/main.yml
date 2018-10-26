@@ -18,11 +18,11 @@
     output_archive: "{{images_target}}/{{registry.name}}.ocp.tar.{{compress_ext}}"
   when: ocp_project is defined
 
-- name: Copy Manifest
-  copy:
-    src: "{{src_manifest}}"
-    dest: "{{output_manifest}}"
-  register: manifest
+#- name: Copy Manifest
+#  copy:
+#    src: "{{src_manifest}}"
+#    dest: "{{output_manifest}}"
+#  register: manifest
 
 - name: Pull Archive
   include: load_archive.yml

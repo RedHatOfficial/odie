@@ -1,5 +1,5 @@
 - name: Populate hosts template file
   template:
-    src: "ocp-hosts.j2"
+    src: "ocp-inventory.j2"
     dest: "{{ inventory_output_path }}"
     mode: 0644

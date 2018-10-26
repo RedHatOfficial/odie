@@ -2,8 +2,8 @@
 odie_playbook_dir: /opt/odie/src
 
 # These are used to put the versions into the docker image loading
-ocp_version: 3.9
-ocp_short_version: 3.9
+ocp_version: 3.11.16
+ocp_short_version: 3.11
 
 # Security Features
 #openshift_master_ldap_ca_file: /opt/odie/config/ldap-ca-cert # a path to your CA local from the jumphost
@@ -41,3 +41,5 @@ metrics_cassandra_replica_count: "{{ groups['infra'] | length }}"
 
 
 inventory_output_path: "{{odie_playbook_dir}}/inventory/inventory"
+
+registry_fqdn: "{{ lookup('pipe', 'hostname -f')  }}:5000"

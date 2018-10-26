@@ -4,9 +4,6 @@
   vars:
       image_types:
         - base
-        - xpaas
-        - dockerio
-        - cfme
       images_file: base-images.yml
 
   tasks:
