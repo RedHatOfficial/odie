@@ -264,6 +264,7 @@ GENERATEEOF
 function setup() {
   cd ${GIT_CLONE}
 
+  run_ansible_play  "Run Configuration" ./odie-configure.yml
   setup_web_server & spin $! "Setup web server"
   run_cmd make import_pki & spin $! "Import Red Hat GPG Key"
   run_cmd make webdirs & spin $! "Creating web directories for httpd content"

@@ -7,17 +7,17 @@
     - rsyslog_configuration
 
 - name: Restart docker registry
-  hosts: registry
+  hosts: localhost
 
-  tasks: 
+  tasks:
     - name: Stop docker-distribution services
       systemd:
-        name: docker-distribution 
+        name: docker-distribution
         state: stopped
 
     - name: Start and enable docker-distribution services
       systemd:
-        name: docker-distribution 
+        name: docker-distribution
         state: started
         enabled: yes
 

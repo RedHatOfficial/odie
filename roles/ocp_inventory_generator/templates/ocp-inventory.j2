@@ -20,7 +20,7 @@ openshift_cockpit_deployer_version=v{{ ocp_version }}
 #openshift_pkg_version={{ ocp_version }}
 
 # ODIE Manages these directly so disable the safeties
-openshift_disable_check=disk_availability,docker_storage,memory_availability
+openshift_disable_check=disk_availability,docker_storage,memory_availability,docker_image_availability
 
 
 openshift_clock_enable=true

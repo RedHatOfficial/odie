@@ -26,4 +26,4 @@
 
 - name: Pull Archive
   include: load_archive.yml
-  when: manifest.changed == true
+  #when: manifest.changed == true

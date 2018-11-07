@@ -17,20 +17,8 @@
 - name: Load {{ registry.name }} images into Docker
   command: docker load -i {{output_archive}}
 
-- name: "Tag Images to {{target_registry}}"
-  command: "docker tag {{ registry.source_registry}}/{{ repos }} {{target_registry}}/{% if ocp_project is defined and ocp_project %}{{repos | regex_replace('^.*/', ocp_project + '/')}}{% else %}{{ repos }}{% endif %}"
+- include: tag_push.yml
   loop_control:
-    loop_var: repos
+    loop_var: repo
   with_items:
-    - "{{ registry.repos }}"
-
-- name: "Push image to {{target_registry}}"
-  command: "docker push {{target_registry}}/{% if ocp_project is defined and ocp_project %}{{repos | regex_replace('^.*/', ocp_project + '/')}}{% else %}{{ repos }}{% endif %}"
-  loop_control:
-    loop_var: repos
-  with_items:
-    - "{{ registry.repos }}"
-  register: docker_push_exec
-  retries: 2
-  until: docker_push_exec.rc == 0
-
+  - "{{ registry.repos }}"

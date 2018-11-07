@@ -13,7 +13,7 @@ logvol /home --fstype=xfs --name=homeVol --vgname=rootVG --size={{partition_home
 # CCE-26435-8: Ensure /tmp Located On Separate Partition
 logvol /tmp --fstype=xfs --name=tmpVol --vgname=rootVG --size={{partition_tmp}} --fsoptions="nodev,noexec,nosuid"  {{ luks_encryption }}
 # CCE-26639-5: Ensure /var Located On Separate Partition
-logvol /var --fstype=xfs --name=varVol --vgname=rootVG --size={{partition_var}} --fsoptions="nodev"  {{ luks_encryption }}
+logvol /var --fstype=xfs --name=varVol --vgname=rootVG --size={{partition_var}} --fsoptions="nodev,gquota"  {{ luks_encryption }}
 # CCE-26215-4: Ensure /var/log Located On Separate Partition
 logvol /var/log --fstype=xfs --name=varLogVol --vgname=rootVG --size={{partition_var_log}} --fsoptions="nodev"  {{ luks_encryption }}
 # CCE-26436-6: Ensure /var/log/audit Located On Separate Partition

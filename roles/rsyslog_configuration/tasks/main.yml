@@ -1,11 +1,11 @@
 ---
 - name: Configure Rsyslog Clients
   include: rsyslog_setup_client.yml
-  when: setup_rsyslog_export and ( '{{ inventory_hostname }}' != '{{ remote_rsyslog_export_hostname }}' )
+  when: setup_rsyslog_export and ( inventory_hostname  !=  remote_rsyslog_export_hostname  )
 
 - name: Setup log rotation
   include: rsyslog_log_rotation.yml
 
 - name: Configure Remote Rsyslog Server
   include: rsyslog_remote_server.yml
-  when: ( '{{ inventory_hostname }}' == '{{ remote_rsyslog_export_hostname }}' ) and setup_rsyslog_remote_server
+  when: ( inventory_hostname  == remote_rsyslog_export_hostname ) and setup_rsyslog_remote_server
