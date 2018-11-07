@@ -52,7 +52,7 @@ ${bold}${underline}Build Output Options${normal}
 ${bold}${underline}General Options${normal}
 	--clean			-c	Clean the output and dist directories
 	--none			-n	Remove all the default operations
-	--test			-t	Provision a ODIE cluster using this ISO via KVM
+	--deploy			-t	Provision a ODIE cluster using this ISO via KVM
 	--help			-h	Display this useful help information
 	--bump			-u	Increment the version number for the build & commit them 
 						(${bold}rebase these ${underline}before${normal}${bold} pushing!${normal}) 
@@ -60,7 +60,7 @@ ${bold}${underline}General Options${normal}
 EOF
 }
 
-export params="$(getopt -o c,i,p,d,f,r,b,h,n,m,u,t -l clean,images,patch,delta,full,release,baseline,help,none,rpm,bump,test --name "${SCRIPT_NAME}" -- "$@")"
+export params="$(getopt -o c,i,p,d,f,r,b,h,n,m,u,t -l clean,images,patch,delta,full,release,baseline,help,none,rpm,bump,deploy --name "${SCRIPT_NAME}" -- "$@")"
 
 if [[ $? -ne 0 ]]; then
   usage
@@ -85,7 +85,7 @@ do
            export BUILD_FLAGS_POST="${BUILD_FLAGS_POST} patch_iso"
            shift
            ;;
-        --test|-t)
+        --deploy|-t)
            PROVISION_ODIE=1
            shift
            ;;
