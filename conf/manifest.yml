@@ -251,7 +251,7 @@ version:
           is no default.
         props:
           setup_rsyslog_remote_server: true
-          remote_rsyslog_export_hostname: rsyslog.lab.local
+          remote_rsyslog_export_hostname: rsyslog.lab.odie
 
       - name: Remote rsyslog log file storage location
         required: false
@@ -564,7 +564,8 @@ version:
           These variables are used by the development playbooks to configure local KVM clusters
         props:
           bridge_name: virbr0
-          domain_name: lab.local
+          network_name: odie
+          domain_name: lab.odie
 
       - name: OpenShift CNS
         yml_file: odie.yml
@@ -864,4 +865,4 @@ version:
           The docker registry host to use during the OCP installation
 
         props:
-          regisry_fqdn: jumphost01.lab.local:5000
+         regisry_fqdn: jumphost01.lab.odie:5000

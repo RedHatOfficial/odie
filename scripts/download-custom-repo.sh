@@ -4,7 +4,7 @@ set +u
 set +x
 
 RUN_DIR=$(realpath $( dirname $0 ))
-push $RUN_DIR
+pushd $RUN_DIR
 
 OUTPUT_DIR="./output/Packages"
 mkdir -p ${OUTPUT_DIR}
