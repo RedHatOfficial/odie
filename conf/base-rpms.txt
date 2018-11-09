@@ -18,7 +18,7 @@ aide
 alsa-firmware
 alsa-lib
 alsa-tools-firmware
-ansible
+ansible-2.6.4
 apr
 apr-util
 at
