@@ -74,7 +74,7 @@ cockpit-docker
 cockpit-system
 cockpit-ws
 conntrack-tools
-container-selinux
+container-selinux-2.73-2.el7.noarch
 container-storage-setup.noarch
 coolkey
 copy-jdk-configs
@@ -177,6 +177,7 @@ gdb
 gdbm
 gdisk
 gdk-pixbuf2
+genisoimage
 GeoIP
 gettext
 gettext-libs
@@ -306,6 +307,7 @@ libatomic
 libattr
 libbasicobjects
 libblkid
+libc
 libcap
 libcap-ng
 libcgroup
@@ -318,6 +320,7 @@ libcurl
 libdaemon
 libdb
 libdb-utils
+libdl
 libdnet
 libdrm
 libdwarf
@@ -345,6 +348,8 @@ libidn
 libini_config
 libitm
 libjpeg-turbo
+libkeyutils
+libkrb5
 libldb
 libmnl
 libmodman
@@ -763,9 +768,10 @@ scap-security-guide-doc
 scl-utils
 screen
 sed
-selinux-policy
-selinux-policy-mls
-selinux-policy-targeted
+selinux-policy-3.13.1-192
+selinux-policy-base-3.13.1-192
+selinux-policy-mls-3.13.1-192
+selinux-policy-targeted-3.13.1-192
 setools-libs
 setserial
 setup
