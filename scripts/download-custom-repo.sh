@@ -19,7 +19,7 @@ mv  /tmp/rpmbuild/x86_64/python-docker-0.0.1-1.x86_64.rpm ${OUTPUT_DIR}
 
 export OCP_VERSION=$(./contrib/bin/yaml_linux_amd64 read /opt/odie/config/ocp.yml ocp_version)
 
-yumdownloader -x \*i686 --archlist x86_64 --destdir ${OUTPUT_DIR} $(cat ./conf/*-rpms.txt| sort -u | envsubst)
+yumdownloader -x \*i686 --archlist x86_64 --destdir ${OUTPUT_DIR} $(cat ./conf/base-rpms.txt| sort -u | envsubst)
 
 cp -f $COMP_PATH ${GROUP}
 cd ${OUTPUT_DIR}/..

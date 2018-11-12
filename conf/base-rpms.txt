@@ -64,7 +64,6 @@ bzip2
 bzip2-libs
 ca-certificates
 cairo
-ceph-common
 checkpolicy
 chkconfig
 chrony
@@ -307,7 +306,6 @@ libatomic
 libattr
 libbasicobjects
 libblkid
-libc
 libcap
 libcap-ng
 libcgroup
@@ -320,7 +318,6 @@ libcurl
 libdaemon
 libdb
 libdb-utils
-libdl
 libdnet
 libdrm
 libdwarf
@@ -348,7 +345,6 @@ libidn
 libini_config
 libitm
 libjpeg-turbo
-libkeyutils
 libkrb5
 libldb
 libmnl
@@ -720,18 +716,6 @@ rhn-client-tools
 rhnlib
 rhnsd
 rhn-setup
-rh-ruby22-ruby
-rh-ruby22-ruby-devel
-rh-ruby22-rubygem-bigdecimal
-rh-ruby22-rubygem-io-console
-rh-ruby22-rubygem-json
-rh-ruby22-rubygem-psych
-rh-ruby22-rubygem-rdoc
-rh-ruby22-rubygems
-rh-ruby22-rubygems-devel
-rh-ruby22-ruby-irb
-rh-ruby22-ruby-libs
-rh-ruby22-runtime
 rng-tools
 rootfiles
 rpcbind
@@ -739,9 +723,9 @@ rpm
 rpm-build
 rpm-build-libs
 rpmdevtools
-rpmlib
 rpm-libs
 rpm-python
+rpm-sign
 rsync
 rsyslog
 rsyslog-gnutls
@@ -768,10 +752,10 @@ scap-security-guide-doc
 scl-utils
 screen
 sed
-selinux-policy-3.13.1-192
-selinux-policy-base-3.13.1-192
-selinux-policy-mls-3.13.1-192
-selinux-policy-targeted-3.13.1-192
+selinux-policy
+selinux-policy-base
+selinux-policy-mls
+selinux-policy-targeted
 setools-libs
 setserial
 setup
@@ -877,7 +861,6 @@ yum-utils
 zip
 zlib
 zsh
-container-storage-setup
 genisoimage
 libnet
 python2-jmespath
@@ -885,3 +868,6 @@ python2-pysocks
 python2-urllib3
 python-gobject-base
 python-passlib
+libsmartcols
+python2-futures
+cockpit-kubernetes

@@ -26,6 +26,7 @@
       <packagereq type="mandatory">ansible</packagereq>
       <packagereq type="mandatory">apr</packagereq>
       <packagereq type="mandatory">apr-util</packagereq>
+      <packagereq type="mandatory">ansible</packagereq>
       <packagereq type="mandatory">atomic-openshift-clients</packagereq>
       <packagereq type="mandatory">atomic-openshift-utils</packagereq>
       <packagereq type="mandatory">audit</packagereq>
@@ -48,7 +49,7 @@
       <packagereq type="mandatory">checkpolicy</packagereq>
       <packagereq type="mandatory">chkconfig</packagereq>
       <packagereq type="mandatory">chrony</packagereq>
-      <packagereq type="mandatory">container-selinux</packagereq>
+      <!--<packagereq type="mandatory">container-selinux</packagereq> -->
       <packagereq type="mandatory">copy-jdk-configs</packagereq>
       <packagereq type="mandatory">coreutils</packagereq>
       <packagereq type="mandatory">cpio</packagereq>
@@ -79,10 +80,12 @@
       <packagereq type="mandatory">diffutils</packagereq>
       <packagereq type="mandatory">dmidecode</packagereq>
       <packagereq type="mandatory">dnsmasq</packagereq>
+      <!--
       <packagereq type="mandatory">docker</packagereq>
       <packagereq type="mandatory">docker-client</packagereq>
       <packagereq type="mandatory">docker-common</packagereq>
       <packagereq type="mandatory">docker-rhel-push-plugin</packagereq>
+      -->
       <packagereq type="mandatory">dracut</packagereq>
       <packagereq type="mandatory">dracut-config-rescue</packagereq>
       <packagereq type="mandatory">dracut-network</packagereq>

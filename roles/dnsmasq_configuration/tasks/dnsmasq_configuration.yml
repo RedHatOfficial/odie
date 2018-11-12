@@ -51,7 +51,7 @@
     - delete_cpio
 
 - name: Extract the RPM
-  shell: "rpm2cpio /opt/odie/repo/odie-custom/syslinux-4.05-13.el7.x86_64.rpm  | cpio -dimv"
+  shell: "rpm2cpio /opt/odie/repo/odie-custom/syslinux-4.05-15.el7.x86_64.rpm  | cpio -dimv"
   args:
     chdir: "{{cpio_dir}}"
   when: stage_pxe

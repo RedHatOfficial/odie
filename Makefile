@@ -121,7 +121,7 @@ register:
 
 setup_repos:
 	@subscription-manager repos --disable "*" --enable rhel-7-server-rpms --enable rhel-7-server-ose-3.11-rpms --enable rhel-server-rhscl-7-rpms --enable rhel-7-server-extras-rpms --enable=rhel-7-server-ansible-2.6-rpms
-	subscription-manager release --set=7.5
+	subscription-manager release --set=7.6
 	yum clean all
 
 unsubscribe:

@@ -20,16 +20,21 @@ openshift_cockpit_deployer_version=v{{ ocp_version }}
 #openshift_pkg_version={{ ocp_version }}
 
 # ODIE Manages these directly so disable the safeties
-openshift_disable_check=disk_availability,docker_storage,memory_availability,docker_image_availability
-
+openshift_disable_check=disk_availability,docker_storage,memory_availability,docker_image_availability,package_availability
 
 openshift_clock_enable=true
 os_sdn_network_plugin_name='redhat/openshift-ovs-networkpolicy'
+
+osn_storage_plugin_deps=["glusterfs","iscsi"]
 
 openshift_master_default_subdomain={{ default_subdomain }}
 
 openshift_examples_modify_imagestreams=true
 openshift_install_examples=false
+
+openshift_service_type=atomic-openshift
+
+default_r_openshift_node_image_prep_packages=["{{ openshift_service_type }}-node","ansible","bash-completion","dnsmasq","ntp","logrotate","httpd-tools","bind-utils","firewalld","libselinux-python","conntrack-tools","openssl","iproute","python-dbus","PyYAML","yum-utils","glusterfs-fuse","device-mapper-multipath","nfs-utils","cockpit-ws","cockpit-system","cockpit-bridge","cockpit-docker","iscsi-initiator-utils","atomic"]
 
 # Must be set to use NFS
 openshift_enable_unsupported_configurations=True
