@@ -223,6 +223,11 @@ function stage() {
       rsync_dir ${CONTENT_DIR}/delta_images ${OUTPUT_DIR} & spin $! "Copying Delta Container Images"
   fi
 
+  if [[ -d "${CONTENT_DIR}/utilities" ]] ; then
+      mkdir -rf ${OUTPUT_DIR}/utilities
+      cp -r ${CONTENT_DIR}/utilities ${OUTPUT_DIR}/utilities & spin $! "Copying Support Utilities Directory"
+  fi
+
   if [[  -d "${CONTENT_DIR}/odie-ocp-installer.git" ]] ; then
       git_update
       ${VERSION_SH} set stage ${INSTALLER_VERSION}

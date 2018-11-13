@@ -10,7 +10,7 @@ delta_media: setup_repos rpms pull_delta_images  pull_odie_images
 
 # everything is put into the same DVD now
 dvd: primary iso
-primary: clone_git_repo setup_scripts
+primary: clone_git_repo setup_scripts clone_cop_git
 
 build: primary patch_iso
 
@@ -136,3 +136,16 @@ build_postgres_stig:
 
 build_cac_proxy:
 	VERSION=`cat contrib/cac-proxy/VERSION` && docker build --no-cache -f contrib/cac-proxy/Dockerfile contrib/cac-proxy -t "localhost:5000/odie/cac-proxy:$${VERSION}" -t "localhost:5000/odie/cac-proxy:latest"
+
+
+clone_cop_git:
+	rm -rf output/utilities/
+	mkdir -p output/utilities/
+	git clone https://github.com/redhat-cop/casl-ansible output/utilities/casl-ansible	
+	git clone https://github.com/redhat-cop/openshift-applier.git  output/utilities/openshift-applier
+	git clone https://github.com/redhat-cop/openshift-playbooks output/utilities/openshift-playbooks
+	git clone https://github.com/redhat-cop/containers-quickstarts output/utilities/containers-quickstart
+	git clone https://github.com/redhat-cop/container-pipelines output/utilities/container-pipelines
+	git clone https://github.com/redhat-cop/infra-ansible.git output/utilities/infra-ansible
+	git clone https://github.com/redhat-cop/openshift-toolkit output/utilities/openshift-toolkit
+
