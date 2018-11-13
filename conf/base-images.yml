@@ -2,7 +2,7 @@ registries:
   base:
     name: ose3-base-images
     source_registry: registry.access.redhat.com
-    repos:
+    disc2:
       - openshift3/apb-base:v3.11.16-2
       - openshift3/apb-tools:v3.11.16-2
       - openshift3/automation-broker-apb:v3.11.16-3
@@ -10,16 +10,12 @@ registries:
       - openshift3/csi-driver-registrar:v3.11.16-2
       - openshift3/csi-livenessprobe:v3.11.16-2
       - openshift3/csi-provisioner:v3.11.16-2
-      - openshift3/ose-efs-provisioner:v3.11.16-1
-      - openshift3/grafana:v3.11.16-3
-      - openshift3/image-inspector:v3.11.16-2
       - openshift3/jenkins-2-rhel7:v3.11.16-3
       - openshift3/jenkins-agent-maven-35-rhel7:v3.11.16-3
       - openshift3/jenkins-agent-nodejs-8-rhel7:v3.11.16-3
       - openshift3/jenkins-slave-base-rhel7:v3.11.16-3
       - openshift3/jenkins-slave-maven-rhel7:v3.11.16-3
       - openshift3/jenkins-slave-nodejs-rhel7:v3.11.16-3
-      - openshift3/local-storage-provisioner:v3.11.16-3
       - openshift3/ose-logging-curator5:v3.11.16-2
       - openshift3/ose-logging-elasticsearch5:v3.11.16-5
       - openshift3/ose-logging-fluentd:v3.11.16-2
@@ -28,17 +24,28 @@ registries:
       - openshift3/mariadb-apb:v3.11.16-2
       - openshift3/mediawiki-apb:v3.11.16-2
       - openshift3/mediawiki:v3.11.16-2
+      - openshift3/ose-ansible-service-broker:v3.11.16-4
+      - openshift3/ose-descheduler:v3.11.16-4
+      - openshift3/ose-logging-eventrouter:v3.11.16-2
+      - openshift3/postgresql-apb:v3.11.16-2
       - openshift3/metrics-cassandra:v3.11.16-4
       - openshift3/metrics-hawkular-metrics:v3.11.16-4
       - openshift3/metrics-hawkular-openshift-agent:v3.11.16-2
       - openshift3/metrics-heapster:v3.11.16-2
       - openshift3/metrics-schema-installer:v3.11.16-4
       - openshift3/mysql-apb:v3.11.16-2
+      - openshift3/ose-template-service-broker:v3.11.16-3
+      - openshift3/ose-service-catalog:v3.11.16-3
+# redhat-openjdk-18/openjdk18-openshift
+
+    repos:
+      - openshift3/ose-efs-provisioner:v3.11.16-1
+      - openshift3/image-inspector:v3.11.16-2
+      - openshift3/local-storage-provisioner:v3.11.16-3
       - openshift3/ose-node-problem-detector:v3.11.16-4
       - openshift3/node:v3.11.16-2
       - openshift3/oauth-proxy:v3.11.16-4
       - openshift3/ose-operator-lifecycle-manager:v3.11.16-3
-      - openshift3/ose-ansible-service-broker:v3.11.16-4
       - openshift3/ose-ansible:v3.11.16-3
         #- openshift3/ose-autoheal:v3.11.16-3
       - openshift3/ose-cli:v3.11.16-3
@@ -49,7 +56,6 @@ registries:
       - openshift3/ose-console:v3.11.16-3
       - openshift3/ose-control-plane:v3.11.16
       - openshift3/ose-deployer:v3.11.16-3
-      - openshift3/ose-descheduler:v3.11.16-4
       - openshift3/ose-docker-builder:v3.11.16-3
       - openshift3/ose-docker-registry:v3.11.16-3
       - openshift3/ose-egress-dns-proxy:v3.11.16-3
@@ -61,25 +67,24 @@ registries:
       - openshift3/ose-keepalived-ipfailover:v3.11.16-3
       - openshift3/ose-kube-rbac-proxy:v3.11.16-3
       - openshift3/ose-kube-state-metrics:v3.11.16-3
-      - openshift3/ose-logging-eventrouter:v3.11.16-2
       - openshift3/ose-metrics-server:v3.11.16-3
+      - openshift3/ose-node:v3.11.16-3
+      - openshift3/openvswitch
       - openshift3/ose-pod:v3.11.16-3
-      - openshift3/ose-prometheus-config-reloader:v3.11.16-3
-      - openshift3/ose-prometheus-operator:v3.11.16-3
       - openshift3/ose-recycler:v3.11.16-3
-      - openshift3/ose-service-catalog:v3.11.16-3
         #- openshift3/ose-service-idler:v3.11.16-3
-      - openshift3/ose-template-service-broker:v3.11.16-3
       - openshift3/ose-tests:v3.11.16-3
       - openshift3/ose-web-console:v3.11.16-3
       - openshift3/ose:v3.11.16-3
         #- openshift3/ovn-kube:v3.11.16-4
-      - openshift3/postgresql-apb:v3.11.16-2
-      - openshift3/prometheus-alert-buffer:v3.11.16-2
-      - openshift3/prometheus-alertmanager:v3.11.16-4
-      - openshift3/prometheus-node-exporter:v3.11.16-4
-      - openshift3/prometheus:v3.11.16-4
       - openshift3/registry-console:v3.11.16-4
       - openshift3/snapshot-controller:v3.11.16-3
       - openshift3/snapshot-provisioner:v3.11.16-3
       - rhel7/etcd:3.2.22
+      - openshift3/grafana:v3.11.16-3
+      - openshift3/ose-prometheus-config-reloader:v3.11.16-3
+      - openshift3/ose-prometheus-operator:v3.11.16-3
+      - openshift3/prometheus-alert-buffer:v3.11.16-2
+      - openshift3/prometheus-alertmanager:v3.11.16-4
+      - openshift3/prometheus-node-exporter:v3.11.16-4
+      - openshift3/prometheus:v3.11.16-4
