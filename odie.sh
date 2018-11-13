@@ -266,14 +266,16 @@ GENERATEEOF
   popd
 }
 
-function setup() {
+function configure() {
   cd ${GIT_CLONE}
 
-  run_ansible_play  "Run Configuration" ./odie-configure.yml
+  # TODO: convert all these into playbooks!!
   setup_web_server & spin $! "Setup web server"
   run_cmd make import_pki & spin $! "Import Red Hat GPG Key"
   run_cmd make webdirs & spin $! "Creating web directories for httpd content"
   run_cmd make localrepos  & spin $! "Setting up local RPM repos"
+
+  run_ansible_play  "Run Configuration" ./odie-configure.yml
 
   test_local_repo & spin $! "Test local RPM Repo"
   complete_message "JumpHost Configuration"
@@ -294,6 +296,14 @@ function conditionally_run_play() {
 }
 
 
+function push_images() {
+  cd ${GIT_CLONE}
+  MAKE_CMD="make -f Makefile.ocp"
+  run_ansible_play "Setup registry" playbooks/ocp_install/prepare_registry.yml
+  run_ansible_play "Push images into Standalone Registry" ${MAKE_CMD} push
+}
+
+
 function install_cluster() {
   cd ${GIT_CLONE}
 
@@ -302,17 +312,16 @@ function install_cluster() {
   run_ansible_play "Yum Clean" ${MAKE_CMD} yum_clean
   run_cmd yum -y install openshift-ansible & spin $! "Install openshift-ansible" 
   run_ansible_play "Cluster Install Steps" ./odie-install.yml
-  run_ansible_play "Push images into Standalone Registry" ${MAKE_CMD} push
   #run_ansible_play "Installing Certificates" ${MAKE_CMD} install_certificates
   run_ansible_play "Installing OCP Cluster" ${MAKE_CMD} install_openshift
-  conditionally_run_play deploy_cns "Install Container Native Storage (Gluster)" ${MAKE_CMD} install_gluster
-  conditionally_run_play deploy_metrics "Install Metrics Subsystem" ${MAKE_CMD} install_metrics
-  conditionally_run_play deploy_logging "Install Logging Subsystem" ${MAKE_CMD} install_logging
-  conditionally_run_play deploy_cloudforms  "Install CloudForms" ${MAKE_CMD} install_cfme
-  run_ansible_play "Configuring Jumphost Certificate" ${MAKE_CMD} admin
-  run_ansible_play "Configuring Registry Console" ${MAKE_CMD} registry_console_cert
+#  conditionally_run_play deploy_cns "Install Container Native Storage (Gluster)" ${MAKE_CMD} install_gluster
+#  conditionally_run_play deploy_metrics "Install Metrics Subsystem" ${MAKE_CMD} install_metrics
+#  conditionally_run_play deploy_logging "Install Logging Subsystem" ${MAKE_CMD} install_logging
+#  conditionally_run_play deploy_cloudforms  "Install CloudForms" ${MAKE_CMD} install_cfme
+  #run_ansible_play "Configuring Jumphost Certificate" ${MAKE_CMD} admin
+  #run_ansible_play "Configuring Registry Console" ${MAKE_CMD} registry_console_cert
   #run_ansible_play "Push images into OCP Registry" ${MAKE_CMD} push_ocp
-  run_ansible_play "Patch resolv.conf on Nodes" ${MAKE_CMD} patch_origin_dns
+  #run_ansible_play "Patch resolv.conf on Nodes" ${MAKE_CMD} patch_origin_dns
   conditionally_run_play setup_htpasswd_accounts  "Install HTPasswd authentication" ${MAKE_CMD} install_htpasswd
   # eventually add pivproxy here
   ${VERSION_SH} set install ${INSTALLER_VERSION}
@@ -489,9 +498,10 @@ usage() {
 
         * ${bold}stage${normal}		-	copy the media from the ISO
         * ${bold}properties${normal}	-	generate the properties file based on the installed version
-        * ${bold}setup${normal}		-	setup the JumpHost 
+        * ${bold}configure${normal}		-	setup the JumpHost 
         * ${bold}generate-config${normal}	-	generate config files
         * ${bold}install${normal}	-	run the Ansible playbooks to install the cluster
+        * ${bold}push${normal}		-	push images to the JumpHost registry
         * ${bold}patch${normal}		-	patch the cluster
         * ${bold}harden${normal}	-	run the STIG remediation in the environment
         * ${bold}ping${normal}		-	ping all the Ansible hosts to test configuration
@@ -525,7 +535,7 @@ EOF
         #${bold}--target BRANCH${normal}	-	The branch to checkout (current: ${TARGET})
 }
 
-export params="$(getopt -o dhs:t: -l reinit,harden,target:,dryrun,help,clean,stash,source:,unprovision,kickstart,skip-git,skip-yum,password,loop --name ${SCRIPT_NAME} -- "$@")"
+export params="$(getopt -o dhs:t: -l reinit,harden,target:,dryrun,help,clean,stash,push,source:,unprovision,kickstart,skip-git,skip-yum,password,loop --name ${SCRIPT_NAME} -- "$@")"
 
 if [[ $? -ne 0 ]]
 then
@@ -637,6 +647,12 @@ do
       shift
       exit 0
       ;;
+    push)
+      header
+      push_images
+      shift
+      exit 0
+      ;;
     properties)
       header
       setup_properties
@@ -649,10 +665,9 @@ do
       generate_config
       exit 0
       ;;
-    setup|configure)
+    configure)
       header
-      #echo "${bold}[${yellow}DEPRECATED${normal}${bold}] ${SCRIPT_NAME} setup${normal} command has been deprecated, use ${bold}${SCRIPT_NAME}what?${n}"
-      setup
+      configure
       exit 0
       ;;
     harden)

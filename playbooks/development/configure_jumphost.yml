@@ -105,5 +105,8 @@
     - name: Run Configure
       shell: "INTERACTIVE=0 /opt/odie/src/odie.sh setup"
 
-    - name: Run Configure
+    - name: Generate Configuration Files
       shell: "INTERACTIVE=0 /opt/odie/src/odie.sh generate-config"
+
+    - name: Configure Registry
+      shell: "INTERACTIVE=0 /opt/odie/src/odie.sh push"

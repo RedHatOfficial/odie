@@ -1,3 +1,5 @@
+#!/usr/bin/ansible-playbook 
+
 - name: Prepare the registry host
   hosts: "{{ host_target | default('localhost') }}"
   #hosts: registry
