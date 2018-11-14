@@ -68,7 +68,7 @@ registries:
       - openshift3/ose-kube-rbac-proxy:v3.11.16-3
       - openshift3/ose-kube-state-metrics:v3.11.16-3
       - openshift3/ose-metrics-server:v3.11.16-3
-      - openshift3/ose-node:v3.11.16-3
+      - openshift3/ose-node:v3.11.16
       - openshift3/openvswitch
       - openshift3/ose-pod:v3.11.16-3
       - openshift3/ose-recycler:v3.11.16-3
