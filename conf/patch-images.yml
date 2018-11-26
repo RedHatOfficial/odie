@@ -1,9 +1,0 @@
-registries:
-  0.5.0:
-    name: patch-0.5.0
-    source_registry: registry.access.redhat.com
-    repos:
-      - openshift3/registry-console:latest
-      - rhgs3/rhgs-server-rhel7:latest
-      - rhgs3/rhgs-volmanager-rhel7:latest
-

@@ -18,3 +18,4 @@
         name: docker_pull
       vars:
         registry: "{{ item.value }}"
+      when: "item.key in image_types"

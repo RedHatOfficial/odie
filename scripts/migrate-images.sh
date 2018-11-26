@@ -33,14 +33,12 @@ _arg_manifest=/opt/odie/src/conf/base-images.yml
 
 print_help ()
 {
-	printf 'Usage: %s [--(no-)all] [--(no-)odie] [--(no-)efk] [--(no-)base] [--(no-)xpaas] [--(no-)docker] [--(no-)standard] [-h|--help]\n' "$0"
+	printf 'Usage: %s [--all] [--odie] [--supplemental] [--base] [--s2i] [-h|--help]\n' "$0"
   	printf "\t%s\n" "<operation>: Whether you want to push or pull images (default: '""push""')"
 
-	printf "\t%s\n" "--all,--no-all: Download All (default) (off by default)"
-	printf "\t%s\n" "--odie,--no-odie: Download ODIE Images (off by default)"
-	printf "\t%s\n" "--base,--no-base: Download Base OCP Images (off by default)"
-
-
+#	printf "\t%s\n" "--all,--no-all: Download All (default) (off by default)"
+#	printf "\t%s\n" "--odie,--no-odie: Download ODIE Images (off by default)"
+#	printf "\t%s\n" "--base,--no-base: Download Base OCP Images (off by default)"
 
 	printf "\t%s\n" "-s,--source: Directory containing the source images & manifests (default: ''/opt/odie/images'')"
 	printf "\t%s\n" "-t,--target: Target output directory (defaults /opt/openshift/images)"
@@ -92,20 +90,23 @@ parse_commandline ()
 			-m*)
 				_arg_manifest="${_key##-m}"
 				;;
-			--no-all|--all)
-				_arg_all="on"
-				test "${1:0:5}" = "--no-" && _arg_all="off"
-        REPOS=('odie' 'base' )
+			--none)
+        			REPOS=()
 				;;
-			--no-odie|--odie)
-				_arg_odie="on"
-				test "${1:0:5}" = "--no-" && _arg_odie="off"
-        REPOS+=('odie')
+			--supplemental)
+        			REPOS+=('supplemental')
 				;;
-			--no-base|--base)
-				_arg_base="on"
-				test "${1:0:5}" = "--no-" && _arg_base="off"
-        REPOS+=('base')
+			--odie)
+        			REPOS+=('odie')
+				;;
+			--s2i)
+        			REPOS+=('s2i')
+				;;
+			--base)
+        			REPOS+=('base')
+				;;
+			--all)
+        			REPOS+=('base','s2i','supplemental','odie')
 				;;
       --debug)
         _arg_debug="-vvv"
@@ -277,7 +278,7 @@ fi
 add_odie_versions
 
 #-e "odie_images_dir=$_arg_source"
-#  -e "{\"image_types\": [$REPOS_CSV]}"  \
+  #-e "{\"image_types\": [$REPOS_CSV]}"  \
 #-vv
 
 echo "Downloading: ${REPOS_CSV}"
