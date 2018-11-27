@@ -1,0 +1,13 @@
+- name: "Add {{hostname}} to /etc/hosts"
+  lineinfile:
+    dest: /etc/hosts
+    state: absent
+    regexp: "^{{hostvars[hostname].ip}}"
+  notify: restart_dnsmasq
+
+- name: "Add {{hostname}} to /etc/hosts"
+  lineinfile:
+    dest: /etc/hosts
+    state: present
+    line: "{{ hostvars[hostname].ip }} {{ hostname }} {{ hostname.split('.')[0]}}"
+  notify: restart_dnsmasq

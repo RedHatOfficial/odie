@@ -7,3 +7,12 @@
   roles:
     - dnsmasq_configuration
 
+- name: Setup /etc/hosts for each host
+  hosts: all
+  connection: local
+  tasks:
+  - name: Setup Jumphost for local DNS
+    include_role:
+      name: provision_vm
+      tasks_from: add_etc_hosts_entry
+

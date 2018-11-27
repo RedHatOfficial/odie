@@ -149,3 +149,7 @@ clone_cop_git:
 	git clone https://github.com/redhat-cop/infra-ansible.git output/utilities/infra-ansible
 	git clone https://github.com/redhat-cop/openshift-toolkit output/utilities/openshift-toolkit
 
+
+setup_dnsmasq:
+	sudo ./playbooks/operations/setup_dnsmasq.yml  -e @/opt/odie/config/build.yml
+

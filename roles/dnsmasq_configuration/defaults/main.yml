@@ -11,3 +11,4 @@ tftp_root: /var/lib/tftpboot
 rhel_mount: /opt/odie/install_media
 
 my_repo_host: "{{ ansible_default_ipv4.address }}" 
+listen_address: "{{ ansible_default_ipv4.address }}"
