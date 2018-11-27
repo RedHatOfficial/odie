@@ -11,8 +11,9 @@ graphical
 autopart --encrypted
 {% else %}
 text
-autopart
+{% include './templates/includes/disk-rhel.j2' %}
 {% endif %}
+
 
 timezone UTC
 reboot --eject

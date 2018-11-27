@@ -1,7 +1,6 @@
 # Create primary system partitions
 part /boot --fstype=xfs --size=1024
-part pv.01 --size={{ partition_root + partition_home + partition_var + partition_var_log + partition_var_log_audit
-        + partition_tmp + partition_swap + 1024 }} 
+part pv.01 --size={{ partition_root + partition_home + partition_var + partition_var_log + partition_var_log_audit + partition_tmp + partition_swap + 1024 }}  --grow
 
 # Create a Logical Volume Management (LVM) group
 volgroup rootVG --pesize=4096 pv.01
@@ -13,7 +12,7 @@ logvol /home --fstype=xfs --name=homeVol --vgname=rootVG --size={{partition_home
 # CCE-26435-8: Ensure /tmp Located On Separate Partition
 logvol /tmp --fstype=xfs --name=tmpVol --vgname=rootVG --size={{partition_tmp}} --fsoptions="nodev,noexec,nosuid"  {{ luks_encryption }}
 # CCE-26639-5: Ensure /var Located On Separate Partition
-logvol /var --fstype=xfs --name=varVol --vgname=rootVG --size={{partition_var}} --fsoptions="nodev,gquota"  {{ luks_encryption }}
+logvol /var --fstype=xfs --name=varVol --vgname=rootVG --size={{partition_var}} --grow --fsoptions="nodev,gquota"  {{ luks_encryption }}
 # CCE-26215-4: Ensure /var/log Located On Separate Partition
 logvol /var/log --fstype=xfs --name=varLogVol --vgname=rootVG --size={{partition_var_log}} --fsoptions="nodev"  {{ luks_encryption }}
 # CCE-26436-6: Ensure /var/log/audit Located On Separate Partition
