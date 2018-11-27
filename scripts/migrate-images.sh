@@ -216,7 +216,7 @@ if [[ $ARG = "push" ]]; then
   CMD="${CMD}push.yml  "
 
   #setup_host_target
-  add_array_of_manifests
+  #add_array_of_manifests
   add_images_source
 
 
@@ -229,7 +229,7 @@ elif [[ $ARG = "push_ocp" ]]; then
   CMD="${CMD}push.yml -e ocp_project=openshift"
 
   #setup_host_target
-  add_array_of_manifests
+  #add_array_of_manifests
   add_images_source
 
 

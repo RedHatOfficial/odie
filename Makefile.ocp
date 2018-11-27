@@ -39,7 +39,7 @@ uninstall:
 	ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/adhoc/uninstall.yml
 
 push:
-	./scripts/migrate-images.sh push 
+	./scripts/migrate-images.sh push --all
 
 push_ocp:
 	./scripts/migrate-images.sh push_ocp --xpaas
