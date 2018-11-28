@@ -3,24 +3,21 @@ SHELL := /bin/bash
 
 BUILD_VERSION?=snapshot
 
-setup: import_pki setup_repos install_dependencies setup_repo_pki setup_git_repos
+build: primary
+setup: import_pki setup_repos install_dependencies setup_repo_pki
 
 full_media: setup_repos rpms stage_rhel_iso pull_images  pull_odie_images
-delta_media: setup_repos rpms pull_delta_images  pull_odie_images
+#delta_media: setup_repos rpms pull_delta_images  pull_odie_images
 
 # everything is put into the same DVD now
 dvd: primary iso
-primary: clone_git_repo setup_scripts clone_cop_git
+primary: stage_rhel_iso clone_git_repo setup_scripts clone_cop_git
 
-build: primary patch_iso
 
 install_dependencies:
 	sudo yum -y install vim-enhanced `cat conf/build-rpms.txt`
 	./scripts/install_asciidoctor.sh
 	systemctl enable --now docker
-
-setup_git_repos:
-	./scripts/init_git_repos.sh
 
 rpms: create_rpm_repos
 
@@ -58,10 +55,6 @@ pull_images:
 	mkdir -p output/container_images
 	./scripts/migrate-images.sh pull --all
 
-pull_delta_images:
-	rm -rf output/delta_images/*
-	scripts/pull_delta_images.sh
-
 ISO_NAME=dist/RedHat-ODIE-$(BUILD_VERSION).iso
 baseline_iso:
 	mkdir -p dist/
@@ -69,13 +62,6 @@ baseline_iso:
 	rm -f ${ISO_NAME}
 	mkisofs -quiet -o ${ISO_NAME} -m 'delta_*' -m 'container_images/extra*' -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -V 'RHEL-7.5 Server.x86_64' -boot-load-size 4 -boot-info-table -r -J -T output/
 	implantisomd5 ${ISO_NAME}
-
-PATCH_ISO_NAME=dist/RedHat-ODIE-$(BUILD_VERSION)-patch.iso
-patch_iso:
-	mkdir -p dist/
-	find -name 'TRANS.TBL' -exec rm -f {} \;
-	mkisofs -quiet -R  -m repo -m container_images -m LiveOS -m isolinux -m Packages -m repodata -m images -m ks -m EULA -o ${PATCH_ISO_NAME} output/
-	implantisomd5 ${PATCH_ISO_NAME}
 
 clean:
 	rm -rf output/ dist/
@@ -127,9 +113,6 @@ setup_repos:
 unsubscribe:
 	subscription-manager remove --all
 	subscription-manager unregister
-
-clean_images:
-	rm -rf output/images
 
 build_postgres_stig:
 	VERSION=`cat contrib/postgresql-container-stig/VERSION` && docker build --no-cache -f contrib/postgresql-container-stig/Dockerfile.rhel7 contrib/postgresql-container-stig -t "localhost:5000/odie/postgresql-95-rhel7-stig:$${VERSION}" -t "localhost:5000/odie/postgresql-95-rhel7-stig:latest"

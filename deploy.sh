@@ -23,12 +23,14 @@ ${bold}${underline}General Options${normal}
 EOF
 }
 
-export params="$(getopt -o h -l help --name "${SCRIPT_NAME}" -- "$@")"
+export params="$(getopt -o hi: -l help,skip-tags:,iso: --name "${SCRIPT_NAME}" -- "$@")"
 
 if [[ $? -ne 0 ]]; then
   usage
   exit 1
 fi
+
+OPTIONS=""
 
 eval set -- "$params"
 
@@ -39,6 +41,15 @@ do
            usage
            exit 0
            ;;
+        --iso|-i)
+          ISO_NAME="$2"
+          shift
+          shift
+          ;;
+        --skip-tags)
+          OPTIONS="${OPTIONS} --skip-tags ${2}"
+          shift;shift;
+          ;;
         --)
           shift; break ;;
     esac
@@ -55,9 +66,5 @@ function header() {
 }
 
 
-if [[ ! -z "$1" ]]; then
-  ISO_NAME=$1
-fi
-
 header
-./odie-provision.yml -e "boot_iso=$(realpath ${ISO_NAME})"
+./odie-provision.yml -e "boot_iso=$(realpath ${ISO_NAME})" -e @/opt/odie/config/build.yml ${OPTIONS}
