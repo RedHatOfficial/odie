@@ -9,5 +9,5 @@
     uri: "{{kvm_uri}}"
   register: vm_result
   until: vm_result.status == state
-  delay: "{{delay}}"
+  delay: "{{delayInterval}}"
   retries: "{{ timeout }}"

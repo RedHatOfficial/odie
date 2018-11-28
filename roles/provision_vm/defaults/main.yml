@@ -17,9 +17,9 @@ kvm_uri: ''
 graphics: '--nographics --noautoconsole'
 
 # these operations can take a long time!!
-# timeout is number of intervals between delays (e.g. 600 sec wait time)
+# timeout is number of seconds between delays (e.g. 600 sec wait time)
 timeout: 60
-delay: 5
+delayInterval: 5
 
 cd_boot: True
 my_repo_host: "{{ groups['jumphost'][0] }}"
