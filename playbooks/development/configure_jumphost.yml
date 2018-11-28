@@ -16,6 +16,8 @@
       register: password_reset
       retries: 5
       until: password_reset.rc == 0
+      tags:
+        - password_reset
 
     - name: Ensure nfs service is enabled in firewall
       firewalld:
@@ -110,5 +112,7 @@
     - name: Generate Configuration Files
       shell: "INTERACTIVE=0 /opt/odie/src/odie.sh generate-config"
 
-    - name: Configure Registry
+    - name: Push Images into Registry
       shell: "INTERACTIVE=0 /opt/odie/src/odie.sh push"
+      tags:
+        - images
