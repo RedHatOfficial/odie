@@ -15,6 +15,3 @@ uncompress_cmd: xz
 
 import_images: True
 
-# These are used to put the versions into the docker image loading
-ocp_version: 3.11.16
-ocp_short_version: 3.11

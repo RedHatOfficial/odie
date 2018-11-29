@@ -1,9 +1,9 @@
 # default 
 odie_playbook_dir: /opt/odie/src
 
-# These are used to put the versions into the docker image loading
-ocp_version: 3.11.16
-ocp_short_version: 3.11
+# These are set globally in inventory/group_vars/all/internal.yml
+#ocp_version: 3.11.16
+#ocp_short_version: 3.11
 
 # Security Features
 #openshift_master_ldap_ca_file: /opt/odie/config/ldap-ca-cert # a path to your CA local from the jumphost
