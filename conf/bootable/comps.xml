@@ -600,6 +600,25 @@
       <packagereq type="optional">selinux-policy-mls</packagereq>
       <packagereq type="optional">tboot</packagereq>
       <packagereq requires="redhat-release-server" type="conditional">NetworkManager-config-server</packagereq>
+
+      <packagereq type="mandatory">libvirt</packagereq>
+      <packagereq type="mandatory">libvirt-client</packagereq>
+      <packagereq type="mandatory">virt-who</packagereq>
+      <packagereq type="optional">fence-virtd-libvirt</packagereq>
+      <packagereq type="optional">fence-virtd-multicast</packagereq>
+      <packagereq type="optional">fence-virtd-serial</packagereq>
+      <packagereq type="optional">libvirt-cim</packagereq>
+      <packagereq type="optional">libvirt-java</packagereq>
+      <packagereq type="optional">libvirt-snmp</packagereq>
+      <packagereq type="optional">perl-Sys-Virt</packagereq>
+      <packagereq type="default">libguestfs</packagereq>
+      <packagereq type="optional">libguestfs-inspect-icons</packagereq>
+      <packagereq type="optional">libguestfs-java</packagereq>
+      <packagereq type="optional">libguestfs-tools</packagereq>
+      <packagereq type="optional">libguestfs-tools-c</packagereq>
+      <packagereq type="mandatory">qemu-kvm</packagereq>
+      <packagereq type="optional">qemu-kvm-tools</packagereq>
+
     </packagelist>
   </group>
   <group>
