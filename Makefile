@@ -11,22 +11,27 @@ full_media: setup_repos rpms stage_rhel_iso pull_images  pull_odie_images
 
 # everything is put into the same DVD now
 dvd: primary iso
-primary: stage_rhel_iso clone_git_repo setup_scripts clone_cop_git
-
+primary: stage_rhel_iso clone_git_repo setup_scripts create_rpm_repo
+release: clone_cop_git create_docs cve_changelog checksum
 
 install_dependencies:
 	sudo yum -y install vim-enhanced `cat conf/build-rpms.txt`
 	./scripts/install_asciidoctor.sh
 	systemctl enable --now docker
 
-rpms: create_rpm_repos
+rpms: generate_rpm_manifest download_rpms create_rpm_repos
 
-create_rpm_repos:
-	rm -rf output/{Packages,repodata}
-	sudo scripts/download-custom-repo.sh
+clean_rpms:
+	rm -rf {Packages,repodata}
 
-clone_git_repo:
-	sh scripts/local-git-repo.sh
+create_rpm_repo:
+	sudo build/rpm-createrepo.sh
+
+generate_rpm_manifest:
+	sudo build/rpm-generate-file-list.sh
+
+download_rpms:
+	sh build/rpm-download-files.sh
 
 create_docs:
 	source /opt/rh/rh-ruby22/enable && cd documentation/ && make pdfs
@@ -36,14 +41,12 @@ setup_scripts:
 	cp odie.sh output/
 	cp INSTALLER_VERSION output/
 
-delta_rpm_changelog:
-	rm -rf tmp
-	mkdir -p tmp
-	cp -r /opt/odie/baseline/Packages tmp/baseline_rpms/
-	ls -1 tmp/baseline_rpms/ > tmp/old-packages.txt
-	rsync -az --exclude-from=tmp/old-packages.txt output/Packages/ tmp/delta_rpms/
-	find tmp -not -name '*.rpm' -not -name 'old-packages.txt' -type f -delete
+cve_changelog:
 	./scripts/generate-cve-delta.pl 2>&1 > output/CVE_CHANGELOG
+
+
+clone_git_repo:
+	sh scripts/local-git-repo.sh
 
 stage_rhel_iso:
 	scripts/stage-rhel-iso.sh output/
@@ -71,7 +74,7 @@ clean:
 
 partial_clean:
 	mkdir -p output
-	cd output/ && find . -maxdepth 1 -not -name 'container_images' -not -name 'Packages' -not -name 'repodata' \
+	cd output/ && find . -maxdepth 1 -not -name 'container_images' -not -name 'Packages' \
 		-not -name 'delta_*' -not -name 'CVE_CHANGELOG' -exec rm -rf {} \;
 
 #all: disconnected

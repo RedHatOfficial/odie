@@ -191,23 +191,16 @@ function stage() {
 
   if [[ -d "${OUTPUT_DIR}" && ${KEEP_CONTENT_DIR} -eq 0 ]] ; then
     confirmation_prompt 0 "Existing content found at ${bold}${OUTPUT_DIR}${normal}.  This installer will delete that directory.  Proceed? (y/n) : "
-    rm -rf ${OUTPUT_DIR}/{images,delta_images,kickstart,repo} & spin $! "Deleting ${OUTPUT_DIR}"
+    rm -rf ${OUTPUT_DIR}/{images,kickstart,repo} & spin $! "Deleting ${OUTPUT_DIR}"
   fi
 
   mkdir -p ${OUTPUT_DIR} & spin $! "Creating ${OUTPUT_DIR}"
   sleep 1
 
   if [[ -d "${CONTENT_DIR}/Packages" ]]; then
+    rm -rf ${OUTPUT_DIR}/repo/odie-custom/repodata
     mkdir -p ${OUTPUT_DIR}/repo/odie-custom/
     run_cmd rsync -av ${CONTENT_DIR}/Packages/* ${OUTPUT_DIR}/repo/odie-custom/ & spin $! "Copying disconnected RPM repository".rpm
-  fi
-
-  if [[ -d "${CONTENT_DIR}/delta_rpm"  ]]; then
-    mkdir -p ${OUTPUT_DIR}/repo/odie-custom
-    rsync -az ${CONTENT_DIR}/delta_rpm/* ${OUTPUT_DIR}/repo/odie-custom & spin $! "Copying Delta RPMs"
-  fi
-
-  if [[ -d "${CONTENT_DIR}/Packages" || -d "${CONTENT_DIR}/delta_rpm" ]]; then
     run_cmd createrepo -v /opt/odie/repo/odie-custom -o /opt/odie/repo/odie-custom & spin $! "Creating RPM repo metadata"
     run_cmd ${CONTENT_DIR}/scripts/repo-pki.sh & spin $! "Signing YUM Repo"
   fi
@@ -216,11 +209,6 @@ function stage() {
   if [[ -d "${CONTENT_DIR}/container_images" ]] ; then
       # TODO: This should reuse the "image_source" variable
       run_cmd rsync -av ${CONTENT_DIR}/container_images/* ${OUTPUT_DIR}/images/ & spin $! "Copying Docker Images"
-  fi
-
-  if [[ -d "${CONTENT_DIR}/delta_images" ]] ; then
-      # TODO: This should reuse the "image_source" variable
-      rsync_dir ${CONTENT_DIR}/delta_images ${OUTPUT_DIR} & spin $! "Copying Delta Container Images"
   fi
 
   if [[ -d "${CONTENT_DIR}/utilities" ]] ; then
