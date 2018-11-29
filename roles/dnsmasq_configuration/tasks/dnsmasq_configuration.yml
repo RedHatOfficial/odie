@@ -88,8 +88,8 @@
       expand-hosts
       domain=dhcp-subnet
       dhcp-range={{ip_range_start}},{{ip_range_end}},12h
-      {% if mac_address is defined and 'jumphost' in groups and groups['jumphost'][0] is defined %}
-      dhcp-host={{ mac_address }},{{hostvars[groups['jumphost'][0]].hostname}},{{hostvars[groups['jumphost'][0]].ip}},infinite
+      {% if jumphost_mac_address is defined and 'jumphost' in groups and groups['jumphost'][0] is defined %}
+      dhcp-host={{ jumphost_mac_address }},{{hostvars[groups['jumphost'][0]].hostname}},{{hostvars[groups['jumphost'][0]].ip}},infinite
       {% endif %}
 
       {% if enable_pxe %}

@@ -1,6 +1,6 @@
 lvm_pool: "ODIE"
 
-mac_prefix: "52:54:00:c2:5"
+mac_prefix: "52:54:00:0d:1"
 cluster_id: "0" # Increment this for each additional cluster
 mac_suffix: "{{ mac_flavor_decoder[hostvars[hostname].flavor] }}{{ hostname.split('.')[0][-1] }}"
 mac_address: "{{mac_prefix}}{{cluster_id}}:{{mac_suffix}}"

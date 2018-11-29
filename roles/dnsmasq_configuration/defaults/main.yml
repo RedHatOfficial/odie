@@ -12,3 +12,9 @@ rhel_mount: /opt/odie/install_media
 
 my_repo_host: "{{ ansible_default_ipv4.address }}" 
 listen_address: "{{ ansible_default_ipv4.address }}"
+
+
+# The provision_vm role has some unique handling for this,
+# if you set your own you will need to modify this accordingly
+# still investigating 
+jumphost_mac_address: "52:54:00:0d:10:f1"
