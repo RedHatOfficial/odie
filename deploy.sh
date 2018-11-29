@@ -23,7 +23,7 @@ ${bold}${underline}General Options${normal}
 EOF
 }
 
-export params="$(getopt -o hi: -l help,skip-tags:,iso: --name "${SCRIPT_NAME}" -- "$@")"
+export params="$(getopt -o hi: -l help,skip-tags:,tags:,iso: --name "${SCRIPT_NAME}" -- "$@")"
 
 if [[ $? -ne 0 ]]; then
   usage
@@ -45,6 +45,10 @@ do
           ISO_NAME="$2"
           shift
           shift
+          ;;
+        --tags)
+          OPTIONS="${OPTIONS} --tags ${2}"
+          shift;shift;
           ;;
         --skip-tags)
           OPTIONS="${OPTIONS} --skip-tags ${2}"
