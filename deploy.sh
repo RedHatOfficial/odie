@@ -59,9 +59,11 @@ do
     esac
 done
 
+SIZE=$(du -sh ${ISO_NAME} | awk '{print $1;}')
 
 function header() {
-  export HEADER="Red Hat ODIE Deploy Script - ${bold}ISO=${ISO_NAME}${normal}"
+  export HEADER="Deploying  ${bold}ISO=${ISO_NAME}${normal} (${SIZE})"
+
   echo
   echo ${HEADER}
   echo
@@ -69,6 +71,6 @@ function header() {
   echo
 }
 
-
 header
-./odie-provision.yml -e "boot_iso=$(realpath ${ISO_NAME})" -e @/opt/odie/config/build.yml ${OPTIONS}
+
+run_ansible_play "Deploying ODIE Enviroment" ./odie-provision.yml -e "boot_iso=$(realpath ${ISO_NAME})" -e @/opt/odie/config/build.yml ${OPTIONS}
