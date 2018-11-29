@@ -14,5 +14,5 @@ fi
 #REMOTE="--fetch-remote-resources"
 REMOTE=""
 
-oscap xccdf eval ${REMOTE} ${REMEDIATE} --profile ospp-rhel7 --report ${RESULT}.html --results ${RESULT}.xml /usr/share/xml/scap/ssg/content/ssg-rhel7-xccdf.xml
+oscap xccdf eval ${REMOTE} ${REMEDIATE} --profile ospp --report ${RESULT}.html --results ${RESULT}.xml /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml
 exit 0

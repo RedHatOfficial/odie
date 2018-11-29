@@ -6,6 +6,8 @@
 ---
 - name: Remediate VMs with OpenSCAP
   hosts: all:localhost
+  tags:
+    - oscap
   vars:
     output_dir: /var/www/html/oscap-results
     remediation: yes
