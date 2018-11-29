@@ -10,6 +10,7 @@ BUILD_FLAGS_MAIN="primary"
 BUILD_FLAGS_POST=""
 SHOW_TAIL=0
 INTERACTIVE=1
+RELEASE=0
 
 export PROVISION_ODIE=0
 
@@ -26,11 +27,8 @@ function git_tag() {
 }
 
 function bump() {
-  VERSION=$(./contrib/bin/semver bump build rc-`date +%Y%m%d-%H-%M-%S` `cat INSTALLER_VERSION `)
-  #git stash
+  VERSION=$(./contrib/bin/semver bump build build-`date +%Y%m%d-%H-%M-%S` `cat INSTALLER_VERSION `)
   echo "${VERSION}" > INSTALLER_VERSION
-  #git commit -m "Bumping to ${VERSION}" INSTALLER_VERSION
-  #git stash pop
 }
 
 function usage() {
@@ -114,15 +112,22 @@ do
            ;;
         --release|-r)
            git_tag
+           RELEASE=1
            export BUILD_FLAGS_PRE="${BUILD_FLAGS_PRE}"
            export BUILD_FLAGS_MAIN="${BUILD_FLAGS_MAIN}"
-#           export BUILD_FLAGS_POST="create_docs ${BUILD_FLAGS_POST}"
+           export BUILD_FLAGS_POST="create_docs ${BUILD_FLAGS_POST}"
            shift
            ;;
         --)
           shift; break ;;
     esac
 done
+
+
+if [[ $RELEASE = 0 ]]; then
+  bump
+fi
+
 
 export ISO_NAME=dist/RedHat-ODIE-${VERSION}.iso
 
