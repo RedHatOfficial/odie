@@ -1,0 +1,7 @@
+Host *.odie
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+
+Host 192.168.*
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
