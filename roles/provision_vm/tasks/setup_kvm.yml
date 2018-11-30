@@ -38,7 +38,7 @@
     --ram {{hostvars[hostname].memory}}
     --vcpus={{hostvars[hostname].cpu}}
     {{ graphics }}
-    --network bridge={{ bridge_name }},mac={{mac_address}}
+    --network network={{ network_name }},mac={{mac_address}}
     --check all=off
     --disk vol={{lvm_pool}}/{{primary_pv}}
     {% if hostvars[hostname].disk2 is defined %} --disk vol={{lvm_pool}}/{{alt_pv}} {% endif %}

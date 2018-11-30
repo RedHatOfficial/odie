@@ -3,7 +3,6 @@
   yum:
     name: dnsmasq
     state: latest
-  when: enable_dhcp
   notify: 
     - restart_dnsmasq
 
@@ -20,108 +19,90 @@
     permanent: yes
   when: enable_dhcp
 
-- name: Setup FW for TFTP
-  firewalld:
-    service: tftp
-    state: enabled
-    immediate: yes
-    permanent: yes
+- name: Enable PXE 
   when: enable_pxe
+  block: 
+  - name: Setup FW for TFTP
+    firewalld:
+      service: tftp
+      state: enabled
+      immediate: yes
+      permanent: yes
 
-- name: Setup selinux context
-  shell: |
-    semanage fcontext -a -t httpd_sys_content_t "/opt/odie/install_media(/.*)?"
-    restorecon -R /opt/odie/install_media/
+  - name: Setup selinux context
+    shell: |
+      semanage fcontext -a -t httpd_sys_content_t "/opt/odie/install_media(/.*)?"
+      restorecon -R /opt/odie/install_media/
 
-- name: Create symlink
-  file:
-    src: /opt/odie/install_media
-    dest: /var/www/html/media
-    state: link
+  - name: Create symlink
+    file:
+      src: /opt/odie/install_media
+      dest: /var/www/html/media
+      state: link
 
-- name: Create Temporary project
-  command: mktemp -d 
-  register: tmp
-  when: stage_pxe
+  - name: Create Temporary project
+    command: mktemp -d 
+    register: tmp
 
-- set_fact:
-    cpio_dir: "{{tmp.stdout}}"
-  when: stage_pxe
-  notify: 
-    - delete_cpio
+  - set_fact:
+      cpio_dir: "{{tmp.stdout}}"
+    notify: 
+      - delete_cpio
 
-- name: Extract the RPM
-  shell: "rpm2cpio /opt/odie/repo/odie-custom/syslinux-4.05-13.el7.x86_64.rpm  | cpio -dimv"
-  args:
-    chdir: "{{cpio_dir}}"
-  when: stage_pxe
+  - name: Extract the RPM
+    shell: "rpm2cpio /opt/odie/repo/odie-custom/syslinux-4.05-15.el7.x86_64.rpm  | cpio -dimv"
+    args:
+      chdir: "{{cpio_dir}}"
 
-- name: Create TFTP Directories
-  file:
-    path: "{{item}}"
-    state: directory
-    recurse: yes
-  when: stage_pxe
-  with_items:
-    - "{{tftp_root}}/pxelinux/images/RHEL-7.5"
-    - "{{tftp_root}}/images/RHEL-7.5"
-    - "{{tftp_root}}/pxelinux/pxelinux.cfg"
+  - name: Create TFTP Directories
+    file:
+      path: "{{item}}"
+      state: directory
+      recurse: yes
+    with_items:
+      - "{{tftp_root}}/pxelinux/images/RHEL-7.5"
+      - "{{tftp_root}}/images/RHEL-7.5"
+      - "{{tftp_root}}/pxelinux/pxelinux.cfg"
 
-- name: Copy TFTP Artifacts
-  copy:
-    src: "{{item.src}}"
-    dest: "{{item.dest}}"
-    directory_mode: true
-  with_items:
-    - { src: "{{rhel_mount}}/images/pxeboot/vmlinuz", dest: "{{tftp_root}}/pxelinux/images/RHEL-7.5/vmlinuz"}
-    - { src: "{{rhel_mount}}/images/pxeboot/initrd.img", dest: "{{tftp_root}}/pxelinux/images/RHEL-7.5/initrd.img"}
-    - { src: "{{rhel_mount}}/images/pxeboot/vmlinuz", dest: "{{tftp_root}}/images/RHEL-7.5/vmlinuz"}
-    - { src: "{{rhel_mount}}/images/pxeboot/initrd.img", dest: "{{tftp_root}}/images/RHEL-7.5/initrd.img"}
-    - { src: "{{cpio_dir}}/usr/share/syslinux/pxelinux.0",  dest: "{{tftp_root}}/pxelinux/pxelinux.0"}
-    - { src: "{{cpio_dir}}/usr/share/syslinux/vesamenu.c32",  dest: "{{tftp_root}}/pxelinux/vesamenu.c32"}
-  when: stage_pxe
+  - name: Copy TFTP Artifacts
+    copy:
+      src: "{{item.src}}"
+      dest: "{{item.dest}}"
+      directory_mode: true
+    with_items:
+      - { src: "{{rhel_mount}}/images/pxeboot/vmlinuz", dest: "{{tftp_root}}/pxelinux/images/RHEL-7.5/vmlinuz"}
+      - { src: "{{rhel_mount}}/images/pxeboot/initrd.img", dest: "{{tftp_root}}/pxelinux/images/RHEL-7.5/initrd.img"}
+      - { src: "{{rhel_mount}}/images/pxeboot/vmlinuz", dest: "{{tftp_root}}/images/RHEL-7.5/vmlinuz"}
+      - { src: "{{rhel_mount}}/images/pxeboot/initrd.img", dest: "{{tftp_root}}/images/RHEL-7.5/initrd.img"}
+      - { src: "{{cpio_dir}}/usr/share/syslinux/pxelinux.0",  dest: "{{tftp_root}}/pxelinux/pxelinux.0"}
+      - { src: "{{cpio_dir}}/usr/share/syslinux/vesamenu.c32",  dest: "{{tftp_root}}/pxelinux/vesamenu.c32"}
 
 - name: Prepare DNSConfg
   copy:
     content: |-
+      listen-address={{listen_address}}
+      address=/.{{default_subdomain}}/{{hostvars[groups['infra'][0]].ip}}
+      bind-interfaces
+
+      {% if enable_dhcp %}
       expand-hosts
       domain=dhcp-subnet
       dhcp-range={{ip_range_start}},{{ip_range_end}},12h
-      address=/{{default_subdomain}}/{{hostvars[groups['infra'][0]].ip}}
-      {% if enable_pxe %} 
+      {% if jumphost_mac_address is defined and 'jumphost' in groups and groups['jumphost'][0] is defined %}
+      dhcp-host={{ jumphost_mac_address }},{{hostvars[groups['jumphost'][0]].hostname}},{{hostvars[groups['jumphost'][0]].ip}},infinite
+      {% endif %}
+
+      {% if enable_pxe %}
       dhcp-boot=pxelinux/pxelinux.0
       enable-tftp
       tftp-root={{tftp_root}}
       {% endif %}
+
+      {% endif %}
+
     dest: /etc/dnsmasq.conf
-  when: enable_dhcp
   notify:
     - restart_dnsmasq
-
-- name: Setup menu
-  copy:
-    content: |-
-      default vesamenu.c32
-      #prompt 1
-      timeout 300
-
-      display boot.msg
-
-      label Local
-        menu label Boot from local HD
-        menu default
-        localboot 0
-
-      {% for server in groups['all'] %}
-
-      label {{server}}
-        menu label Install {{server}}
-        kernel images/RHEL-7.5/vmlinuz
-        append initrd=images/RHEL-7.5/initrd.img ip=dhcp inst.repo=http://{{my_repo_host}}/media  inst.ks=http://{{my_repo_host}}/pub/{{server}}.cfg fips=1
-
-      {% endfor %}
-    dest: "{{tftp_root}}/pxelinux/pxelinux.cfg/default"
-  when: enable_pxe
 
 - name: Setup menu per VM - PXE Hex IP convention
   copy:
@@ -165,3 +146,5 @@
   set_fact:
     kickstart_media: True
   when: enable_pxe
+
+

@@ -49,3 +49,8 @@ inventory/group_vars/all
 example_layout/projects/reference-project/apps/reference-app/build/reference-app/deployments/reference-app.war
 
 *.iml
+supplemental/
+
+# random files go in here
+scratch
+manifests

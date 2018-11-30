@@ -1,86 +1,128 @@
 registries:
   base:
-    name: ose3-base-images
+    name: ocp-images-base
+    source_registry: registry.access.redhat.com
+    repos:
+        - openshift3/ose-efs-provisioner:v{{ocp_version}}
+        - openshift3/image-inspector:v{{ocp_version}}
+        - openshift3/local-storage-provisioner:v{{ocp_version}}
+        - openshift3/ose-node-problem-detector:v{{ocp_version}}
+        - openshift3/node:v{{ocp_version}}
+        - openshift3/oauth-proxy:v{{ocp_version}}
+        - openshift3/ose-operator-lifecycle-manager:v{{ocp_version}}
+        - openshift3/ose-ansible:v{{ocp_version}}
+          #- openshift3/ose-autoheal:v{{ocp_version}}
+        - openshift3/ose-cli:v{{ocp_version}}
+        - openshift3/ose-cluster-autoscaler:v{{ocp_version}}
+        - openshift3/ose-cluster-capacity:v{{ocp_version}}
+        - openshift3/ose-cluster-monitoring-operator:v{{ocp_version}}
+        - openshift3/ose-configmap-reloader:v{{ocp_version}}
+        - openshift3/ose-console:v{{ocp_version}}
+        - openshift3/ose-control-plane:v{{ocp_version}}
+        - openshift3/ose-deployer:v{{ocp_version}}
+        - openshift3/ose-docker-builder:v{{ocp_version}}
+        - openshift3/ose-docker-registry:v{{ocp_version}}
+        - openshift3/ose-egress-dns-proxy:v{{ocp_version}}
+        - openshift3/ose-egress-http-proxy:v{{ocp_version}}
+        - openshift3/ose-egress-router:v{{ocp_version}}
+        - openshift3/ose-haproxy-router:v{{ocp_version}}
+        - openshift3/ose-hyperkube:v{{ocp_version}}
+        - openshift3/ose-hypershift:v{{ocp_version}}
+        - openshift3/ose-keepalived-ipfailover:v{{ocp_version}}
+        - openshift3/ose-kube-rbac-proxy:v{{ocp_version}}
+        - openshift3/ose-kube-state-metrics:v{{ocp_version}}
+        - openshift3/ose-metrics-server:v{{ocp_version}}
+        - openshift3/ose-node:v{{ocp_version}}
+        - openshift3/openvswitch
+        - openshift3/ose-pod:v{{ocp_version}}
+        - openshift3/ose-recycler:v{{ocp_version}}
+          #- openshift3/ose-service-idler:v{{ocp_version}}
+        - openshift3/ose-tests:v{{ocp_version}}
+        - openshift3/ose-web-console:v{{ocp_version}}
+        - openshift3/ose:v{{ocp_version}}
+          #- openshift3/ovn-kube:v{{ocp_version}}
+        - openshift3/registry-console:v{{ocp_version}}
+        - openshift3/snapshot-controller:v{{ocp_version}}
+        - openshift3/snapshot-provisioner:v{{ocp_version}}
+        - rhel7/etcd:3.2.22
+        - openshift3/grafana:v{{ocp_version}}
+        - openshift3/ose-prometheus-config-reloader:v{{ocp_version}}
+        - openshift3/ose-prometheus-operator:v{{ocp_version}}
+        - openshift3/prometheus-alert-buffer:v{{ocp_version}}
+        - openshift3/prometheus-alertmanager:v{{ocp_version}}
+        - openshift3/prometheus-node-exporter:v{{ocp_version}}
+        - openshift3/prometheus:v{{ocp_version}}
+  supplemental:
+    name: ocp-images-supplemental
     source_registry: registry.access.redhat.com
     repos:
       - openshift3/apb-base:v{{ocp_version}}
-      - openshift3/container-engine:v{{ocp_version}}
-      - openshift3/cri-o:v{{ocp_version}}
-      - openshift3/image-inspector:v{{ocp_version}}
+      - openshift3/apb-tools:v{{ocp_version}}
+      - openshift3/automation-broker-apb:v{{ocp_version}}
+      - openshift3/csi-attacher:v{{ocp_version}}
+      - openshift3/csi-driver-registrar:v{{ocp_version}}
+      - openshift3/csi-livenessprobe:v{{ocp_version}}
+      - openshift3/csi-provisioner:v{{ocp_version}}
       - openshift3/jenkins-2-rhel7:v{{ocp_version}}
+      - openshift3/jenkins-agent-maven-35-rhel7:v{{ocp_version}}
+      - openshift3/jenkins-agent-nodejs-8-rhel7:v{{ocp_version}}
       - openshift3/jenkins-slave-base-rhel7:v{{ocp_version}}
       - openshift3/jenkins-slave-maven-rhel7:v{{ocp_version}}
       - openshift3/jenkins-slave-nodejs-rhel7:v{{ocp_version}}
-      - openshift3/local-storage-provisioner:v{{ocp_version}}
-      - openshift3/logging-auth-proxy:v{{ocp_version}}
-      - openshift3/logging-curator:v{{ocp_version}}
-      - openshift3/logging-elasticsearch:v{{ocp_version}}
-      - openshift3/logging-eventrouter:v{{ocp_version}}
-      - openshift3/logging-fluentd:v{{ocp_version}}
-      - openshift3/logging-kibana:v3.9.30-3
+      - openshift3/ose-logging-curator5:v{{ocp_version}}
+      - openshift3/ose-logging-elasticsearch5:v{{ocp_version}}
+      - openshift3/ose-logging-fluentd:v{{ocp_version}}
+      - openshift3/ose-logging-kibana5:v{{ocp_version}}
+        #- openshift3/manila-provisioner:v{{ocp_version}}
       - openshift3/mariadb-apb:v{{ocp_version}}
-      - openshift3/mediawiki-123:v{{ocp_version}}
       - openshift3/mediawiki-apb:v{{ocp_version}}
+      - openshift3/mediawiki:v{{ocp_version}}
+      - openshift3/ose-ansible-service-broker:v{{ocp_version}}
+      - openshift3/ose-descheduler:v{{ocp_version}}
+      - openshift3/ose-logging-eventrouter:v{{ocp_version}}
+      - openshift3/postgresql-apb:v{{ocp_version}}
       - openshift3/metrics-cassandra:v{{ocp_version}}
       - openshift3/metrics-hawkular-metrics:v{{ocp_version}}
       - openshift3/metrics-hawkular-openshift-agent:v{{ocp_version}}
       - openshift3/metrics-heapster:v{{ocp_version}}
+      - openshift3/metrics-schema-installer:v{{ocp_version}}
       - openshift3/mysql-apb:v{{ocp_version}}
-      - openshift3/node:v{{ocp_version}}
-      - openshift3/oauth-proxy:v{{ocp_version}}
-      - openshift3/openvswitch:v{{ocp_version}}
-      - openshift3/ose-ansible-service-broker:v{{ocp_version}}
-      - openshift3/ose-ansible:v3.9.30-3
-      - openshift3/ose-cluster-capacity:v{{ocp_version}}
-      - openshift3/ose-deployer:v{{ocp_version}}
-      - openshift3/ose-docker-builder:v{{ocp_version}}
-      - openshift3/ose-docker-registry:v{{ocp_version}}
-      - openshift3/ose-egress-http-proxy:v{{ocp_version}}
-      - openshift3/ose-egress-router:v{{ocp_version}}
-      - openshift3/ose-f5-router:v{{ocp_version}}
-      - openshift3/ose-haproxy-router:v{{ocp_version}}
-      - openshift3/ose-keepalived-ipfailover:v{{ocp_version}}
-      - openshift3/ose-pod:v{{ocp_version}}
-      - openshift3/ose-recycler:v{{ocp_version}}
-      - openshift3/ose-service-catalog:v{{ocp_version}}
-      - openshift3/ose-sti-builder:v{{ocp_version}}
       - openshift3/ose-template-service-broker:v{{ocp_version}}
-      - openshift3/ose-web-console:v{{ocp_version}}
-      - openshift3/ose:v{{ocp_version}}
-      - openshift3/postgresql-apb:v{{ocp_version}}
-      - openshift3/prometheus-alert-buffer:v{{ocp_version}}
-      - openshift3/prometheus-alertmanager:v{{ocp_version}}
-      - openshift3/prometheus-node-exporter:v{{ocp_version}}
-      - openshift3/prometheus:v{{ocp_version}}
-      - openshift3/registry-console:v{{ocp_version}}
-      - openshift3/snapshot-controller:v{{ocp_version}}
-      - openshift3/snapshot-provisioner:v{{ocp_version}}
-#      - rhgs3/rhgs-server-rhel7:latest
-#      - rhgs3/rhgs-volmanager-rhel7:latest
-
-  dockerio:
-    name: dockerio
-    source_registry: docker.io
-    repos:
-      - heketi/heketi:dev
-
-  xpaas:
-    name: xpaas
+      - openshift3/ose-service-catalog:v{{ocp_version}}
+  s2i:
+    name: s2i
     source_registry: registry.access.redhat.com
     repos:
-      - jboss-eap-6/eap64-openshift:1.5-19
-      - jboss-eap-6/eap64-openshift:latest
-      - jboss-amq-6/amq62-openshift:1.5-4
-      - jboss-amq-6/amq62-openshift:latest
+      - redhat-openjdk-18/openjdk18-openshift
       - rhscl/postgresql-95-rhel7:latest
+      - rhscl/postgresql-96-rhel7:latest
       - rhscl/postgresql-10-rhel7:latest
-  cfme:
-    name: cfme
-    source_registry: registry.access.redhat.com
-    repos:
-      - rhel7/rhel:latest
-      - rhel7/openscap:latest
-      - rhel7/rhel-tools:latest
+      - rhscl/devtoolset-7-toolchain-rhel7
+      - rhscl/devtoolset-7-perftools-rhel7
+      - rhscl/httpd-24-rhel7
+      - rhscl/mongodb-36-rhel7
+      - rhscl/perl-526-rhel7
+      - rhscl/php-70-rhel7
+      - rhscl/ruby-25-rhel7
+      - rhscl/varnish-5-rhel7
+      - rhscl/mariadb-102-rhel7
+      - rhscl/mongodb-34-rhel7
+      - rhscl/nginx-112-rhel7
+      - rhscl/nodejs-8-rhel7
+      - rhscl/php-71-rhel7
+      - rhscl/python-36-rhel7
+      - rhscl/nodejs-6-rhel7
+      - rhscl/python-27-rhel7
+      - rhscl/ruby-24-rhel7
+      - rhscl/ror-50-rhel7
+      - jboss-webserver-3/webserver31-tomcat8-openshift:latest
+      - jboss-webserver-3/webserver31-tomcat7-openshift:latest
+      - jboss-webserver-5/webserver50-tomcat9-openshift:latest
+      - jboss-eap-6/eap64-openshift:latest
+      - jboss-amq-6/amq62-openshift:latest
+      - jboss-eap-7/eap71-openshift:latest
+      - fuse7/fuse-eap-openshift:latest
+      - fuse7/fuse-karaf-openshift:latest
   odie:
     name: odie
     source_registry: localhost:5000
@@ -89,4 +131,3 @@ registries:
       - odie/postgresql-95-rhel7-stig:latest
       - odie/cac-proxy:{{cac_proxy_version}}
       - odie/cac-proxy:latest
-

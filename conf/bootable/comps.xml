@@ -26,6 +26,7 @@
       <packagereq type="mandatory">ansible</packagereq>
       <packagereq type="mandatory">apr</packagereq>
       <packagereq type="mandatory">apr-util</packagereq>
+      <packagereq type="mandatory">ansible</packagereq>
       <packagereq type="mandatory">atomic-openshift-clients</packagereq>
       <packagereq type="mandatory">atomic-openshift-utils</packagereq>
       <packagereq type="mandatory">audit</packagereq>
@@ -48,7 +49,7 @@
       <packagereq type="mandatory">checkpolicy</packagereq>
       <packagereq type="mandatory">chkconfig</packagereq>
       <packagereq type="mandatory">chrony</packagereq>
-      <packagereq type="mandatory">container-selinux</packagereq>
+      <!--<packagereq type="mandatory">container-selinux</packagereq> -->
       <packagereq type="mandatory">copy-jdk-configs</packagereq>
       <packagereq type="mandatory">coreutils</packagereq>
       <packagereq type="mandatory">cpio</packagereq>
@@ -79,10 +80,12 @@
       <packagereq type="mandatory">diffutils</packagereq>
       <packagereq type="mandatory">dmidecode</packagereq>
       <packagereq type="mandatory">dnsmasq</packagereq>
+      <!--
       <packagereq type="mandatory">docker</packagereq>
       <packagereq type="mandatory">docker-client</packagereq>
       <packagereq type="mandatory">docker-common</packagereq>
       <packagereq type="mandatory">docker-rhel-push-plugin</packagereq>
+      -->
       <packagereq type="mandatory">dracut</packagereq>
       <packagereq type="mandatory">dracut-config-rescue</packagereq>
       <packagereq type="mandatory">dracut-network</packagereq>
@@ -300,13 +303,13 @@
       <packagereq type="mandatory">openldap</packagereq>
       <packagereq type="mandatory">openscap</packagereq>
       <packagereq type="mandatory">openscap-scanner</packagereq>
-      <packagereq type="mandatory">openshift-ansible</packagereq>
+      <!--<packagereq type="mandatory">openshift-ansible</packagereq>>
       <packagereq type="mandatory">openshift-ansible-callback-plugins</packagereq>
       <packagereq type="mandatory">openshift-ansible-docs</packagereq>
       <packagereq type="mandatory">openshift-ansible-filter-plugins</packagereq>
       <packagereq type="mandatory">openshift-ansible-lookup-plugins</packagereq>
       <packagereq type="mandatory">openshift-ansible-playbooks</packagereq>
-      <packagereq type="mandatory">openshift-ansible-roles</packagereq>
+      <packagereq type="mandatory">openshift-ansible-roles</packagereq>-->
       <packagereq type="mandatory">openssh</packagereq>
       <packagereq type="mandatory">openssh-clients</packagereq>
       <packagereq type="mandatory">openssh-server</packagereq>
@@ -597,6 +600,25 @@
       <packagereq type="optional">selinux-policy-mls</packagereq>
       <packagereq type="optional">tboot</packagereq>
       <packagereq requires="redhat-release-server" type="conditional">NetworkManager-config-server</packagereq>
+
+      <packagereq type="mandatory">libvirt</packagereq>
+      <packagereq type="mandatory">libvirt-client</packagereq>
+      <packagereq type="mandatory">virt-who</packagereq>
+      <packagereq type="optional">fence-virtd-libvirt</packagereq>
+      <packagereq type="optional">fence-virtd-multicast</packagereq>
+      <packagereq type="optional">fence-virtd-serial</packagereq>
+      <packagereq type="optional">libvirt-cim</packagereq>
+      <packagereq type="optional">libvirt-java</packagereq>
+      <packagereq type="optional">libvirt-snmp</packagereq>
+      <packagereq type="optional">perl-Sys-Virt</packagereq>
+      <packagereq type="default">libguestfs</packagereq>
+      <packagereq type="optional">libguestfs-inspect-icons</packagereq>
+      <packagereq type="optional">libguestfs-java</packagereq>
+      <packagereq type="optional">libguestfs-tools</packagereq>
+      <packagereq type="optional">libguestfs-tools-c</packagereq>
+      <packagereq type="mandatory">qemu-kvm</packagereq>
+      <packagereq type="optional">qemu-kvm-tools</packagereq>
+
     </packagelist>
   </group>
   <group>

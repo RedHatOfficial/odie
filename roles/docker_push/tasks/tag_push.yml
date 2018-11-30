@@ -1,0 +1,14 @@
+- name: Prepare Variables
+  set_fact:
+    source_image: "{{ registry.source_registry}}/{{ repo }}"
+    repo_tagless: "{{ repo | regex_replace('-\\d$','') }}"
+
+- name: Set Target Image
+  set_fact:
+    target_image: "{{target_registry}}/{% if ocp_project is defined and ocp_project %}{{repo_tagless | regex_replace('^.*/', ocp_project + '/')   }}{% else %}{{  repo_tagless }}{% endif %}"
+
+- name: "Tag Images to {{target_registry}}"
+  command: "docker tag {{source_image}} {{target_image}}"
+
+- name: "Push image to {{target_registry}}"
+  command: "docker push {{target_image}}"

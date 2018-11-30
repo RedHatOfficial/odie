@@ -21,7 +21,7 @@
       src: "httpd-conf.j2"
       dest: "/etc/httpd/conf/httpd.conf"
       mode: 0644
-    when: secure_kickstarts
+    when: secure_kickstarts is defined and secure_kickstarts
 
   - name: Restart httpd service
     service:

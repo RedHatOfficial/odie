@@ -6,7 +6,7 @@
 - name: Define Role Variables
   set_fact:
     src_manifest: "{{images_source}}/{{registry.name}}.yml"
-    output_manifest: "{{images_target}}/{{registry.name}}.yml"
+    output_manifest: "{{images_source}}/{{registry.name}}.yml.pushed"
     src_archive: "{{images_source}}/{{registry.name}}.tar.{{compress_ext}}"
     output_archive: "{{output}}.{{compress_ext}}"
     repos: "{{ registry.repos }}"
@@ -24,6 +24,17 @@
     dest: "{{output_manifest}}"
   register: manifest
 
-- name: Pull Archive
-  include: load_archive.yml
+- name: "Load Archive {{src_manifest}}"
+  block:
+    - name: Load image
+      include: load_archive.yml
+  rescue:
+    - name: Delete old manifest
+      file:
+        path: "{{output_manifest}}"
+        state: absent
+
+    - fail:
+        msg: "Unable to load {{src_manifest}}"
+
   when: manifest.changed == true

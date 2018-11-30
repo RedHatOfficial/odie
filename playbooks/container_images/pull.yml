@@ -4,20 +4,18 @@
   vars:
       image_types:
         - base
-        - xpaas
-        - dockerio
-        - cfme
       images_file: base-images.yml
 
   tasks:
     - include_vars: "{{ images_file }}"
 
-    - name: Download Images {{ registries[outer].name }}
-      with_items:
-        - "{{ image_types }}"
+    - debug:
+        var: registries
+
+    - name: "Download Images {{ item.key }}"
+      with_dict: "{{ registries }}"
       include_role:
         name: docker_pull
-      loop_control:
-          loop_var: outer
       vars:
-        registry: "{{ registries[outer] }}"
+        registry: "{{ item.value }}"
+      when: "item.key in image_types"

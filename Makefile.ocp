@@ -1,5 +1,6 @@
 install_openshift:
-	ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml --skip-tags glusterfs
+	ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml -i /opt/odie/src/inventory/inventory
+	ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml -vv --skip-tags glusterfs -i /opt/odie/src/inventory/inventory
 
 install_certificates:
 	ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/openshift-master/certificates.yml

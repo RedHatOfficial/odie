@@ -6,5 +6,5 @@
     uri: "{{kvm_uri}}"
   register: result
   until: result.status == 'shutdown'
-  delay: "{{delay}}"
+  delay: "{{delayInterval}}"
   retries: "{{ timeout }}"

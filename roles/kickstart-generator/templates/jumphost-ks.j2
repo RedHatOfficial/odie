@@ -11,8 +11,9 @@ graphical
 autopart --encrypted
 {% else %}
 text
-autopart
+{% include './templates/includes/disk-rhel.j2' %}
 {% endif %}
+
 
 timezone UTC
 reboot --eject
@@ -27,20 +28,12 @@ skipx
 firstboot --enable
 
 %packages
-@base
+{% include './templates/includes/common-packages.j2' %}
+
 @odie-jumphost
-open-vm-tools
-fuse
-fuse-libs
-xmlsec1
-xmlsec1-openssl
-python-pytoml
-grub2-pc
-grub2-pc-modules
-libdnet
-libtool-ltdl
-libmspack
+telnet
 mod_ssl
+vim-enhanced
 %end
 
 %post --nochroot

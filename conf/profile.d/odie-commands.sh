@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 toodie_func() {
   if [ -n "$1" ]; then
     cd "/opt/odie/$1";

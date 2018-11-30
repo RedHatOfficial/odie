@@ -1,0 +1,5 @@
+#!/usr/bin/env ansible-playbook
+---
+
+- include: playbooks/generate_configuration/generate_kickstarts.yml
+

@@ -2,6 +2,9 @@
 - include: config_etc_hosts.yml
   tags: dns
 
+- include: add_etc_hosts_entry.yml
+  tags: dns
+
 - name: Delete VM
   include: ops/delete_vm.yml
   tags:

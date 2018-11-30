@@ -25,10 +25,7 @@ _arg_operation="push"
 _arg_all=off
 _arg_debug=''
 _arg_odie=off
-_arg_efk=off
 _arg_base=off
-_arg_xpaas=off
-_arg_docker=off
 _arg_source=/opt/odie/images
 _arg_target=/opt/odie/src/output/container_images
 _arg_manifest=/opt/odie/src/conf/base-images.yml
@@ -36,18 +33,17 @@ _arg_manifest=/opt/odie/src/conf/base-images.yml
 
 print_help ()
 {
-	printf "%s\n" "The general script's help msg"
-	printf 'Usage: %s [--(no-)all] [--(no-)odie] [--(no-)efk] [--(no-)base] [--(no-)xpaas] [--(no-)docker] [--(no-)standard] [-h|--help]\n' "$0"
+	printf 'Usage: %s [--all] [--odie] [--supplemental] [--base] [--s2i] [-h|--help]\n' "$0"
   	printf "\t%s\n" "<operation>: Whether you want to push or pull images (default: '""push""')"
-	printf "\t%s\n" "--all,--no-all: Download All (default) (off by default)"
-	printf "\t%s\n" "--odie,--no-odie: Download ODIE Images (off by default)"
-	printf "\t%s\n" "--efk,--no-efk: Download EFK (off by default)"
-	printf "\t%s\n" "--base,--no-base: Download Base Images (off by default)"
-	printf "\t%s\n" "--xpaas,--no-xpaas: Download xpaas (off by default)"
-	printf "\t%s\n" "--docker,--no-docker: Download Docker IO (off by default)"
+
+#	printf "\t%s\n" "--all,--no-all: Download All (default) (off by default)"
+#	printf "\t%s\n" "--odie,--no-odie: Download ODIE Images (off by default)"
+#	printf "\t%s\n" "--base,--no-base: Download Base OCP Images (off by default)"
+
 	printf "\t%s\n" "-s,--source: Directory containing the source images & manifests (default: ''/opt/odie/images'')"
 	printf "\t%s\n" "-t,--target: Target output directory (defaults /opt/openshift/images)"
 	printf "\t%s\n" "-d,--debug: Enable Ansible verbose debugging"
+
 	printf "\t%s\n" "-h,--help: Prints help"
   printf "\t%s\n" "-m,--manifest: Manifest (default: ''/opt/odie/src/conf/base-images.yml'')"
 }
@@ -94,35 +90,23 @@ parse_commandline ()
 			-m*)
 				_arg_manifest="${_key##-m}"
 				;;
-			--no-all|--all)
-				_arg_all="on"
-				test "${1:0:5}" = "--no-" && _arg_all="off"
-        REPOS=('odie' 'efk' 'base' 'xpaas' 'dockerio')
+			--none)
+        			REPOS=()
 				;;
-			--no-odie|--odie)
-				_arg_odie="on"
-				test "${1:0:5}" = "--no-" && _arg_odie="off"
-        REPOS+=('odie')
+			--supplemental)
+        			REPOS+=('supplemental')
 				;;
-			--no-efk|--efk)
-				_arg_efk="on"
-				test "${1:0:5}" = "--no-" && _arg_efk="off"
-        REPOS+=('efk')
+			--odie)
+        			REPOS+=('odie')
 				;;
-			--no-base|--base)
-				_arg_base="on"
-				test "${1:0:5}" = "--no-" && _arg_base="off"
-        REPOS+=('base')
+			--s2i)
+        			REPOS+=('s2i')
 				;;
-			--no-xpaas|--xpaas)
-				_arg_xpaas="on"
-				test "${1:0:5}" = "--no-" && _arg_xpaas="off"
-        REPOS+=('xpaas')
+			--base)
+        			REPOS+=('base')
 				;;
-			--no-docker|--docker)
-				_arg_docker="on"
-				test "${1:0:5}" = "--no-" && _arg_docker="off"
-        REPOS+=('dockerio')
+			--all)
+        			REPOS+=('base','s2i','supplemental','odie')
 				;;
       --debug)
         _arg_debug="-vvv"
@@ -231,8 +215,8 @@ if [[ $ARG = "push" ]]; then
 
   CMD="${CMD}push.yml  "
 
-  setup_host_target
-  add_array_of_manifests
+  #setup_host_target
+  #add_array_of_manifests
   add_images_source
 
 
@@ -243,8 +227,9 @@ elif [[ $ARG = "push_ocp" ]]; then
   # - a single file for the manifest (base-images.yml)
 
   CMD="${CMD}push.yml -e ocp_project=openshift"
-  setup_host_target
-  add_array_of_manifests
+
+  #setup_host_target
+  #add_array_of_manifests
   add_images_source
 
 
@@ -293,7 +278,7 @@ fi
 add_odie_versions
 
 #-e "odie_images_dir=$_arg_source"
-#  -e "{\"image_types\": [$REPOS_CSV]}"  \
+  #-e "{\"image_types\": [$REPOS_CSV]}"  \
 #-vv
 
 echo "Downloading: ${REPOS_CSV}"

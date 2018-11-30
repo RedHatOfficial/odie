@@ -60,9 +60,6 @@ function git_update() {
     UNTRACKED=0
     cd ${GIT_CLONE}
 
-    # ignore all changes to the smoke test files
-    git update-index --skip-worktree example_layout/projects/reference-project/apps/reference-app/pvs/{broker-amq,reference-app-postgresql,reference-app}/.placeholder
-
     GIT_STATUS=$(git diff-index --quiet HEAD --)
     RES=$?
     [[ $RES -ne 0 ]] && UNTRACKED=1
@@ -113,9 +110,10 @@ function setup_properties() {
 
   run_ansible_play  "Update Property Files for ${INSTALLER_VERSION}" ./playbooks/generate_configuration/property_generation.yml
   SAMPLE_DIR=/opt/odie/src/contrib/env-config/
-  cp -n ${SAMPLE_DIR}/default/hosts.csv /opt/odie/config/hosts-default.csv.sample
-  cp -n ${SAMPLE_DIR}/lab/hosts.csv /opt/odie/config/hosts-lab.csv.sample
-  cp -n ${SAMPLE_DIR}/full/hosts.csv /opt/odie/config/hosts-full.csv.sample
+
+#  cp -n ${SAMPLE_DIR}/default/hosts.csv /opt/odie/config/hosts-default.csv.sample
+ # cp -n ${SAMPLE_DIR}/lab/hosts.csv /opt/odie/config/hosts-lab.csv.sample
+  #cp -n ${SAMPLE_DIR}/full/hosts.csv /opt/odie/config/hosts-full.csv.sample
 
   wc -l ${CONFIG_DIR}/*.{yml,csv} 2>/dev/null | grep -v total > ${AFTER_FILE} 2>/dev/null
 
@@ -130,13 +128,12 @@ function setup_properties() {
 PROPERTIES
 
     declare -A PROPS
-    PROPS["${CONFIG_DIR}/odie.yml"]="Configuration options for the the ODIE installer"
+    PROPS["${CONFIG_DIR}/custom.yml"]="Advanced Configuration options for sophisicated use cases"
+    PROPS["${CONFIG_DIR}/odie.yml"]="Installation Parameters"
+    PROPS["${CONFIG_DIR}/build.yml"]="Parameters used to build ODIE and deploy via KVM"
     PROPS["${CONFIG_DIR}/env.yml"]="Specify site centric information about your environment "
     PROPS["${CONFIG_DIR}/hosts.csv"]="Static network information and cluster topology"
-    PROPS["${CONFIG_DIR}/images.yml"]="Docker registry configuration"
-    PROPS["${CONFIG_DIR}/ks.yml"]="Parameters used to generate the Kickstart files"
-    PROPS["${CONFIG_DIR}/ocp.yml"]="Parameters and features to enable during OCP installation"
-    PROPS["${CONFIG_DIR}/secret.yml"]="Specifies the credentials for your default users."
+    PROPS["${CONFIG_DIR}/secret.yml"]="Specifies the credentials for your default users. Encrypted via ${bold}odie encrypt${normal}"
     PROPS["${CONFIG_DIR}/certs.yml"]="Parameters used for SSL settings for the publically available OpenShift management endpoints"
 
      while read -r key; do
@@ -145,8 +142,8 @@ PROPERTIES
 
   cat <<PROPERTIES
 
-  ${bold}IMPORTANT${normal}: The ${bold}ansible-vault${normal} command can be used to encrypt these files at rest.
-                Please see the documentation for more information (${bold}man ansible-vault${normal})
+
+
 
 
 PROPERTIES
@@ -159,26 +156,14 @@ PROPERTIES
   rm ${AFTER_FILE} ${BEFORE_FILE}
 }
 
-function install_dependencies() {
-  if [[ "${SKIP_YUM}" = 1 ]]; then
-    return
-  fi
-
-  run_cmd yum clean all
-  run_cmd yum install -y net-tools bind-utils vim-enhanced screen wget bash-completion ansible \
-    atomic-openshift-utils atomic-openshift-clients
-
-  RETURN=$?
-  return $RETURN
-}
-
 function setup_web_server() {
 
   #Generate certificate for Apache HTTPS encryption
-  openssl req -batch -x509 -nodes -days 1825 -newkey rsa:2048 -keyout /etc/pki/tls/private/localhost.key -out /etc/pki/tls/certs/localhost.crt
+  run_cmd openssl req -batch -x509 -nodes -days 1825 -newkey rsa:2048 -keyout /etc/pki/tls/private/localhost.key -out /etc/pki/tls/certs/localhost.crt
 
   ## Allow HTTPS traffic through firewall
   run_cmd firewall-cmd --permanent --add-port=443/tcp
+  run_cmd firewall-cmd --permanent --add-port=80/tcp
   run_cmd firewall-cmd --reload
 
   run_cmd systemctl enable httpd
@@ -200,36 +185,22 @@ function curl_test() {
   fi
 }
 
-function diagnostics() {
-  is_oc_logged_in
-  #run_ansible_play "ODIE :: Diagnostics" ./odie-diagnostics.yml
-  oc adm diagnostics --network-pod-image='localhost:5000/openshift3/ose:${version}' --network-test-pod-image='localhost:5000/openshift3/ose-deployer:${version}' --images='localhost:5000/openshift3/ose-${component}:${version}'
-}
-
-
 
 function stage() {
   verify_installer & spin $! "Verify installation content"
 
   if [[ -d "${OUTPUT_DIR}" && ${KEEP_CONTENT_DIR} -eq 0 ]] ; then
     confirmation_prompt 0 "Existing content found at ${bold}${OUTPUT_DIR}${normal}.  This installer will delete that directory.  Proceed? (y/n) : "
-    rm -rf ${OUTPUT_DIR}/{images,delta_images,kickstart,repo} & spin $! "Deleting ${OUTPUT_DIR}"
+    rm -rf ${OUTPUT_DIR}/{images,kickstart,repo} & spin $! "Deleting ${OUTPUT_DIR}"
   fi
 
   mkdir -p ${OUTPUT_DIR} & spin $! "Creating ${OUTPUT_DIR}"
   sleep 1
 
   if [[ -d "${CONTENT_DIR}/Packages" ]]; then
+    rm -rf ${OUTPUT_DIR}/repo/odie-custom/repodata
     mkdir -p ${OUTPUT_DIR}/repo/odie-custom/
     run_cmd rsync -av ${CONTENT_DIR}/Packages/* ${OUTPUT_DIR}/repo/odie-custom/ & spin $! "Copying disconnected RPM repository".rpm
-  fi
-
-  if [[ -d "${CONTENT_DIR}/delta_rpm"  ]]; then
-    mkdir -p ${OUTPUT_DIR}/repo/odie-custom
-    rsync -az ${CONTENT_DIR}/delta_rpm/* ${OUTPUT_DIR}/repo/odie-custom & spin $! "Copying Delta RPMs"
-  fi
-
-  if [[ -d "${CONTENT_DIR}/Packages" || -d "${CONTENT_DIR}/delta_rpm" ]]; then
     run_cmd createrepo -v /opt/odie/repo/odie-custom -o /opt/odie/repo/odie-custom & spin $! "Creating RPM repo metadata"
     run_cmd ${CONTENT_DIR}/scripts/repo-pki.sh & spin $! "Signing YUM Repo"
   fi
@@ -240,9 +211,9 @@ function stage() {
       run_cmd rsync -av ${CONTENT_DIR}/container_images/* ${OUTPUT_DIR}/images/ & spin $! "Copying Docker Images"
   fi
 
-  if [[ -d "${CONTENT_DIR}/delta_images" ]] ; then
-      # TODO: This should reuse the "image_source" variable
-      rsync_dir ${CONTENT_DIR}/delta_images ${OUTPUT_DIR} & spin $! "Copying Delta Container Images"
+  if [[ -d "${CONTENT_DIR}/utilities" ]] ; then
+      mkdir -rf ${OUTPUT_DIR}/utilities
+      cp -r ${CONTENT_DIR}/utilities ${OUTPUT_DIR}/utilities & spin $! "Copying Support Utilities Directory"
   fi
 
   if [[  -d "${CONTENT_DIR}/odie-ocp-installer.git" ]] ; then
@@ -255,27 +226,6 @@ function stage() {
       cp -nf /opt/odie/src/contrib/bin/* /usr/bin/ & spin $! "Installing 3rd Party Utilities"
   fi
 
-  if [[  -d "${CONTENT_DIR}/bundles/" ]] ; then
-    # assume this is just the reference app, for now
-    PROJECT_BUNDLE=${CONTENT_DIR}/bundles/odie-export-reference-project-${INSTALLER_VERSION}.tar
-    APP_BUNDLE=${CONTENT_DIR}/bundles/odie-export-reference-project-reference-app-${INSTALLER_VERSION}.tar
-
-    copy_reference_project_bundle ${CONTENT_DIR}/bundles/odie-export-reference-project-${INSTALLER_VERSION}.tar & spin $! "Copying Reference Project"
-
-
-    if [[ -d "${PROJECTS_DIR}/reference-project" ]]; then
-        return 200 & spin $! "Creating reference-project (already exists)"
-    else
-        run_cmd INTERACTIVE=0 /opt/odie/src/odie-app.sh create reference-project & spin $! "Creating reference-project"
-    fi
-
-    if [[ -d "${PROJECTS_DIR}/reference-project/apps/reference-app" ]]; then
-        return 200 & spin $! "Importing reference-app (already exists)"
-    else
-        run_cmd INTERACTIVE=0 /opt/odie/src/odie-app.sh import ${APP_BUNDLE} --to=reference-project & spin $! "Importing reference-app"
-    fi
-  fi
-
   complete_message "Installation Media Staging"
   ${VERSION_SH} set stage ${INSTALLER_VERSION}
 
@@ -284,28 +234,11 @@ function stage() {
   fi
 }
 
-function copy_reference_project_bundle() {
-  TAR=$1
-  mkdir -p ${BUNDLES_DIR}
-  cp -f $TAR ${BUNDLES_DIR}/
-  TAR_FILE=$(basename ${TAR})
-  ln -sf ${BUNDLES_DIR}/${TAR_FILE} ${BUNDLES_DIR}/current
-}
-
-function configure() {
-  cd ${GIT_CLONE}
-
-  setup_web_server & spin $! "Setup web server"
-  run_cmd make import_pki & spin $! "Import Red Hat GPG Key"
-  run_cmd make webdirs & spin $! "Creating web directories for httpd content"
-  run_cmd make localrepos  & spin $! "Setting up local RPM repos"
-  test_local_repo & spin $! "Test local RPM Repo"
-  install_dependencies & spin $! "Install YUM dependencies"
+function generate_config() {
+  pushd ${GIT_CLONE}
   rm -f inventory/inventory
-  run_ansible_play "ODIE :: Configuration" ./odie-configure.yml
+  run_ansible_play "ODIE :: Generate Configuration Files" ./odie-generate.yml
   ${VERSION_SH} set configure ${INSTALLER_VERSION}
-
-  complete_message "JumpHost Configuration"
 
   cat <<GENERATEEOF
 
@@ -318,6 +251,24 @@ function configure() {
 
 GENERATEEOF
 
+  popd
+}
+
+function configure() {
+  cd ${GIT_CLONE}
+
+  # TODO: convert all these into playbooks!!
+  setup_web_server & spin $! "Setup web server"
+  run_cmd make import_pki & spin $! "Import Red Hat GPG Key"
+  run_cmd make webdirs & spin $! "Creating web directories for httpd content"
+  run_cmd make localrepos  & spin $! "Setting up local RPM repos"
+
+  run_ansible_play  "Run Configuration" ./odie-configure.yml
+
+  test_local_repo & spin $! "Test local RPM Repo"
+  complete_message "JumpHost Configuration"
+
+  generate_config
 }
 
 function conditionally_run_play() {
@@ -333,24 +284,32 @@ function conditionally_run_play() {
 }
 
 
+function push_images() {
+  cd ${GIT_CLONE}
+  MAKE_CMD="make -f Makefile.ocp"
+  run_ansible_play "Setup registry" playbooks/ocp_install/prepare_registry.yml
+  run_ansible_play "Push images into Standalone Registry" ${MAKE_CMD} push
+}
+
+
 function install_cluster() {
   cd ${GIT_CLONE}
 
   MAKE_CMD="make -f Makefile.ocp"
 
   run_ansible_play "Yum Clean" ${MAKE_CMD} yum_clean
+  run_cmd yum -y install openshift-ansible & spin $! "Install openshift-ansible" 
   run_ansible_play "Cluster Install Steps" ./odie-install.yml
-  run_ansible_play "Push images into Standalone Registry" ${MAKE_CMD} push
-  run_ansible_play "Installing OCP Cluster" ${MAKE_CMD} install_certificates
+  #run_ansible_play "Installing Certificates" ${MAKE_CMD} install_certificates
   run_ansible_play "Installing OCP Cluster" ${MAKE_CMD} install_openshift
-  conditionally_run_play deploy_cns "Install Container Native Storage (Gluster)" ${MAKE_CMD} install_gluster
-  conditionally_run_play deploy_metrics "Install Metrics Subsystem" ${MAKE_CMD} install_metrics
-  conditionally_run_play deploy_logging "Install Logging Subsystem" ${MAKE_CMD} install_logging
-  conditionally_run_play deploy_cloudforms  "Install CloudForms" ${MAKE_CMD} install_cfme
-  run_ansible_play "Configuring Jumphost Certificate" ${MAKE_CMD} admin
-  run_ansible_play "Configuring Registry Console" ${MAKE_CMD} registry_console_cert
-  run_ansible_play "Push images into OCP Registry" ${MAKE_CMD} push_ocp
-  run_ansible_play "Patch resolv.conf on Nodes" ${MAKE_CMD} patch_origin_dns
+#  conditionally_run_play deploy_cns "Install Container Native Storage (Gluster)" ${MAKE_CMD} install_gluster
+#  conditionally_run_play deploy_metrics "Install Metrics Subsystem" ${MAKE_CMD} install_metrics
+#  conditionally_run_play deploy_logging "Install Logging Subsystem" ${MAKE_CMD} install_logging
+#  conditionally_run_play deploy_cloudforms  "Install CloudForms" ${MAKE_CMD} install_cfme
+  #run_ansible_play "Configuring Jumphost Certificate" ${MAKE_CMD} admin
+  #run_ansible_play "Configuring Registry Console" ${MAKE_CMD} registry_console_cert
+  #run_ansible_play "Push images into OCP Registry" ${MAKE_CMD} push_ocp
+  #run_ansible_play "Patch resolv.conf on Nodes" ${MAKE_CMD} patch_origin_dns
   conditionally_run_play setup_htpasswd_accounts  "Install HTPasswd authentication" ${MAKE_CMD} install_htpasswd
   # eventually add pivproxy here
   ${VERSION_SH} set install ${INSTALLER_VERSION}
@@ -360,7 +319,6 @@ function install_cluster() {
   fi
 
   install_footer
-  smoketest
 }
 
 function run_update_playbooks() {
@@ -411,31 +369,6 @@ function patch_footer() {
 
 function install_footer() {
     complete_message "OCP Cluster :: Installation"
-}
-
-function smoketest_footer() {
-    complete_message "OCP Cluster :: Smoketest Verification"
-}
-
-function unsmoketest_footer() {
-    complete_message "OCP Cluster :: Smoketest Unprovisioning"
-}
-
-function smoketest() {
-  cd ${GIT_CLONE}
-
-  if [[ "${APP_UNPROVISION}" -ne "1" ]]; then
-    NO_HEADER=1 LOG_FILE=${LOG_FILE} ./odie-app.sh provision reference-project
-    if [ $? = 0 ]; then
-      smoketest_footer
-    fi
-  else
-    NO_HEADER=1 LOG_FILE=${LOG_FILE} ./odie-app.sh unprovision reference-project
-    if [ $? = 0 ]; then
-      unsmoketest_footer
-    fi
-  fi
-
 }
 
 function ping_hosts() {
@@ -553,18 +486,21 @@ usage() {
 
         * ${bold}stage${normal}		-	copy the media from the ISO
         * ${bold}properties${normal}	-	generate the properties file based on the installed version
-        * ${bold}configure${normal}	-	configure the JumpHost and generate config files
-        * ${bold}diagnostics${normal}   -       run oc adm diagnostics with the current logged in user
+        * ${bold}configure${normal}		-	setup the JumpHost 
+        * ${bold}generate-config${normal}	-	generate config files
         * ${bold}install${normal}	-	run the Ansible playbooks to install the cluster
+        * ${bold}push${normal}		-	push images to the JumpHost registry
         * ${bold}patch${normal}		-	patch the cluster
         * ${bold}harden${normal}	-	run the STIG remediation in the environment
-        * ${bold}smoketest${normal}	-	deploy a reference application to verify the installation
-        * ${bold}validate${normal}	-	run the Ansible playbooks to validate the proper installation of the cluster
         * ${bold}ping${normal}		-	ping all the Ansible hosts to test configuration
         * ${bold}reboot${normal}	-	ping all the Ansible hosts to test configuration
         * ${bold}encrypt${normal}	-	encrypt the secret.yml and config.yml files
         * ${bold}decrypt${normal}	-	decrypt the secret.yml and config.yml files
         * ${bold}help${normal}		-	this help message
+
+      Broken:
+        * ${bold}diagnostics${normal}   -       run oc adm diagnostics with the current logged in user
+        * ${bold}validate${normal}	-	run the Ansible playbooks to validate the proper installation of the cluster
 
       Options:
         ${bold}--source DIR${normal}	-	the source directory of the ODIE media
@@ -587,13 +523,7 @@ EOF
         #${bold}--target BRANCH${normal}	-	The branch to checkout (current: ${TARGET})
 }
 
-if [[ $1 == "app" ]]; then
-    shift
-    LOG_FILE=${LOG_FILE} ${BASEDIR}/odie-app.sh $@
-    exit $?
-fi
-
-export params="$(getopt -o dhs:t: -l reinit,harden,target:,dryrun,help,clean,stash,source:,unprovision,kickstart,skip-git,skip-yum,password,loop --name ${SCRIPT_NAME} -- "$@")"
+export params="$(getopt -o dhs:t: -l reinit,harden,target:,dryrun,help,clean,stash,push,source:,unprovision,kickstart,skip-git,skip-yum,password,loop --name ${SCRIPT_NAME} -- "$@")"
 
 if [[ $? -ne 0 ]]
 then
@@ -705,17 +635,22 @@ do
       shift
       exit 0
       ;;
+    push)
+      header
+      push_images
+      shift
+      exit 0
+      ;;
     properties)
       header
       setup_properties
       shift
       exit 0
       ;;
-    generate)
+    generate-config)
       header
-      echo "${bold}[${yellow}DEPRECATED${normal}${bold}] ${SCRIPT_NAME} generate${normal} command has been deprecated, use ${bold}${SCRIPT_NAME} configure${normal}"
       echo
-      configure
+      generate_config
       exit 0
       ;;
     configure)
@@ -736,11 +671,6 @@ do
     patch)
       header
       patch_cluster
-      exit 0
-      ;;
-    smoketest)
-      header
-      smoketest
       exit 0
       ;;
     ping)

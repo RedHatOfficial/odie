@@ -23,12 +23,14 @@ ${bold}${underline}General Options${normal}
 EOF
 }
 
-export params="$(getopt -o h -l help --name "${SCRIPT_NAME}" -- "$@")"
+export params="$(getopt -o hi: -l help,skip-tags:,tags:,iso: --name "${SCRIPT_NAME}" -- "$@")"
 
 if [[ $? -ne 0 ]]; then
   usage
   exit 1
 fi
+
+OPTIONS=""
 
 eval set -- "$params"
 
@@ -39,14 +41,29 @@ do
            usage
            exit 0
            ;;
+        --iso|-i)
+          ISO_NAME="$2"
+          shift
+          shift
+          ;;
+        --tags)
+          OPTIONS="${OPTIONS} --tags ${2}"
+          shift;shift;
+          ;;
+        --skip-tags)
+          OPTIONS="${OPTIONS} --skip-tags ${2}"
+          shift;shift;
+          ;;
         --)
           shift; break ;;
     esac
 done
 
+SIZE=$(du -sh ${ISO_NAME} | awk '{print $1;}')
 
 function header() {
-  export HEADER="Red Hat ODIE Deploy Script - ${bold}ISO=${ISO_NAME}${normal}"
+  export HEADER="Deploying  ${bold}ISO=${ISO_NAME}${normal} (${SIZE})"
+
   echo
   echo ${HEADER}
   echo
@@ -54,10 +71,6 @@ function header() {
   echo
 }
 
-
-if [[ ! -z "$1" ]]; then
-  ISO_NAME=$1
-fi
-
 header
-./odie-provision.yml -e "boot_iso=$(realpath ${ISO_NAME})"
+
+run_ansible_play "Deploying ODIE Enviroment" ./odie-provision.yml -e "boot_iso=$(realpath ${ISO_NAME})" -e @/opt/odie/config/build.yml ${OPTIONS}

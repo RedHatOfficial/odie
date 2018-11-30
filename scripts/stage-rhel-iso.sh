@@ -6,7 +6,7 @@
 # $1 = the location to the RHEL 7.x ISO
 # $2 = the output location to copy the files
 
-ISO=$(./contrib/bin/yaml_linux_amd64 read /opt/odie/config/images.yml rhel_iso)
+ISO=$(./contrib/bin/yaml_linux_amd64 read /opt/odie/config/build.yml rhel_iso)
 OUTPUT_DIR=$1
 
 shift
