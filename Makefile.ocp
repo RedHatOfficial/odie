@@ -49,3 +49,20 @@ push_ocp:
 patch_origin_dns:
 	ansible-playbook playbooks/ocp_install/patch_99-origin-dns.yml
 
+
+#### The rest of the file contains misc runtime functions, not related to media building
+webdirs:
+	mkdir -p /var/www/html/repos
+	rm -f /var/www/html/repos/odie-custom
+	ln -s --force /opt/odie/repo/odie-custom /var/www/html/repos/odie-custom
+
+localrepos:
+	cp files/ose.repo /etc/yum.repos.d/ose.repo
+	sudo yum clean all
+	#yum -y update
+
+setup_repo_pki:
+	./scripts/repo-pki.sh
+
+setup_dnsmasq:
+	sudo ./playbooks/operations/setup_dnsmasq.yml  -e @/opt/odie/config/build.yml

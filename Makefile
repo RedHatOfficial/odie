@@ -3,40 +3,49 @@ SHELL := /bin/bash
 
 BUILD_VERSION?=snapshot
 
+.PHONY: root_check
+
+root_check:
+	echo "The ODIE build must be build as a non-root user.  It uses sudo for all yum operations"
+	id -nu  | grep -v root
+	echo "Non-root proceed!"
+
 build: primary
 setup: import_pki setup_repos install_dependencies setup_repo_pki
 
 full_media: setup_repos rpms stage_rhel_iso pull_images  pull_odie_images
-#delta_media: setup_repos rpms pull_delta_images  pull_odie_images
 
 # everything is put into the same DVD now
 dvd: primary iso
-primary: stage_rhel_iso clone_git_repo setup_scripts create_rpm_repo
-release: clone_cop_git create_docs cve_changelog checksum
+primary: root_check stage_rhel_iso clone_git_repo setup_scripts rpms
+release: root_check clone_cop_git create_docs cve_changelog checksum
 
-install_dependencies:
+install_dependencies: root_check
 	sudo yum -y install vim-enhanced `cat conf/build-rpms.txt`
-	./scripts/install_asciidoctor.sh
-	systemctl enable --now docker
+	sudo ./scripts/install_asciidoctor.sh
+	sudo systemctl enable --now docker
 
-rpms: generate_rpm_manifest download_rpms create_rpm_repos
+rpms: root_check generate_rpm_manifest download_rpms create_rpm_repos fix_perms
 
 clean_rpms:
 	rm -rf {Packages,repodata}
 
-create_rpm_repo:
+create_rpm_repo: root_check
 	sudo build/rpm-createrepo.sh
 
-generate_rpm_manifest:
+generate_rpm_manifest: root_check
 	sudo build/rpm-generate-file-list.sh
 
-download_rpms:
-	sh build/rpm-download-files.sh
+download_rpms: root_check
+	sudo build/rpm-download-files.sh
+
+fix_perms:  root_check
+	(user=$(shell id -un):$(shell id -gn); sudo chown -R $$user * )
 
 create_docs:
 	source /opt/rh/rh-ruby22/enable && cd documentation/ && make pdfs
 
-setup_scripts:
+setup_scripts: root_check
 	mkdir -p output
 	cp -r scripts output/scripts
 	cp odie.sh output/
@@ -50,7 +59,7 @@ cve_changelog:
 clone_git_repo:
 	sh scripts/local-git-repo.sh
 
-stage_rhel_iso:
+stage_rhel_iso: root_check
 	scripts/stage-rhel-iso.sh output/
 
 checksum:
@@ -79,28 +88,10 @@ partial_clean:
 	cd output/ && find . -maxdepth 1 -not -name 'container_images' -not -name 'Packages' \
 		-not -name 'delta_*' -not -name 'CVE_CHANGELOG' -exec rm -rf {} \;
 
-#all: disconnected
-
 pull_odie_images: build_postgres_stig build_cac_proxy
 	mkdir -p output/container_images
 	./scripts/migrate-images.sh pull --odie -t output/container_images/
 
-setup_repo_pki:
-	./scripts/repo-pki.sh
-
-#### The rest of the file contains misc runtime functions, not related to media building
-webdirs:
-	mkdir -p /var/www/html/repos
-	rm -f /var/www/html/repos/odie-custom
-	ln -s --force /opt/odie/repo/odie-custom /var/www/html/repos/odie-custom
-
-import_pki:
-	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
-
-localrepos:
-	cp files/ose.repo /etc/yum.repos.d/ose.repo
-	yum clean all
-	#yum -y update
 
 register:
 	@echo "*******************************************"
@@ -108,16 +99,16 @@ register:
 	@echo "********************************************"
 	@subscription-manager register
 	@read -p "Enter the Red Hat subscription pool ID: " poolid; \
-	subscription-manager attach --pool $$poolid
+	sudo subscription-manager attach --pool $$poolid
 
 setup_repos:
-	@subscription-manager repos --disable "*" --enable rhel-7-server-rpms --enable rhel-7-server-ose-3.11-rpms --enable rhel-server-rhscl-7-rpms --enable rhel-7-server-extras-rpms --enable=rhel-7-server-ansible-2.6-rpms
-	subscription-manager release --set=7.6
-	yum clean all
+	@sudo subscription-manager repos --disable "*" --enable rhel-7-server-rpms --enable rhel-7-server-ose-3.11-rpms --enable rhel-server-rhscl-7-rpms --enable rhel-7-server-extras-rpms --enable=rhel-7-server-ansible-2.6-rpms
+	sudo subscription-manager release --set=7.6
+	sudo yum clean all
 
 unsubscribe:
-	subscription-manager remove --all
-	subscription-manager unregister
+	sudo subscription-manager remove --all
+	sudo subscription-manager unregister
 
 build_postgres_stig:
 	VERSION=`cat contrib/postgresql-container-stig/VERSION` && docker build --no-cache -f contrib/postgresql-container-stig/Dockerfile.rhel7 contrib/postgresql-container-stig -t "localhost:5000/odie/postgresql-95-rhel7-stig:$${VERSION}" -t "localhost:5000/odie/postgresql-95-rhel7-stig:latest"
@@ -137,7 +128,5 @@ clone_cop_git:
 	git clone https://github.com/redhat-cop/infra-ansible.git output/utilities/infra-ansible
 	git clone https://github.com/redhat-cop/openshift-toolkit output/utilities/openshift-toolkit
 
-
-setup_dnsmasq:
-	sudo ./playbooks/operations/setup_dnsmasq.yml  -e @/opt/odie/config/build.yml
-
+import_pki:
+	sudo rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release

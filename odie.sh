@@ -13,6 +13,7 @@ HARDEN_HOSTS=0
 APP_UNPROVISION=0
 SKIP_GIT=${SKIP_GIT:-0}
 LOOP_PING=0
+MAKE_CMD="make -f Makefile.ocp"
 
 # FUNCTIONS (This is all being kept in-line to make transfer easier)
 
@@ -287,9 +288,9 @@ function configure() {
 
   # TODO: convert all these into playbooks!!
   run_cmd setup_web_server & spin $! "Setup web server"
-  run_cmd make import_pki & spin $! "Import Red Hat GPG Key"
-  run_cmd make webdirs & spin $! "Creating web directories for httpd content"
-  run_cmd make localrepos  & spin $! "Setting up local RPM repos"
+  run_cmd ${MAKE_CMD} import_pki & spin $! "Import Red Hat GPG Key"
+  run_cmd ${MAKE_CMD} webdirs & spin $! "Creating web directories for httpd content"
+  run_cmd ${MAKE_CMD} localrepos  & spin $! "Setting up local RPM repos"
 
   run_ansible_play  "Run Configuration" ./odie-configure.yml
 
@@ -315,7 +316,6 @@ function conditionally_run_play() {
 
 function push_images() {
   cd ${GIT_CLONE}
-  MAKE_CMD="make -f Makefile.ocp"
   run_ansible_play "Setup registry" playbooks/ocp_install/prepare_registry.yml
   run_ansible_play "Push images into Standalone Registry" ${MAKE_CMD} push
 }
@@ -323,8 +323,6 @@ function push_images() {
 
 function install_cluster() {
   cd ${GIT_CLONE}
-
-  MAKE_CMD="make -f Makefile.ocp"
 
   run_ansible_play "Yum Clean" ${MAKE_CMD} yum_clean
   run_cmd yum -y install openshift-ansible & spin $! "Install openshift-ansible" 
@@ -362,8 +360,7 @@ function run_update_playbooks() {
 
 function patch_cluster() {
   cd ${GIT_CLONE}
-	
-  MAKE_CMD="make -f Makefile.ocp"
+
   run_cmd ${MAKE_CMD} yum_clean "Yum Clean"
   run_ansible_play "Updating RPMs" ./playbooks/operations/update_rpms.yml
   run_ansible_play "Push images into Standalone Registry" ${MAKE_CMD} push
@@ -743,9 +740,9 @@ do
     auth)
       header
       case "$2" in
-        install-htpasswd) 
+        install-htpasswd)
           cd ${GIT_CLONE}
-          run_ansible_play "Install HTPasswd" make -f Makefile.ocp install_htpasswd
+          run_ansible_play "Install HTPasswd" ${MAKE_CMD} install_htpasswd
         ;;
         install-pivproxy) install_pivproxy;;
         update-pivproxy) update_pivproxy;;
