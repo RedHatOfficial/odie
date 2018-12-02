@@ -150,8 +150,6 @@ PROPERTIES
   rm ${AFTER_FILE} ${BEFORE_FILE}
 }
 
-<<<<<<< Updated upstream
-=======
 function extract_config() {
   URL=$1
   OUT_FILE=/root/odie-config.tar.xz
@@ -190,7 +188,6 @@ function setup() {
 }
 
 
->>>>>>> Stashed changes
 function setup_web_server() {
 
   #Generate certificate for Apache HTTPS encryption
@@ -263,8 +260,6 @@ function stage() {
 
   complete_message "Installation Media Staging"
   ${VERSION_SH} set stage ${INSTALLER_VERSION}
-<<<<<<< Updated upstream
-=======
 }
 
 function generate_config() {
@@ -281,26 +276,9 @@ function generate_config() {
   * ${bold}${GIT_CLONE}/inventory/inventory${normal} - Static inventory file used for the Red Hat OCP Ansible playbooks
 
   ${bold}${yellow}WARNING:${normal} Any changes to these files will be overriden
->>>>>>> Stashed changes
 
 GENERATEEOF
 
-<<<<<<< Updated upstream
-function generate_config() {
-  pushd ${GIT_CLONE}
-  rm -f inventory/inventory
-  run_ansible_play "ODIE :: Generate Configuration Files" ./odie-generate.yml
-  ${VERSION_SH} set configure ${INSTALLER_VERSION}
-
-  cat <<GENERATEEOF
-
-  This has generated the following files.
-
-  * ${bold}${OUTPUT_DIR}/kickstart/${normal} - Kickstart files that will be used for provisioning
-  * ${bold}${GIT_CLONE}/inventory/inventory${normal} - Static inventory file used for the Red Hat OCP Ansible playbooks
-
-  ${bold}${yellow}WARNING:${normal} Any changes to these files will be overriden
-=======
   popd
 }
 
@@ -308,39 +286,19 @@ function configure() {
   cd ${GIT_CLONE}
 
   # TODO: convert all these into playbooks!!
-  setup_web_server & spin $! "Setup web server"
+  run_cmd setup_web_server & spin $! "Setup web server"
   run_cmd make import_pki & spin $! "Import Red Hat GPG Key"
   run_cmd make webdirs & spin $! "Creating web directories for httpd content"
   run_cmd make localrepos  & spin $! "Setting up local RPM repos"
 
   run_ansible_play  "Run Configuration" ./odie-configure.yml
->>>>>>> Stashed changes
 
-  test_local_repo & spin $! "Test local RPM Repo"
+  run_cmd test_local_repo & spin $! "Test local RPM Repo"
   complete_message "JumpHost Configuration"
 
-<<<<<<< Updated upstream
   popd
 }
 
-function configure() {
-  cd ${GIT_CLONE}
-
-  # TODO: convert all these into playbooks!!
-  setup_web_server & spin $! "Setup web server"
-  run_cmd make import_pki & spin $! "Import Red Hat GPG Key"
-  run_cmd make webdirs & spin $! "Creating web directories for httpd content"
-  run_cmd make localrepos  & spin $! "Setting up local RPM repos"
-
-  run_ansible_play  "Run Configuration" ./odie-configure.yml
-
-  test_local_repo & spin $! "Test local RPM Repo"
-  complete_message "JumpHost Configuration"
-
-=======
->>>>>>> Stashed changes
-  generate_config
-}
 
 function conditionally_run_play() {
   YAML="${1}"
@@ -559,12 +517,6 @@ usage() {
         * ${bold}properties${normal}	-	generate the properties file based on the installed version
         * ${bold}configure${normal}		-	setup the JumpHost 
         * ${bold}generate-config${normal}	-	generate config files
-<<<<<<< Updated upstream
-        * ${bold}install${normal}	-	run the Ansible playbooks to install the cluster
-        * ${bold}push${normal}		-	push images to the JumpHost registry
-        * ${bold}patch${normal}		-	patch the cluster
-        * ${bold}harden${normal}	-	run the STIG remediation in the environment
-=======
 
 
         * ${bold}push${normal}		-	push images to the JumpHost registry
@@ -573,7 +525,6 @@ usage() {
             ${bold}--harden${normal}	-	Run the STIG remediation after installation
         * ${bold}harden${normal}	-	run the STIG remediation in the environment
 
->>>>>>> Stashed changes
         * ${bold}ping${normal}		-	ping all the Ansible hosts to test configuration
             ${bold}--loop${normal}	-	Loop ping command until its successful
         * ${bold}reboot${normal}	-	ping all the Ansible hosts to test configuration
@@ -581,14 +532,8 @@ usage() {
         * ${bold}decrypt${normal}	-	decrypt the secret.yml and config.yml files
         * ${bold}help${normal}		-	this help message
 
-<<<<<<< Updated upstream
-      Broken:
-        * ${bold}diagnostics${normal}   -       run oc adm diagnostics with the current logged in user
-        * ${bold}validate${normal}	-	run the Ansible playbooks to validate the proper installation of the cluster
-=======
         * ${bold}setup${normal}   -     initial setup 
 
->>>>>>> Stashed changes
 
       Options:
         ${bold}--tail${normal}		-	tail output in realtime
@@ -597,7 +542,6 @@ usage() {
         ${bold}--stash${normal}		-	Stash and re-apply all working changes in the git repo
         ${bold}--nospin${normal}	-	Disable the spinning (set ${bold}SPIN_FPS${normal} for speed = ${SPIN_FPS}
         ${bold}--password${normal}		-	Prompt for the password of encrypted Vault config files
-
 
 
       Broken:
@@ -610,11 +554,7 @@ usage() {
 EOF
 }
 
-<<<<<<< Updated upstream
-export params="$(getopt -o dhs:t: -l reinit,harden,target:,dryrun,help,clean,stash,push,source:,unprovision,kickstart,skip-git,skip-yum,password,loop --name ${SCRIPT_NAME} -- "$@")"
-=======
 export params="$(getopt -o dhs:t: -l tail,harden,target:,help,clean,stash,push,source:,nospin,password,loop --name ${SCRIPT_NAME} -- "$@")"
->>>>>>> Stashed changes
 
 if [[ $? -ne 0 ]]
 then
@@ -728,17 +668,7 @@ do
       shift
       exit 0
       ;;
-<<<<<<< Updated upstream
-    push)
-      header
-      push_images
-      shift
-      exit 0
-      ;;
-    properties)
-=======
     properties|generate-properties)
->>>>>>> Stashed changes
       header
       setup_properties
       shift
