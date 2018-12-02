@@ -639,11 +639,11 @@ function header() {
   COMMAND=${1:-""}
   MESSAGE=${2:-""}
 
-  echo -n "${white}[${bold}ODIE v${INSTALLER_VERSION} |"
-  echo -n "${green} OCP v${OCP_VERSION} ${white}| "
-  echo -n "${yellow} LOG: ${LOG_FILE} ${white} |"
-  echo -n "${blue} $COMMAND" 
-  echo -n ${normal}
+  echo -n "${white}${bold}  ODIE ${INSTALLER_VERSION} |"
+  echo -n "${green} OCP ${OCP_VERSION} ${white}| "
+  echo -n "${yellow}tail -f ${LOG_FILE} ${white}|"
+  echo -n "${blue} $COMMAND"
+  echo "${normal}"
 }
 
 
@@ -657,7 +657,6 @@ do
       exit 0
       ;;
     runonce)
-	
       INTERACTIVE=0
       LOG_FILE=/root/odie-runonce.log
       header "Initial System Boot"
@@ -667,70 +666,72 @@ do
       ;;
     setup)
       header $1
-      setup 
+      setup
       shift
       exit 0
       ;;
     push|push-images)
-      header
+      header $1
       push_images
       shift
       exit 0
       ;;
     properties|generate-properties)
-      header
+      header $1
       setup_properties
       shift
       exit 0
       ;;
     generate-config)
-      header
+      header $1
       echo
       generate_config
       exit 0
       ;;
     configure)
-      header
+      header $1
       configure
       exit 0
       ;;
     harden)
+      header $1
       header
       harden_hosts
       exit 0
       ;;
     install)
-      header
+      header $1
       install_cluster
       exit 0
       ;;
     patch)
-      header
+      header $1
       patch_cluster
       exit 0
       ;;
     ping)
-      header
+      header $1
       ping_hosts
       exit 0
       ;;
     reboot)
-      header
+      header $1
       reboot_hosts
       exit 0
       ;;
     validate)
-      header
+      header $1
       validate_hosts
       exit 0
       ;;
     help)
+      header $1
       usage
       shift
       exit 0
       ;;
     encrypt|decrypt)
-      header
+      header $1
       set -e
 
       if [[ "${1}" == "encrypt" ]]; then
@@ -750,7 +751,7 @@ do
       exit 0
       ;;
     auth)
-      header
+      header $1:$2
       case "$2" in
         install-htpasswd)
           cd ${GIT_CLONE}
