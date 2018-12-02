@@ -21,7 +21,7 @@ full_media: setup_repos rpms stage_rhel_iso pull_images  pull_odie_images
 
 # everything is put into the same DVD now
 primary: root_check partial_clean stage_rhel_iso clone_git_repo setup_scripts
-release: root_check clone_cop_git create_docs cve_changelog checksum
+release: root_check clone_cop_git create_docs checksum
 
 install_dependencies: root_check
 	sudo yum -y install vim-enhanced `cat conf/build-rpms.txt`

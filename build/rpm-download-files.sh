@@ -10,7 +10,7 @@ BUILD_ROOT=${BUILD_ROOT:-output}
 OUTPUT_DIR="${BUILD_ROOT}/Packages"
 mkdir -p ${OUTPUT_DIR}
 
-MANIFEST_FILE=
+LOG_DIR=${ROOT_DIR:-/opt/odie/src/manifests/}
+PROCESSED_FILE=${PROCESSED_FILE:-${LOG_DIR}/base-rpms.txt.processed}
 
-
-cat manifests/rpm_manifest.txt | xargs yumdownloader -x \*i686 --archlist x86_64 --destdir ${OUTPUT_DIR}
+cat ${PROCESSED_FILE}  | xargs yumdownloader --destdir ${OUTPUT_DIR}
