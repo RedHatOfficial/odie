@@ -21,6 +21,9 @@ export INTERACTIVE=${INTERACTIVE:-1}
 export LOG_FILE="${LOG_FILE:-${LOG_NAME}}"
 export CMD_SUFFIX=" 2>&1 >>${LOG_FILE}"
 
+export SHOW_TAIL=${SHOW_TAIL:-0}
+export SPIN_FPS=${SPIN_FPS:-.1}
+
 VERSION_FILE=${CONTENT_DIR}/INSTALLER_VERSION
 CONTENT_VERSION=$(cat ${VERSION_FILE} 2> /dev/null)
 
@@ -29,6 +32,8 @@ ${VERSION_SH} set content ${CONTENT_VERSION}
 export INSTALLER_VERSION=${CONTENT_VERSION}
 export INSTALLED_VERSION=$( ${VERSION_SH} show active )
 export UPGRADE_VERSION=$(if [[ $(${VERSION_SH} compare active content) = -1 ]]; then echo 1; else echo 0; fi )
+
+export OCP_VERSION=$(cat ${CONTENT_DIR}/OCP_VERSION 2>/dev/null)
 
 function confirmation_prompt() {
 # https://stackoverflow.com/questions/226703/how-do-i-prompt-for-yes-no-cancel-input-in-a-linux-shell-script/27875395#27875395
@@ -83,7 +88,7 @@ spin() {
           printf "\b${spin:$i:1}"
           printf "\r"
       fi
-      sleep .1
+      sleep ${SPIN_FPS}
     done
     # $? after the while loop is the return code of the kill command.  absolutely useless here
     wait $1 # https://stackoverflow.com/questions/1570262/shell-get-exit-code-of-background-process
@@ -182,10 +187,14 @@ if [ tty_supports_color ]; then
 fi
 
 function run_cmd() {
+  CMD_SUFFIX="2>&1 | tee -a ${LOG_FILE}"
+  if [[ "$SHOW_TAIL" = "0" ]]; then
+    CMD_SUFFIX="${CMD_SUFFIX} >/dev/null"
+  fi
+
   CMD=${@}
-  eval echo "$ ${CMD}" "${CMD_SUFFIX}"
-#eval ${CMD} "${CMD_SUFFIX}"
-  eval ${CMD} >>${LOG_FILE} 2>> ${LOG_FILE}
+  eval echo "$ ${CMD}" ${CMD_SUFFIX}
+  eval ${CMD} ${CMD_SUFFIX}
   return $?
 }
 
@@ -215,6 +224,11 @@ function run_ansible_play() {
   eval echo "$ ${CMD}" "${CMD_SUFFIX}"
 
   SHOW_TASKS=0
+
+  if [[ ${SHOW_TAIL} = 1 ]]; then
+    run_cmd ${CMD}
+    return $?
+  fi
 
   set -o pipefail
   ${CMD} 2>&1 | tee -a ${LOG_FILE} |  while read -r line ; do

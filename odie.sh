@@ -4,7 +4,6 @@ export BASEDIR=$(dirname "$(readlink -f "$0")")
 SCRIPT_NAME=$(basename "$0")
 
 . ${BASEDIR}/scripts/lib.sh
-export HEADER="Red Hat ODIE Installer - ${INSTALLER_VERSION}"
 
 # SCRIPT VARIABLES
 KEEP_CONTENT_DIR=1
@@ -12,8 +11,7 @@ STASH_UNCOMMITTED=0
 REINIT_CONFIG=0
 HARDEN_HOSTS=0
 APP_UNPROVISION=0
-SKIP_GIT=0
-SKIP_YUM=0
+SKIP_GIT=${SKIP_GIT:-0}
 LOOP_PING=0
 
 # FUNCTIONS (This is all being kept in-line to make transfer easier)
@@ -96,10 +94,6 @@ EOF
 }
 
 function setup_properties() {
-  # TODO: this should be replaced with another arg into the property generation
-  if [[ -d ${CONFIG_DIR} && ${REINIT_CONFIG} -eq 1 ]] ; then
-    run_cmd rm -rf ${CONFIG_DIR} & spin $! "Deleting ${CONFIG_DIR}"
-  fi
 
   BEFORE_FILE=$(mktemp)
   AFTER_FILE=$(mktemp)
@@ -156,6 +150,47 @@ PROPERTIES
   rm ${AFTER_FILE} ${BEFORE_FILE}
 }
 
+<<<<<<< Updated upstream
+=======
+function extract_config() {
+  URL=$1
+  OUT_FILE=/root/odie-config.tar.xz
+  OUTPUT_DIR=${CONFIG_DIR}/
+#set -x
+  run_cmd wget $URL -O $OUT_FILE 
+  run_cmd mkdir -p ${CONFIG_DIR}
+  run_cmd cd ${CONFIG_DIR}
+  run_cmd tar -xvJf ${OUT_FILE}
+}
+
+function download_config() {
+  SOURCE_FILE=odie-config.tar.xz
+  GW_IP=$(/sbin/ip route | awk '/default/ { print $3 }')
+
+  CONFIG_SERVER_HOST=${CONFIG_SERVER_HOST:-$GW_IP}
+  URL=http://${CONFIG_SERVER_HOST}/${SOURCE_FILE} 
+
+  echo $URL
+  RESULT=$(curl -o /dev/null --silent --head --write-out '%{http_code}\n' --connect-timeout 5 $URL)
+  echo $RESULT
+
+  MSG="Download Remote Configuration from Gateway"
+
+  if [[ $RESULT = 200 ]]; then
+    run_cmd extract_config $URL ${CONFIG_DIR} & spin $! "${MSG}"
+  else
+    return 200 & spin $! "${MSG}"
+  fi
+}
+
+function setup() { 
+  download_config
+  #stage
+  #setup_properties
+}
+
+
+>>>>>>> Stashed changes
 function setup_web_server() {
 
   #Generate certificate for Apache HTTPS encryption
@@ -228,10 +263,8 @@ function stage() {
 
   complete_message "Installation Media Staging"
   ${VERSION_SH} set stage ${INSTALLER_VERSION}
-
-  if [[ "${UPGRADE_VERSION}" && -d "${CONTENT_DIR}/odie-ocp-installer.git" ]] ; then
-      setup_properties
-  fi
+<<<<<<< Updated upstream
+=======
 }
 
 function generate_config() {
@@ -248,9 +281,45 @@ function generate_config() {
   * ${bold}${GIT_CLONE}/inventory/inventory${normal} - Static inventory file used for the Red Hat OCP Ansible playbooks
 
   ${bold}${yellow}WARNING:${normal} Any changes to these files will be overriden
+>>>>>>> Stashed changes
 
 GENERATEEOF
 
+<<<<<<< Updated upstream
+function generate_config() {
+  pushd ${GIT_CLONE}
+  rm -f inventory/inventory
+  run_ansible_play "ODIE :: Generate Configuration Files" ./odie-generate.yml
+  ${VERSION_SH} set configure ${INSTALLER_VERSION}
+
+  cat <<GENERATEEOF
+
+  This has generated the following files.
+
+  * ${bold}${OUTPUT_DIR}/kickstart/${normal} - Kickstart files that will be used for provisioning
+  * ${bold}${GIT_CLONE}/inventory/inventory${normal} - Static inventory file used for the Red Hat OCP Ansible playbooks
+
+  ${bold}${yellow}WARNING:${normal} Any changes to these files will be overriden
+=======
+  popd
+}
+
+function configure() {
+  cd ${GIT_CLONE}
+
+  # TODO: convert all these into playbooks!!
+  setup_web_server & spin $! "Setup web server"
+  run_cmd make import_pki & spin $! "Import Red Hat GPG Key"
+  run_cmd make webdirs & spin $! "Creating web directories for httpd content"
+  run_cmd make localrepos  & spin $! "Setting up local RPM repos"
+
+  run_ansible_play  "Run Configuration" ./odie-configure.yml
+>>>>>>> Stashed changes
+
+  test_local_repo & spin $! "Test local RPM Repo"
+  complete_message "JumpHost Configuration"
+
+<<<<<<< Updated upstream
   popd
 }
 
@@ -268,6 +337,8 @@ function configure() {
   test_local_repo & spin $! "Test local RPM Repo"
   complete_message "JumpHost Configuration"
 
+=======
+>>>>>>> Stashed changes
   generate_config
 }
 
@@ -478,7 +549,7 @@ if [ "$0" != "$BASH_SOURCE" ]  ; then return; fi
 usage() {
     cat <<EOF
 
-      usage: ${SCRIPT_NAME} [command] [--source DIR] [--reinit]
+      usage: ${SCRIPT_NAME} [command] [--source DIR]
 
       ================
 
@@ -488,42 +559,62 @@ usage() {
         * ${bold}properties${normal}	-	generate the properties file based on the installed version
         * ${bold}configure${normal}		-	setup the JumpHost 
         * ${bold}generate-config${normal}	-	generate config files
+<<<<<<< Updated upstream
         * ${bold}install${normal}	-	run the Ansible playbooks to install the cluster
         * ${bold}push${normal}		-	push images to the JumpHost registry
         * ${bold}patch${normal}		-	patch the cluster
         * ${bold}harden${normal}	-	run the STIG remediation in the environment
+=======
+
+
+        * ${bold}push${normal}		-	push images to the JumpHost registry
+
+        * ${bold}install${normal}	-	run the Ansible playbooks to install the cluster
+            ${bold}--harden${normal}	-	Run the STIG remediation after installation
+        * ${bold}harden${normal}	-	run the STIG remediation in the environment
+
+>>>>>>> Stashed changes
         * ${bold}ping${normal}		-	ping all the Ansible hosts to test configuration
+            ${bold}--loop${normal}	-	Loop ping command until its successful
         * ${bold}reboot${normal}	-	ping all the Ansible hosts to test configuration
         * ${bold}encrypt${normal}	-	encrypt the secret.yml and config.yml files
         * ${bold}decrypt${normal}	-	decrypt the secret.yml and config.yml files
         * ${bold}help${normal}		-	this help message
 
+<<<<<<< Updated upstream
       Broken:
         * ${bold}diagnostics${normal}   -       run oc adm diagnostics with the current logged in user
         * ${bold}validate${normal}	-	run the Ansible playbooks to validate the proper installation of the cluster
+=======
+        * ${bold}setup${normal}   -     initial setup 
+
+>>>>>>> Stashed changes
 
       Options:
+        ${bold}--tail${normal}		-	tail output in realtime
         ${bold}--source DIR${normal}	-	the source directory of the ODIE media
         ${bold}--clean${normal}		-	Delete the ${OUTPUT_DIR} directory before installation
-        ${bold}--harden${normal}	-	Run the STIG remediation after installation
-        ${bold}--reinit${normal}	-	replace the configuration files with the original
         ${bold}--stash${normal}		-	Stash and re-apply all working changes in the git repo
-        ${bold}--unprovision${normal}		-	Change app mode from provision to unprovision
-        ${bold}--kickstart${normal}		-	Modify the behavior of stage to support Kickstart %post
+        ${bold}--nospin${normal}	-	Disable the spinning (set ${bold}SPIN_FPS${normal} for speed = ${SPIN_FPS}
         ${bold}--password${normal}		-	Prompt for the password of encrypted Vault config files
-        ${bold}--loop${normal}		-	Loop ping command until its successful
 
-      Development Options:
-        ${bold}--skip-git${normal}		-	Do not modify the source code directory
-        ${bold}--skip-yum${normal}		-   Do not install Yum Dependencies
 
-        * ${bold}${SCRIPT_NAME} app --help${normal}		-	Application Import/Export
+
+      Broken:
+        * ${bold}validate${normal}	-	run the Ansible playbooks to validate the proper installation of the cluster
+        * ${bold}patch${normal}		-	patch the cluster
+      Deprecated Options:
+        ${bold}--target BRANCH${normal}	-	The branch to checkout (current: ${TARGET})
+
 
 EOF
-        #${bold}--target BRANCH${normal}	-	The branch to checkout (current: ${TARGET})
 }
 
+<<<<<<< Updated upstream
 export params="$(getopt -o dhs:t: -l reinit,harden,target:,dryrun,help,clean,stash,push,source:,unprovision,kickstart,skip-git,skip-yum,password,loop --name ${SCRIPT_NAME} -- "$@")"
+=======
+export params="$(getopt -o dhs:t: -l tail,harden,target:,help,clean,stash,push,source:,nospin,password,loop --name ${SCRIPT_NAME} -- "$@")"
+>>>>>>> Stashed changes
 
 if [[ $? -ne 0 ]]
 then
@@ -542,11 +633,6 @@ do
            shift
            exit 0
            ;;
-        --dryrun)
-          echo "DRY RUN -- not implemented yet!"
-          exit 1
-          shift
-          ;;
         --harden)
           HARDEN_HOSTS=1
           shift
@@ -555,8 +641,9 @@ do
           KEEP_CONTENT_DIR=0
           shift
           ;;
-        --reinit)
-          REINIT_CONFIG=1
+        --tail)
+          SHOW_TAIL=1
+          INTERACTIVE=0
           shift
           ;;
         --stash)
@@ -571,8 +658,7 @@ do
           LOOP_PING=1
           shift
           ;;
-        --kickstart)
-          KICKSTART=1
+        --nospin)
           #OUTPUT_DIR=/mnt/sysimage/opt/odie
           INTERACTIVE=0
           shift
@@ -589,16 +675,8 @@ do
             *) TARGET="$2"; shift 2 ;;
           esac;
           ;;
-        --unprovision)
-          APP_UNPROVISION=1
-          shift
-          ;;
         --skip-git)
           SKIP_GIT=1
-          shift
-          ;;
-        --skip-yum)
-          SKIP_YUM=1
           shift
           ;;
 
@@ -612,11 +690,12 @@ do
 done
 
 function header() {
-  echo
-  echo ${HEADER}
-  echo
-  echo "- View log file in another terminal : ${bold}tail -f ${LOG_FILE}${normal}  "
-  echo
+
+  COMMAND=${1:-""}
+  MESSAGE=${2:-""}
+
+  echo "${white}[${bold}[ ODIE :: ${INSTALLER_VERSION}  ] [ ${normal}${green}${bold} [ OCP :: ${OCP_VERSION} ] ${yellow} [ LOG: ${LOG_FILE} ]"
+  echo -n ${normal}
 }
 
 
@@ -629,12 +708,27 @@ do
       shift
       exit 0
       ;;
-    diagnostics)
-      header
-      diagnostics
+    runonce)
+      INTERACTIVE=0
+      LOG_FILE=/root/odie-runonce.log
+      header "Initial System Boot"
+      setup
       shift
       exit 0
       ;;
+    setup)
+      header $1
+      setup 
+      shift
+      exit 0
+      ;;
+    push|push-images)
+      header
+      push_images
+      shift
+      exit 0
+      ;;
+<<<<<<< Updated upstream
     push)
       header
       push_images
@@ -642,6 +736,9 @@ do
       exit 0
       ;;
     properties)
+=======
+    properties|generate-properties)
+>>>>>>> Stashed changes
       header
       setup_properties
       shift
