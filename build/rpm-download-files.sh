@@ -10,4 +10,7 @@ BUILD_ROOT=${BUILD_ROOT:-output}
 OUTPUT_DIR="${BUILD_ROOT}/Packages"
 mkdir -p ${OUTPUT_DIR}
 
+MANIFEST_FILE=
+
+
 cat manifests/rpm_manifest.txt | xargs yumdownloader -x \*i686 --archlist x86_64 --destdir ${OUTPUT_DIR}

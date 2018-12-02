@@ -11,7 +11,6 @@ OUTPUT_DIR=${ROOT_DIR:-/opt/odie/src/output/}
 LOG_DIR=${ROOT_DIR:-/opt/odie/src/manifests/}
 
 PACKAGES=$(basename ${SOURCE_PACKAGES})
-# what is the point of this file???? -- except as a build artifact itself...
 TARGET_PACKAGES=${TARGET_PACKAGES:-${LOG_DIR}/${PACKAGES}.packages}
 PROCESSED_FILE=${PROCESSED_FILE:-${LOG_DIR}/${PACKAGES}.processed}
 QUEUE_FILE=${QUEUE_FILE:-${LOG_DIR}/${PACKAGES}.queue}
@@ -22,14 +21,11 @@ MANIFEST_FILE=${PROCESSED_FILE:-${PACKAGES}.manifest}
 export COUNT=1
 
 # The main issue is with yum having an exclusive lock on the yum db
-# I did a lot of testing and >3 threads you end up just having a lot of idle
+# After some testing I determined that >3 threads you end up just having a lot of idle
 # threads since everyone is waiting on the lock
-THREADS=${THREADS:-3}
+THREADS=${THREADS:-4}
 
 ########### END CONFIGURATION ####################
-
-
-
 
 function check_dep() {
   NAME=$1
@@ -39,7 +35,7 @@ function check_dep() {
   # packages on occasionally.  Also, it fails silently if the package is not found.
   # so we have to manually parse the log output
   # STDERR is suppressed since you get nagged about the lock all the times
-  DEPLIST=$( sudo yum -C deplist $NAME 2>/dev/null)
+  DEPLIST=$( sudo yum -C deplist $NAME  2>/dev/null )
 
   # try the package name as is (probably noarch or explicit version)
   if [[ $(echo "$DEPLIST" | wc -l) = 2 ]] ; then
@@ -61,7 +57,7 @@ function sort_files() {
 
 function count() {
   sort_files
-  PACKAGES=$(cat $QUEUE_FILE | comm -2 -3 - $PROCESSED_FILE)
+  PACKAGES=$(cat $TARGET_PACKAGES | sort -u | comm -1 -3 - $QUEUE_FILE| comm -3 - ${ERROR_FILE} )
   COUNT=$(echo $PACKAGES | wc -w )
 
   echo "$(date) - Packages remaining to parse $COUNT "
@@ -76,7 +72,7 @@ function count() {
 
 function process_file() {
   #SOURCE_PACKAGES=$1
-  PACKAGES=$(sort -u $QUEUE_FILE | comm -2 -3 - $PROCESSED_FILE | head -${THREADS})
+  PACKAGES=$(cat $TARGET_PACKAGES | sort -u | comm -1 -3 - $QUEUE_FILE | comm -3 - ${ERROR_FILE} | head -${THREADS})
 
   for package in $(echo ${PACKAGES}) ; do
     parse_package "$package" &
@@ -109,28 +105,27 @@ function parse_package() {
       continue
   fi
 
-  # Processed contains the parent dependencies also
-  # for base they will end up being the same file
-  echo "$PACKAGE" >> $PROCESSED_FILE
-  #echo "$PACKAGE" >> $MANIFEST_FILE
+  PACKAGE_NAME_REGEXP="perl -pe 's/^.*: //; s/(.\w+) (.*)$/-\2\1/;'"
 
+  # queue file is a listing of package names, while the manifest contains the fully qualified version
+  #echo "$DEPLIST" | egrep 'provider:|package:' | grep -v 'i686' |  $PACKAGE_NAME_REGEXP \
+  #  | tee -a $MANIFEST_FILE | perl -pe 's/(.*?)\-\d+\.el7.*?\.(x86_64|noarch)$//;' >> $QUEUE_FILE
 
-  # target is per-rpm category including package names
-  echo "$DEPLIST" | egrep 'provider:' | egrep -v 'i686|\.el7' | perl -pe 's/^.*: //; s/(.\w+) (.*)$/-\2\1/; s/(.*?)\-\d+\.el7.*?\.(x86_64|noarch)$//;  ' >> $MANIFEST_FILE
+    echo "$PACKAGE" >> $TARGET_PACKAGES
+    echo "$DEPLIST"  | egrep 'package:' |  perl -pe 's/^.*: //; s/(.\w+) (.*)$/-\2\1/;' >> $PROCESSED_FILE
+    echo "$DEPLIST" | egrep 'provider:' | egrep -v 'i686|\.el7' |  perl -pe 's/^.*: //; s/(.\w+) (.*)$/-\2\1/;' |   perl -pe 's/(.*?)\-\d+\.el7.*?\.(x86_64|noarch)$//;' >> $MANIFEST_FILE
 
-  # progress file is all of them across all
-  echo "$DEPLIST" | egrep 'provider:|package:' | grep -v 'i686' | perl -pe 's/^.*: //; s/(.\w+) (.*)$/-\2\1/;'>> $QUEUE_FILE
-
-   #>> ${TARGET_PACKAGES}
-   #yumdownloader -x \*i686 --archlist x86_64 --destdir ${OUTPUT_DIR}
-
+    echo "$DEPLIST" | egrep 'provider:' | egrep -v 'i686' |   perl -pe 's/^.*: //;s/^(.*?) .*?$/\1/;s/\.noarch//; s/\.x86_64//;'  >> $QUEUE_FILE
+    #echo "$DEPLIST" | egrep 'provider:' | egrep -v 'i686' | >> $QUEUE_FILE #perl -pe 's/^.*: //; s/(.\w+) (.*)$/-\2\1/;' >>  $QUEUE_FILE
 }
+
 
 handler()
 {
+  echo "Caught SIGINT.  Waiting for yum to finish before exiting.."
   wait
   sort_files
-  exit 1
+  exit 2
 }
 
 trap handler SIGINT
@@ -139,8 +134,8 @@ trap handler SIGINT
 mkdir -p $LOG_DIR
 mkdir -p $OUTPUT_DIR
 
-cp $SOURCE_PACKAGES $TARGET_PACKAGES
-touch $QUEUE_FILE $ERROR_FILE $PROCESSED_FILE
+#cp $SOURCE_PACKAGES $TARGET_PACKAGES
+touch $QUEUE_FILE $ERROR_FILE $PROCESSED_FILE $TARGET_PACKAGES
 
 # these files were completed by the base RPM set and can be ignored
 # the script will return a manifest containing just the child dependencies
@@ -149,7 +144,7 @@ cat ${PARENT_MANIFEST} >> $PROCESSED_FILE
 sort_files
 
 #cat ${TARGET_PACKAGES} >> $QUEUE_FILE
-sort -u $TARGET_PACKAGES | comm -2 -3 - $PARENT_PACKAGES >> $QUEUE_FILE
+sort -u $SOURCE_PACKAGES | comm -2 -3 - $PARENT_PACKAGES >> $QUEUE_FILE
 
 while [ $COUNT != 0 ]; do
   count
@@ -157,6 +152,3 @@ while [ $COUNT != 0 ]; do
   echo
 done
 
-
-#cat $MANIFEST_ >> $PROCESSED_FILE
-#sort -u $PROCESSED_FILE -o $PROCESSED_FILE
