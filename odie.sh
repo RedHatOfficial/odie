@@ -156,7 +156,7 @@ function extract_config() {
   OUT_FILE=/root/odie-config.tar.xz
   OUTPUT_DIR=${CONFIG_DIR}/
 #set -x
-  run_cmd wget $URL -O $OUT_FILE 
+  run_cmd wget $URL -O $OUT_FILE
   run_cmd mkdir -p ${CONFIG_DIR}
   run_cmd cd ${CONFIG_DIR}
   run_cmd tar -xvJf ${OUT_FILE}
@@ -169,9 +169,7 @@ function download_config() {
   CONFIG_SERVER_HOST=${CONFIG_SERVER_HOST:-$GW_IP}
   URL=http://${CONFIG_SERVER_HOST}/${SOURCE_FILE} 
 
-  echo $URL
   RESULT=$(curl -o /dev/null --silent --head --write-out '%{http_code}\n' --connect-timeout 5 $URL)
-  echo $RESULT
 
   MSG="Download Remote Configuration from Gateway"
 
@@ -186,9 +184,10 @@ function setup() {
 
   run_cmd cp /opt/odie/src/conf/profile.d/odie-commands.sh /etc/profile.d/ & spin $! "Setup core bash profile"
   run_cmd cp /opt/odie/src/conf/rc/bashrc /root/.bashrc & spin $! "Setup bash rc"
+  mkdir ${IMAGES_DIR}
 
   download_config
-  generate_properties
+  setup_properties
   configure
   generate_config
   push_images
@@ -305,8 +304,6 @@ function configure() {
 
   run_cmd test_local_repo & spin $! "Test local RPM Repo"
   complete_message "JumpHost Configuration"
-
-  popd
 }
 
 
@@ -642,7 +639,10 @@ function header() {
   COMMAND=${1:-""}
   MESSAGE=${2:-""}
 
-  echo "${white}[${bold}[ ODIE :: ${INSTALLER_VERSION}  ] [ ${normal}${green}${bold} [ OCP :: ${OCP_VERSION} ] ${yellow} [ LOG: ${LOG_FILE} ]"
+  echo -n "${white}[${bold}ODIE v${INSTALLER_VERSION} |"
+  echo -n "${green} OCP v${OCP_VERSION} ${white}| "
+  echo -n "${yellow} LOG: ${LOG_FILE} ${white} |"
+  echo -n "${blue} $COMMAND" 
   echo -n ${normal}
 }
 
@@ -657,6 +657,7 @@ do
       exit 0
       ;;
     runonce)
+	
       INTERACTIVE=0
       LOG_FILE=/root/odie-runonce.log
       header "Initial System Boot"

@@ -114,7 +114,7 @@ function print_message() {
   if [[ $rc == "0" ]]; then
     # https://stackoverflow.com/questions/8903239/how-to-calculate-time-difference-in-bash-script
 #    printf "\b${light_green}`date -u -d @"$SECONDS" +'%_Mm %_Ss'`${normal}]\n"
-    printf "\b${light_green}COMPLETE${normal}]\n"
+    printf "\b${light_green}$(date +%H:%M:%S)${normal}]\n"
   elif [[ $rc == "${SKIPPED_CODE}" ]]; then
     printf "\b${light_blue}SKIPPED${normal}]\n"
   elif [[ $rc == "${FAILURE_CODE}" ]]; then
