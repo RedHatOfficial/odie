@@ -15,7 +15,7 @@ root_check:
 all: clean setup full_media primary release iso
 
 build: primary
-setup: import_pki setup_repos install_dependencies
+setup: setup_repos install_dependencies
 
 full_media: setup_repos rpms stage_rhel_iso pull_images  pull_odie_images
 
@@ -87,6 +87,7 @@ baseline_iso:
 	7za a -m0 -v900m ${ISO_NAME}.7z  ${ISO_NAME}
 
 partial_clean:
+	./build/fix-perms.sh
 	mkdir -p output
 	cd output/ && find . -maxdepth 1 -not -name 'container_images' -not -name 'Packages' \
 		-exec rm -Irf {} \;
@@ -130,6 +131,3 @@ clone_cop_git:
 	git clone https://github.com/redhat-cop/container-pipelines output/utilities/container-pipelines
 	git clone https://github.com/redhat-cop/infra-ansible.git output/utilities/infra-ansible
 	git clone https://github.com/redhat-cop/openshift-toolkit output/utilities/openshift-toolkit
-
-import_pki:
-	sudo rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release

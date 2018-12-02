@@ -2,32 +2,43 @@
 set -u
 #set -x
 
+SOURCE_PACKAGES=${1:-/opt/odie/src/conf/base-rpms.txt}
+PARENT_MANIFEST=${2:-/dev/null}
+PARENT_PACKAGES=${3:-/dev/null}
+
+
 OUTPUT_DIR=${ROOT_DIR:-/opt/odie/src/output/}
 LOG_DIR=${ROOT_DIR:-/opt/odie/src/manifests/}
-PACKAGES_DIR=${PACKAGES_DIR:-${OUTPUT_DIR}/Packages}
 
-PACKAGES_FILE=${PACKAGES_FILE:-/opt/odie/src/conf/base-rpms.txt}
-PARSED_FILE=${PARSED_FILE:-${LOG_DIR}/parsed_packages.txt}
-FOUND_FILE=${FOUND_FILE:-${LOG_DIR}/found_packages.txt}
-PROGRESS_FILE=${PROGRESS_FILE:-${LOG_DIR}/inprogress.txt}
-ERROR_FILE=${ERROR_FILE:-${LOG_DIR}/errored_packages.txt}
-MANIFEST_FILE=${MANIFEST_FILE:-${LOG_DIR}/rpm_manifest.txt}
+PACKAGES=$(basename ${SOURCE_PACKAGES})
+# what is the point of this file???? -- except as a build artifact itself...
+TARGET_PACKAGES=${TARGET_PACKAGES:-${LOG_DIR}/${PACKAGES}.packages}
+PROCESSED_FILE=${PROCESSED_FILE:-${LOG_DIR}/${PACKAGES}.processed}
+QUEUE_FILE=${QUEUE_FILE:-${LOG_DIR}/${PACKAGES}.queue}
+ERROR_FILE=${ERROR_FILE:-${LOG_DIR}/${PACKAGES}.error}
+MANIFEST_FILE=${PROCESSED_FILE:-${PACKAGES}.manifest}
 
+# force this to start the while loop
+export COUNT=1
+
+# The main issue is with yum having an exclusive lock on the yum db
+# I did a lot of testing and >3 threads you end up just having a lot of idle
+# threads since everyone is waiting on the lock
 THREADS=${THREADS:-3}
 
-# prep these files
-mkdir -p $LOG_DIR
-mkdir -p $OUTPUT_DIR
-touch $FOUND_FILE $PROGRESS_FILE $ERROR_FILE $FOUND_FILE $PARSED_FILE
+########### END CONFIGURATION ####################
 
 
-# Before we proceed a quick rant -- yum deplist is hot garbage
-# There is no way to specify architecture (so it will randomly pick i686
-# packages on occasionally.  Also, it fails silently if the package is not found.
+
 
 function check_dep() {
   NAME=$1
 
+  # Before we proceed a quick rant -- yum deplist is hot garbage
+  # There is no way to specify architecture (so it will randomly pick i686
+  # packages on occasionally.  Also, it fails silently if the package is not found.
+  # so we have to manually parse the log output
+  # STDERR is suppressed since you get nagged about the lock all the times
   DEPLIST=$( sudo yum -C deplist $NAME 2>/dev/null)
 
   # try the package name as is (probably noarch or explicit version)
@@ -38,23 +49,19 @@ function check_dep() {
   fi
 }
 
-export COUNT=1
-
 
 function sort_files() {
-
-  # do other parsing here
-  sort -u $PROGRESS_FILE -o $PROGRESS_FILE
-  sort -u $FOUND_FILE -o $FOUND_FILE
+  sort -u $QUEUE_FILE -o $QUEUE_FILE
+  sort -u $TARGET_PACKAGES -o $TARGET_PACKAGES
   sort -u $ERROR_FILE -o $ERROR_FILE
-  cat $ERROR_FILE >> $PARSED_FILE
-  sort -u $PARSED_FILE -o $PARSED_FILE
+  cat $ERROR_FILE >> $PROCESSED_FILE
+  sort -u $PROCESSED_FILE -o $PROCESSED_FILE
 
-  cp $PROGRESS_FILE $MANIFEST_FILE
 }
 
 function count() {
-  PACKAGES=$(sort -u $PACKAGES_FILE | comm -2 -3 - $PARSED_FILE)
+  sort_files
+  PACKAGES=$(cat $QUEUE_FILE | comm -2 -3 - $PROCESSED_FILE)
   COUNT=$(echo $PACKAGES | wc -w )
 
   echo "$(date) - Packages remaining to parse $COUNT "
@@ -68,8 +75,8 @@ function count() {
 }
 
 function process_file() {
-  PACKAGES_FILE=$1
-  PACKAGES=$(sort -u $PACKAGES_FILE | comm -2 -3 - $PARSED_FILE | head -${THREADS})
+  #SOURCE_PACKAGES=$1
+  PACKAGES=$(sort -u $QUEUE_FILE | comm -2 -3 - $PROCESSED_FILE | head -${THREADS})
 
   for package in $(echo ${PACKAGES}) ; do
     parse_package "$package" &
@@ -97,17 +104,24 @@ function parse_package() {
   fi
 
   if [[ $? = 1 ]]; then
-      (>&2 echo "WARNING: No infomation found for $PACKAGE")
+      (>&2 echo "WARNING: No information found for $PACKAGE")
       echo $PACKAGE >> $ERROR_FILE
       continue
   fi
 
-  # good output
-  echo "$PACKAGE" >> $PARSED_FILE
-  # pyliblzma-0.5.3-11.el7.x86_64
-  echo "$DEPLIST" | egrep 'provider:' | egrep -v 'i686|\.el7' | perl -pe 's/^.*: //; s/(.\w+) (.*)$/-\2\1/; s/(.*?)\-\d+\.el7.*?\.(x86_64|noarch)$//;  ' >> $FOUND_FILE
-  echo "$DEPLIST" | egrep 'provider:|package:' | grep -v 'i686' | perl -pe 's/^.*: //; s/(.\w+) (.*)$/-\2\1/;'>> $PROGRESS_FILE
+  # Processed contains the parent dependencies also
+  # for base they will end up being the same file
+  echo "$PACKAGE" >> $PROCESSED_FILE
+  #echo "$PACKAGE" >> $MANIFEST_FILE
 
+
+  # target is per-rpm category including package names
+  echo "$DEPLIST" | egrep 'provider:' | egrep -v 'i686|\.el7' | perl -pe 's/^.*: //; s/(.\w+) (.*)$/-\2\1/; s/(.*?)\-\d+\.el7.*?\.(x86_64|noarch)$//;  ' >> $MANIFEST_FILE
+
+  # progress file is all of them across all
+  echo "$DEPLIST" | egrep 'provider:|package:' | grep -v 'i686' | perl -pe 's/^.*: //; s/(.\w+) (.*)$/-\2\1/;'>> $QUEUE_FILE
+
+   #>> ${TARGET_PACKAGES}
    #yumdownloader -x \*i686 --archlist x86_64 --destdir ${OUTPUT_DIR}
 
 }
@@ -121,15 +135,28 @@ handler()
 
 trap handler SIGINT
 
-# Append the source package list into our "found" file
-cat ${PACKAGES_FILE} >> ${FOUND_FILE}
-sort -u -o ${FOUND_FILE} $FOUND_FILE
+# prep these files
+mkdir -p $LOG_DIR
+mkdir -p $OUTPUT_DIR
 
-PACKAGES_FILE=${FOUND_FILE}
+cp $SOURCE_PACKAGES $TARGET_PACKAGES
+touch $QUEUE_FILE $ERROR_FILE $PROCESSED_FILE
+
+# these files were completed by the base RPM set and can be ignored
+# the script will return a manifest containing just the child dependencies
+
+cat ${PARENT_MANIFEST} >> $PROCESSED_FILE
+sort_files
+
+#cat ${TARGET_PACKAGES} >> $QUEUE_FILE
+sort -u $TARGET_PACKAGES | comm -2 -3 - $PARENT_PACKAGES >> $QUEUE_FILE
 
 while [ $COUNT != 0 ]; do
-  sort_files
   count
-  time process_file ${PACKAGES_FILE}
+  time process_file
   echo
 done
+
+
+#cat $MANIFEST_ >> $PROCESSED_FILE
+#sort -u $PROCESSED_FILE -o $PROCESSED_FILE

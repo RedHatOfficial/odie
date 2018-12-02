@@ -153,5 +153,5 @@ make_odie & spin $! "Building ODIE"
 
 
 if [[ "${PROVISION_ODIE}" = 1 ]]; then
-  ${BASEDIR}/deploy.sh --iso $(realpath ${ISO_NAME}) 
+  sudo ${BASEDIR}/deploy.sh --iso $(realpath ${ISO_NAME}) 
 fi

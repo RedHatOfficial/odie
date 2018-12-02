@@ -66,3 +66,6 @@ setup_repo_pki:
 
 setup_dnsmasq:
 	sudo ./playbooks/operations/setup_dnsmasq.yml  -e @/opt/odie/config/build.yml
+
+import_pki:
+	sudo rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
