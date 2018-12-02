@@ -37,9 +37,11 @@ create_docs:
 	source /opt/rh/rh-ruby22/enable && cd documentation/ && make pdfs
 
 setup_scripts:
+	mkdir -p output
 	cp -r scripts output/scripts
 	cp odie.sh output/
 	cp INSTALLER_VERSION output/
+	cp OCP_VERSION output/
 
 cve_changelog:
 	./scripts/generate-cve-delta.pl 2>&1 > output/CVE_CHANGELOG
