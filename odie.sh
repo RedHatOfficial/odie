@@ -182,10 +182,19 @@ function download_config() {
   fi
 }
 
-function setup() { 
+function setup() {
+
+  run_cmd cp /opt/odie/src/conf/profile.d/odie-commands.sh /etc/profile.d/ & spin $! "Setup core bash profile"
+  run_cmd cp /opt/odie/src/conf/rc/bashrc /root/.bashrc & spin $! "Setup bash rc"
+
   download_config
-  #stage
-  #setup_properties
+  generate_properties
+  configure
+  generate_config
+  push_images
+
+  run_cmd systemctl disable odie-setup & spin $! "Disabling ODIE setup script"
+
 }
 
 
@@ -329,6 +338,7 @@ function install_cluster() {
   run_ansible_play "Cluster Install Steps" ./odie-install.yml
   #run_ansible_play "Installing Certificates" ${MAKE_CMD} install_certificates
   run_ansible_play "Installing OCP Cluster" ${MAKE_CMD} install_openshift
+  # TODO: test all of these!!
 #  conditionally_run_play deploy_cns "Install Container Native Storage (Gluster)" ${MAKE_CMD} install_gluster
 #  conditionally_run_play deploy_metrics "Install Metrics Subsystem" ${MAKE_CMD} install_metrics
 #  conditionally_run_play deploy_logging "Install Logging Subsystem" ${MAKE_CMD} install_logging
@@ -340,6 +350,7 @@ function install_cluster() {
   conditionally_run_play setup_htpasswd_accounts  "Install HTPasswd authentication" ${MAKE_CMD} install_htpasswd
   # eventually add pivproxy here
   ${VERSION_SH} set install ${INSTALLER_VERSION}
+  ${VERSION_SH} set ocp ${OCP_VERSION}
 
   if [[ "${HARDEN_HOSTS}" = 1 ]]; then
     harden_hosts

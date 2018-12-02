@@ -54,9 +54,26 @@ exec 1>/root/kickstart-stage2.log 2>&1
 
 LOG_FILE=/root/kickstart-odie.log /opt/odie/install_media/odie.sh stage --kickstart
 find /opt/odie -name 'TRANS.TBL' -delete
-/opt/odie/src/playbooks/operations/setup_dnsmasq.yml -e stage_pxe=true -e rhel_mount=/opt/odie/install_media
 
-cp /opt/odie/src/conf/profile.d/odie-commands.sh /etc/profile.d/
+
+cat << EOF > /etc/systemd/system/odie-setup.service
+[Unit]
+Description=ODIE Initial Setup
+Requires=network-online.target
+Requires=docker.service
+After=network-online.target
+
+[Service]
+ExecStart=/opt/odie/src/odie.sh setup
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+chmod 664 /etc/systemd/system/odie-setup.service
+systemctl enable odie-setup
+EOF
+
 
 chage -d 0 root
 chage -d 0 admin
