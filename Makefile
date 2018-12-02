@@ -2,6 +2,8 @@
 SHELL := /bin/bash
 
 BUILD_VERSION?=snapshot
+DISC?=base/
+DISC?=output
 
 .PHONY: root_check
 
@@ -10,14 +12,15 @@ root_check:
 	id -nu  | grep -v root
 	echo "Non-root proceed!"
 
+all: clean setup full_media primary release iso
+
 build: primary
-setup: import_pki setup_repos install_dependencies setup_repo_pki
+setup: import_pki setup_repos install_dependencies
 
 full_media: setup_repos rpms stage_rhel_iso pull_images  pull_odie_images
 
 # everything is put into the same DVD now
-dvd: primary iso
-primary: root_check stage_rhel_iso clone_git_repo setup_scripts rpms
+primary: root_check stage_rhel_iso clone_git_repo setup_scripts
 release: root_check clone_cop_git create_docs cve_changelog checksum
 
 install_dependencies: root_check
@@ -27,8 +30,10 @@ install_dependencies: root_check
 
 rpms: root_check generate_rpm_manifest download_rpms create_rpm_repos fix_perms
 
+clean: fix_perms clean_rpms
+
 clean_rpms:
-	rm -rf {Packages,repodata}
+	rm -rf output/{Packages,repodata}
 
 create_rpm_repo: root_check
 	sudo build/rpm-createrepo.sh
@@ -40,12 +45,14 @@ download_rpms: root_check
 	sudo build/rpm-download-files.sh
 
 fix_perms:  root_check
-	(user=$(shell id -un):$(shell id -gn); sudo chown -R $$user * )
+	(user=$(shell id -un):$(shell id -gn); sudo chown -R $$user /opt/odie/src )
+	(user=$(shell id -un):$(shell id -gn); sudo chown -R $$user /opt/odie/config )
+	(user=$(shell id -un):$(shell id -gn); sudo chown -R $$user /etc/odie-release )
 
 create_docs:
 	source /opt/rh/rh-ruby22/enable && cd documentation/ && make pdfs
 
-setup_scripts: root_check
+setup_scripts: root_check create_rpm_repo
 	mkdir -p output
 	cp -r scripts output/scripts
 	cp odie.sh output/
