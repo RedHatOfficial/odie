@@ -46,8 +46,8 @@ cp -nr ${CONTENT_DIR}/{LiveOS,images,repodata} ${OUTPUT_DIR}/
 cp -n ${CONTENT_DIR}/isolinux/* ${OUTPUT_DIR}/isolinux/
 cp -f conf/bootable/isolinux.cfg conf/bootable/f*txt ${OUTPUT_DIR}/isolinux/
 
-find ${OUTPUT_DIR} -exec chmod +w {} \;
 
+./build/fix-perms.sh
 
 /usr/bin/sed -i -e "s/INSTALLER_VERSION/${INSTALLER}/" ${OUTPUT_DIR}/isolinux/isolinux.cfg
 

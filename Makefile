@@ -20,7 +20,7 @@ setup: import_pki setup_repos install_dependencies
 full_media: setup_repos rpms stage_rhel_iso pull_images  pull_odie_images
 
 # everything is put into the same DVD now
-primary: root_check stage_rhel_iso clone_git_repo setup_scripts
+primary: root_check partial_clean stage_rhel_iso clone_git_repo setup_scripts
 release: root_check clone_cop_git create_docs cve_changelog checksum
 
 install_dependencies: root_check
@@ -45,9 +45,7 @@ download_rpms: root_check
 	sudo build/rpm-download-files.sh
 
 fix_perms:  root_check
-	(user=$(shell id -un):$(shell id -gn); sudo chown -R $$user /opt/odie/src )
-	(user=$(shell id -un):$(shell id -gn); sudo chown -R $$user /opt/odie/config )
-	(user=$(shell id -un):$(shell id -gn); sudo chown -R $$user /etc/odie-release )
+	./build/fix-perms
 
 create_docs:
 	source /opt/rh/rh-ruby22/enable && cd documentation/ && make pdfs
@@ -91,7 +89,7 @@ baseline_iso:
 partial_clean:
 	mkdir -p output
 	cd output/ && find . -maxdepth 1 -not -name 'container_images' -not -name 'Packages' \
-		-not -name 'delta_*' -not -name 'CVE_CHANGELOG' -exec rm -rf {} \;
+		-exec rm -Irf {} \;
 
 pull_odie_images: build_postgres_stig build_cac_proxy
 	mkdir -p output/container_images

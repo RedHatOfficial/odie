@@ -57,7 +57,7 @@ ${bold}${underline}General Options${normal}
 EOF
 }
 
-export params="$(getopt -o c,i,f,r,b,h,n,m,u,d -l clean,images,full,release,baseline,help,none,rpm,bump,deploy,show-tail --name "${SCRIPT_NAME}" -- "$@")"
+export params="$(getopt -o c,i,f,r,b,h,n,m,u,d -l clean,images,full,release,baseline,help,none,rpm,bump,deploy,tail --name "${SCRIPT_NAME}" -- "$@")"
 
 if [[ $? -ne 0 ]]; then
   usage
@@ -73,7 +73,7 @@ do
            usage
            exit 0
            ;;
-        --show-tail)
+        --tail)
           echo "Realtime tailing of log"
           INTERACTIVE=0
           SHOW_TAIL=1
@@ -131,21 +131,9 @@ fi
 
 export ISO_NAME=dist/RedHat-ODIE-${VERSION}.iso
 
-function run_cmd2() {
-  CMD_SUFFIX="2>&1 | tee -a ${LOG_FILE}"
-  if [[ "$SHOW_TAIL" = "0" ]]; then
-    CMD_SUFFIX="${CMD_SUFFIX} >/dev/null"
-  fi
-
-  CMD=${@}
-  eval echo "$ ${CMD}" ${CMD_SUFFIX}
-  eval ${CMD} ${CMD_SUFFIX}
-  return $?
-}
-
 function make_odie() {
   set +x
-  run_cmd2 make ${BUILD_FLAGS_PRE} ${BUILD_FLAGS_MAIN} ${BUILD_FLAGS_POST} BUILD_VERSION=${VERSION} ISO_NAME=${ISO_NAME}
+  run_cmd make ${BUILD_FLAGS_PRE} ${BUILD_FLAGS_MAIN} ${BUILD_FLAGS_POST} BUILD_VERSION=${VERSION} ISO_NAME=${ISO_NAME}
 }
 
 
