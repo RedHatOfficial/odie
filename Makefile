@@ -31,6 +31,10 @@ install_dependencies: root_check
 rpms: root_check generate_rpm_manifest download_rpms create_rpm_repos fix_perms
 
 clean: fix_perms clean_rpms
+	rm -rf manifests/*
+	rm -rf output
+
+
 
 clean_rpms:
 	rm -rf output/{Packages,repodata}
@@ -45,7 +49,7 @@ download_rpms: root_check
 	sudo build/rpm-download-files.sh
 
 fix_perms:  root_check
-	./build/fix-perms
+	./build/fix-perms.sh
 
 create_docs:
 	source /opt/rh/rh-ruby22/enable && cd documentation/ && make pdfs
@@ -106,7 +110,7 @@ register:
 	sudo subscription-manager attach --pool $$poolid
 
 setup_repos:
-	@sudo subscription-manager repos --disable "*" --enable rhel-7-server-rpms --enable rhel-7-server-ose-3.11-rpms --enable rhel-server-rhscl-7-rpms --enable rhel-7-server-extras-rpms --enable=rhel-7-server-ansible-2.6-rpms
+	sudo subscription-manager repos --disable "*" --enable rhel-7-server-rpms --enable rhel-7-server-ose-3.11-rpms --enable rhel-server-rhscl-7-rpms --enable rhel-7-server-extras-rpms --enable=rhel-7-server-ansible-2.6-rpms
 	sudo subscription-manager release --set=7.6
 	sudo yum clean all
 
