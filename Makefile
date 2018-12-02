@@ -60,7 +60,7 @@ clone_git_repo:
 	sh scripts/local-git-repo.sh
 
 stage_rhel_iso: root_check
-	scripts/stage-rhel-iso.sh output/
+	build/stage-rhel-iso.sh output/
 
 checksum:
 	cd output && sha256sum `find -type f | egrep -v '.*\.pdf'` > ../documentation/target/ISO_CHECKSUM
@@ -74,11 +74,9 @@ baseline_iso:
 	mkdir -p dist/
 	find -name 'TRANS.TBL' -exec rm -f {} \;
 	rm -f ${ISO_NAME}
-	mkisofs -quiet -o ${ISO_NAME} -m 'delta_*' -m 'container_images/extra*' -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -V 'RHEL-7.5 Server.x86_64' -boot-load-size 4 -boot-info-table -r -J -T output/
+	mkisofs -quiet -o ${ISO_NAME} -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -V 'RHEL-7.5 Server.x86_64' -boot-load-size 4 -boot-info-table -r -J -T output/
 	implantisomd5 ${ISO_NAME}
 
-clean:
-	rm -rf output/ dist/
 
 7z:
 	7za a -m0 -v900m ${ISO_NAME}.7z  ${ISO_NAME}

@@ -45,15 +45,19 @@ cp -nr ${CONTENT_DIR}/{LiveOS,images,repodata} ${OUTPUT_DIR}/
 #find ${CONTENT_DIR} -maxdepth 1 -type f -exec cp {} ${CONTENT_DIR}/ \;
 cp -n ${CONTENT_DIR}/isolinux/* ${OUTPUT_DIR}/isolinux/
 cp -f conf/bootable/isolinux.cfg conf/bootable/f*txt ${OUTPUT_DIR}/isolinux/
+
+find ${OUTPUT_DIR} -exec chmod +w {} \;
+
+
 /usr/bin/sed -i -e "s/INSTALLER_VERSION/${INSTALLER}/" ${OUTPUT_DIR}/isolinux/isolinux.cfg
 
 echo "Generate Jumphost Kickstarts"
 KS=$(realpath ${OUTPUT_DIR}/ks)
 KS_OUT=$(realpath ${OUTPUT_DIR}/ks_output)
 
-./playbooks/media_preparation/generate_jumphost_ks.yml -e "kickstart_dir=${KS_OUT}/" -e 'installer_method=gui'
+./playbooks/media_preparation/generate_jumphost_ks.yml -e "kickstart_dir=${KS_OUT}/" -e 'installer_method=gui' -e "make_build=True"
 mv ${KS_OUT}/*.cfg ${KS}/jumphost-gui-ks.cfg
-./playbooks/media_preparation/generate_jumphost_ks.yml -e "kickstart_dir=${KS_OUT}/" -e 'installer_method=text'
+./playbooks/media_preparation/generate_jumphost_ks.yml -e "kickstart_dir=${KS_OUT}/" -e 'installer_method=text' -e "make_build=True"
 mv ${KS_OUT}/*.cfg ${KS}/jumphost-text-ks.cfg
 rmdir  ${KS_OUT}
 
