@@ -61,7 +61,7 @@ cat << EOF > /etc/systemd/system/odie-setup.service
 Description=ODIE Initial Setup
 Requires=network-online.target
 Requires=docker.service
-After=network-online.target
+After=multi-user.target
 
 [Service]
 ExecStart=/opt/odie/src/odie.sh setup
@@ -71,7 +71,6 @@ WantedBy=multi-user.target
 EOF
 
 chmod 664 /etc/systemd/system/odie-setup.service
-systemctl enable odie-setup
 EOF
 
 
