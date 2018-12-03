@@ -212,5 +212,3 @@ Lots to still document before the 1.0.0 GA... always looking for assistance
 * RPM manifest design and key files
 * content dir layout
 * document how to use download retrival process
-
-
