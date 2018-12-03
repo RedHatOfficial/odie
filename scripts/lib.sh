@@ -16,10 +16,13 @@ export PROJECTS_DIR=${ODIE_PROJECT_DIRECTORY:-${OUTPUT_DIR}/projects}
 export UPDATES_DIR=${ODIE_PLAYBOOK_UPDATES_DIRECTORY:-${OUTPUT_DIR}/src/playbooks/updates}
 export IMAGES_DIR=${ODIE_IMAGES_DIRECTORY:-${OUTPUT_DIR}/images}
 export TARGET=master
-export LOG_NAME=/tmp/odie.log-`date +%Y-%m-%d-%H:%M:%S`
+export LOG_NAME=/tmp/odie.log-`date +%y%m%d-%H%M%S`
 export INTERACTIVE=${INTERACTIVE:-1}
 export LOG_FILE="${LOG_FILE:-${LOG_NAME}}"
 export CMD_SUFFIX=" 2>&1 >>${LOG_FILE}"
+
+export SHOW_TAIL=${SHOW_TAIL:-0}
+export SPIN_FPS=${SPIN_FPS:-.1}
 
 VERSION_FILE=${CONTENT_DIR}/INSTALLER_VERSION
 CONTENT_VERSION=$(cat ${VERSION_FILE} 2> /dev/null)
@@ -29,6 +32,8 @@ ${VERSION_SH} set content ${CONTENT_VERSION}
 export INSTALLER_VERSION=${CONTENT_VERSION}
 export INSTALLED_VERSION=$( ${VERSION_SH} show active )
 export UPGRADE_VERSION=$(if [[ $(${VERSION_SH} compare active content) = -1 ]]; then echo 1; else echo 0; fi )
+
+export OCP_VERSION=$(cat ${CONTENT_DIR}/OCP_VERSION 2>/dev/null)
 
 function confirmation_prompt() {
 # https://stackoverflow.com/questions/226703/how-do-i-prompt-for-yes-no-cancel-input-in-a-linux-shell-script/27875395#27875395
@@ -83,7 +88,7 @@ spin() {
           printf "\b${spin:$i:1}"
           printf "\r"
       fi
-      sleep .1
+      sleep ${SPIN_FPS}
     done
     # $? after the while loop is the return code of the kill command.  absolutely useless here
     wait $1 # https://stackoverflow.com/questions/1570262/shell-get-exit-code-of-background-process
@@ -109,7 +114,7 @@ function print_message() {
   if [[ $rc == "0" ]]; then
     # https://stackoverflow.com/questions/8903239/how-to-calculate-time-difference-in-bash-script
 #    printf "\b${light_green}`date -u -d @"$SECONDS" +'%_Mm %_Ss'`${normal}]\n"
-    printf "\b${light_green}COMPLETE${normal}]\n"
+    printf "\b${light_green}$(date +%H:%M:%S)${normal}]\n"
   elif [[ $rc == "${SKIPPED_CODE}" ]]; then
     printf "\b${light_blue}SKIPPED${normal}]\n"
   elif [[ $rc == "${FAILURE_CODE}" ]]; then
@@ -123,7 +128,7 @@ function print_message() {
         echo;
         echo "${bold}${red} LOG TAIL  *******************************************${normal}"
         tail  ${LOG_FILE}
-        echo; confirmation_prompt 1 "${bold}${red}****** ${normal} Do you want to view the entire error log (y/n): "; less ${LOG_FILE}; exit $rc ; }
+        echo; confirmation_prompt 1 "${bold}${red}****** ${normal} Do you want to ${bold}less${normal} ${LOG_FILE} ? y/n: "; less ${LOG_FILE}; exit $rc ; }
     else
         tail -25 ${LOG_FILE} >> /dev/stderr
     fi
@@ -182,10 +187,14 @@ if [ tty_supports_color ]; then
 fi
 
 function run_cmd() {
+  CMD_SUFFIX="2>&1 | tee -a ${LOG_FILE}"
+  if [[ "$SHOW_TAIL" = "0" ]]; then
+    CMD_SUFFIX="${CMD_SUFFIX} >/dev/null"
+  fi
+
   CMD=${@}
-  eval echo "$ ${CMD}" "${CMD_SUFFIX}"
-#eval ${CMD} "${CMD_SUFFIX}"
-  eval ${CMD} >>${LOG_FILE} 2>> ${LOG_FILE}
+  eval echo "$ ${CMD}" ${CMD_SUFFIX}
+  eval ${CMD} ${CMD_SUFFIX}
   return $?
 }
 
@@ -215,6 +224,11 @@ function run_ansible_play() {
   eval echo "$ ${CMD}" "${CMD_SUFFIX}"
 
   SHOW_TASKS=0
+
+  if [[ ${SHOW_TAIL} = 1 ]]; then
+    run_cmd ${CMD}
+    return $?
+  fi
 
   set -o pipefail
   ${CMD} 2>&1 | tee -a ${LOG_FILE} |  while read -r line ; do

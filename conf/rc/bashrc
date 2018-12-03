@@ -12,8 +12,3 @@ if [ -f /etc/bashrc  ]; then
 fi
 
 export ANSIBLE_CONFIG=/opt/odie/src/ansible.cfg
-
-
-source /opt/rh/rh-ruby22/enable
-source /opt/rh/rh-maven33/enable
-export PATH=/opt/rh/rh-ruby22/root/usr/local/bin:/opt/rh/rh-maven33/${PATH:+:${PATH}}

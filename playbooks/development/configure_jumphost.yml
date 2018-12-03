@@ -106,13 +106,5 @@
     - name: Change Hostname
       shell: "hostnamectl set-hostname {{hostname}}"
 
-    - name: Run Configure
-      shell: "INTERACTIVE=0 /opt/odie/src/odie.sh configure"
-
-    - name: Generate Configuration Files
-      shell: "INTERACTIVE=0 /opt/odie/src/odie.sh generate-config"
-
-    - name: Push Images into Registry
-      shell: "INTERACTIVE=0 /opt/odie/src/odie.sh push"
-      tags:
-        - images
+    - name: Run Setup
+      shell: "INTERACTIVE=0 /opt/odie/src/odie.sh setup"

@@ -1,0 +1,2 @@
+#!/usr/bin/bash
+tail -f "/tmp/$(ls -1tr /tmp | grep odie | tail -1)"

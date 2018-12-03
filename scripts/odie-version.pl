@@ -2,7 +2,7 @@
 
 use IO::Handle;
 
-my @flags = ( 'stage', 'patch', 'install', 'configure', 'properties', 'harden', 'content');
+my @flags = ( 'stage', 'patch', 'install', 'configure', 'properties', 'harden', 'content', 'ocp');
 my %properties = {};
 
 my $semver = "/opt/odie/src/contrib/bin/semver";

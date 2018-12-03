@@ -414,8 +414,8 @@ version:
           The DHCP range must be defined.
         props:
           enable_dhcp: false
-          ip_range_start: '172.27.168.100'
-          ip_range_end: '172.27.168.200'
+          ip_range_start: '192.168.124.2'
+          ip_range_end: '192.168.124.96'
 
       - name: PXE Server
         prefix: 11203
@@ -428,6 +428,19 @@ version:
         props:
           enable_pxe: true
 
+      - name: Hypervisor DNS
+        prefix: 11203
+        yml_file: build.yml
+        header_text:
+        required: true
+        status: active
+        description_text: |-
+          Ensure that the host has DNS services to the cluster
+        props:
+          enable_pxe: false
+          enable_dns: true
+          ip_range_start: '192.168.124.2'
+          ip_range_end: '192.168.124.96'
 
       - name: Secondary DHCP IP
         prefix: 11202
@@ -468,7 +481,6 @@ version:
                 It is not necessary to directly modify this option.
         props:
           ansible_ssh_user: admin
-
 
       # Partition sizes
       - name: Root Partition
@@ -558,7 +570,7 @@ version:
       - name: KVM Variables
         yml_file: build.yml
         header_text:
-        required: false
+        required: true
         status: active
         description_text: |-
           These variables are used by the development playbooks to configure local KVM clusters
@@ -796,7 +808,7 @@ version:
 
       - name: Variablized Compression
         prefix: 25010
-        yml_file: custom.yml
+        yml_file: build.yml
         header_text:
         description_text: |-
            Compression utilities and arguments have been variablized to allow 

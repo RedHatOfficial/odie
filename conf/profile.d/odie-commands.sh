@@ -20,7 +20,9 @@ view_list_select() {
   done
 }
 
-alias tailodie='tail -f "/tmp/$(ls -1tr /tmp | grep odie | tail -1)"'
+# For Nate - this is now a binary that lives in  contrib/bin/
+# this allows it be executed remotely from SSH
+#alias tailodie='tail -f "/tmp/$(ls -1tr /tmp | grep odie | tail -1)"'
 alias viewodie=view_list_select
 alias toodie=toodie_func
 

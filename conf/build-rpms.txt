@@ -1,11 +1,12 @@
 ansible
+createrepo
+docker
 expect
 genisoimage
 isomd5sum
-java-1.7.0-openjdk-headless
-java-devel-openjdk
 python-docker-py
 python-websocket-client
+psmisc
 rh-ruby22-ruby
 rh-ruby22-ruby-devel
 rh-ruby22-rubygem-bigdecimal
@@ -19,3 +20,4 @@ rh-ruby22-ruby-irb
 rh-ruby22-ruby-libs
 rh-ruby22-runtime
 rpm-sign
+yum-utils

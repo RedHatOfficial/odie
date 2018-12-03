@@ -13,12 +13,27 @@
 - name: Encrypt the user password
   set_fact:
     encrypted_password: "{{ my_password|password_hash('sha256', my_password_salt) }}"
+    output_file: "{{ kickstart_dir }}/{{ hostname }}.cfg"
+
+- name: Change Permissions
+  file:
+    path: "{{ kickstart_dir }}"
+    state: directory
 
 - name: Render the template
   template:
     src: "{{ flavor }}-ks.j2"
-    dest: "{{ kickstart_dir }}/{{ hostname }}.cfg"
+    dest: "{{ output_file }}"
+  delegate_to: localhost
+
+- name: Change Permissions
+  file:
+    path: "{{ output_file }}"
+    state: file
     mode: 0600
     owner: apache
     group: apache
   delegate_to: localhost
+  become: true
+  when: make_build is not defined
+
