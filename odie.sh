@@ -14,6 +14,7 @@ APP_UNPROVISION=0
 SKIP_GIT=${SKIP_GIT:-0}
 LOOP_PING=0
 MAKE_CMD="make -f Makefile.ocp"
+export SINGLE_PROPERTY=""
 
 # FUNCTIONS (This is all being kept in-line to make transfer easier)
 
@@ -93,6 +94,7 @@ EOF
   fi
 
 }
+
 
 function setup_properties() {
 
@@ -679,6 +681,9 @@ do
       ;;
     properties|generate-properties)
       header $1
+      if [[ "${2}x" != "x" ]]; then
+        export SINGLE_PROPERTY=" -e odie_single_property=$2"
+      fi
       setup_properties
       shift
       exit 0

@@ -2,11 +2,12 @@
   - name: Delete Directory
     file:
       state: absent
-      path: "{{odie_properties_output_dir}}/fragments"  
+      path: "{{odie_properties_output_dir}}/fragments"
 
 
   - name: Copy Existing config files
     include: ../tasks/copy_config.yml
+    when: odie_single_property is not defined or odie_single_property == item
     with_items:
       - "{{config_files}}"
 
