@@ -15,7 +15,13 @@ root_check:
 all: clean setup full_media primary release iso
 
 build: primary
-setup: setup_repos install_dependencies
+setup: initial_setup initial_rpm install_dependencies
+
+initial_rpm: list_pool_ids attach setup_repos
+
+initial_setup:
+	./odie.sh properties build.yml
+	cp -n /opt/odie/config/hosts-build.csv.sample /opt/odie/config/hosts.csv
 
 full_media: setup_repos rpms stage_rhel_iso pull_images  pull_odie_images
 
@@ -26,6 +32,8 @@ release: root_check clone_cop_git create_docs checksum
 install_dependencies: root_check
 	sudo yum -y install vim-enhanced `cat conf/build-rpms.txt`
 	sudo ./scripts/install_asciidoctor.sh
+	sudo yum -y --enablerepo=rhel-7-server-optional-rpms --enablerepo=epel install  maven python2-pip htop the_silver_searcher jq
+	sudo pip install docker-py PyYAML
 	sudo systemctl enable --now docker
 
 rpms: root_check generate_rpm_manifest download_rpms create_rpm_repos fix_perms
@@ -33,7 +41,6 @@ rpms: root_check generate_rpm_manifest download_rpms create_rpm_repos fix_perms
 clean: fix_perms clean_rpms
 	rm -rf manifests/*
 	rm -rf output
-
 
 clean_rpms:
 	rm -rf output/{Packages,repodata}
@@ -86,7 +93,6 @@ baseline_iso:
 	mkisofs -quiet -o ${ISO_NAME} -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -V 'RHEL-7.5 Server.x86_64' -boot-load-size 4 -boot-info-table -r -J -T output/
 	implantisomd5 ${ISO_NAME}
 
-
 7z:
 	7za a -m0 -v900m ${ISO_NAME}.7z  ${ISO_NAME}
 
@@ -100,12 +106,31 @@ pull_odie_images: build_postgres_stig build_cac_proxy
 	mkdir -p output/container_images
 	./scripts/migrate-images.sh pull --odie -t output/container_images/
 
+list_pool_ids:
+	@echo "*******************************************"
+	@echo "List all available pool ids"
+	@echo ""
+	@echo "The pool IDs vary for each account so they must be manually determined"
+	@echo ""
+	@echo "This will find the first pool with the 'Red Hat OpenShift Container Platform'  entitlement."
+	@echo "Copy this into your paste buffer as you will need it in the next step."
+	@echo ""
+	@echo "If you do not find this pool, contact your Red Hat sales team for assistance."
+	@echo "********************************************"
+	@echo ""
+	@(export LOG=$$(mktemp); read -p "Press enter to continue: " m;  echo $$LOG ; subscription-manager list --available > $$LOG ; \
+		less -p'OpenShift Container Platform' $$LOG)
+
+inital_setup:
+	./odie.sh properties build.yml
 
 register:
 	@echo "*******************************************"
 	@echo "Adding Red Hat subscription. Please enter your Red Hat username and password."
 	@echo "********************************************"
 	@subscription-manager register
+
+attach:
 	@read -p "Enter the Red Hat subscription pool ID: " poolid; \
 	sudo subscription-manager attach --pool $$poolid
 
@@ -113,6 +138,8 @@ setup_repos:
 	sudo subscription-manager repos --disable "*" --enable rhel-7-server-rpms --enable rhel-7-server-ose-3.11-rpms --enable rhel-server-rhscl-7-rpms --enable rhel-7-server-extras-rpms --enable=rhel-7-server-ansible-2.6-rpms
 	sudo subscription-manager release --set=7.6
 	sudo yum clean all
+	sudo yum -y install  https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+	sudo yum-config-manager --disable epel
 
 unsubscribe:
 	sudo subscription-manager remove --all

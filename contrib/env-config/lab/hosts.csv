@@ -1,8 +1,6 @@
-hostname,ip,flavor,env,cns,disk1,disk2,disk3,cpu,memory
-master01.lab.local,192.168.124.2,master,lab,,150,,,4,12000
-infra01.lab.local,192.168.124.3,infra,lab,,150,20,,1,8000
-node01.lab.local,192.168.124.4,node,lab,x,150,20,10,1,4000
-node02.lab.local,192.168.124.7,node,lab,x,150,20,10,1,4000
-node03.lab.local,192.168.124.8,node,lab,x,150,20,10,1,4000
-lbnfs01.lab.local,192.168.124.5,lb_nfs,lab,,150,11,,1,2048
-registry01.lab.local,192.168.124.6,registry,lab,,150,40,,1,12000
+hostname,ip,flavor,env,cns,disk1,disk2,disk3,cpu,memory,partition_root,partition_var,ansible_ssh_user,ansible_ssh_pass
+node01.lab.odie,192.168.124.4,node,lab,,150,20,10,4,4096,,,,
+lbnfs01.lab.odie,192.168.124.5,lb_nfs,lab,,150,11,,1,2048,,,,
+master01.lab.odie,192.168.124.2,master,lab,,150,,,4,12000,,,,
+infra01.lab.odie,192.168.124.7,infra,lab,,150,20,,1,8097,,,,
+jumphost01.lab.odie,192.168.124.10,jumphost,lab,,250,,,1,8000,,,root,odiejumphost

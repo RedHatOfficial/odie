@@ -1,0 +1,2 @@
+hostname,ip,flavor,env,cns,disk1,disk2,disk3,cpu,memory,partition_root,partition_var,ansible_ssh_user,ansible_ssh_pass
+jumphost01.lab.odie,192.168.124.10,jumphost,lab,,250,,,1,8000,,,root,odiejumphost

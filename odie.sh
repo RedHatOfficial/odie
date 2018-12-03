@@ -103,12 +103,13 @@ function setup_properties() {
 
   cd ${GIT_CLONE}
 
-  run_ansible_play  "Update Property Files for ${INSTALLER_VERSION}" ./playbooks/generate_configuration/property_generation.yml
   SAMPLE_DIR=/opt/odie/src/contrib/env-config/
+  run_ansible_play  "Update Property Files for ${INSTALLER_VERSION}" ./playbooks/generate_configuration/property_generation.yml ${SINGLE_PROPERTY}
 
-#  cp -n ${SAMPLE_DIR}/default/hosts.csv /opt/odie/config/hosts-default.csv.sample
- # cp -n ${SAMPLE_DIR}/lab/hosts.csv /opt/odie/config/hosts-lab.csv.sample
-  #cp -n ${SAMPLE_DIR}/full/hosts.csv /opt/odie/config/hosts-full.csv.sample
+  cp -n ${SAMPLE_DIR}/default/hosts.csv /opt/odie/config/hosts-default.csv.sample
+  cp -n ${SAMPLE_DIR}/lab/hosts.csv /opt/odie/config/hosts-lab.csv.sample
+  cp -n ${SAMPLE_DIR}/full/hosts.csv /opt/odie/config/hosts-full.csv.sample
+  cp -n ${SAMPLE_DIR}/build/hosts.csv /opt/odie/config/hosts-build.csv.sample
 
   wc -l ${CONFIG_DIR}/*.{yml,csv} 2>/dev/null | grep -v total > ${AFTER_FILE} 2>/dev/null
 
@@ -123,7 +124,7 @@ function setup_properties() {
 PROPERTIES
 
     declare -A PROPS
-    PROPS["${CONFIG_DIR}/custom.yml"]="Advanced Configuration options for sophisicated use cases"
+    PROPS["${CONFIG_DIR}/custom.yml"]="Advanced configurations options"
     PROPS["${CONFIG_DIR}/odie.yml"]="Installation Parameters"
     PROPS["${CONFIG_DIR}/build.yml"]="Parameters used to build ODIE and deploy via KVM"
     PROPS["${CONFIG_DIR}/env.yml"]="Specify site centric information about your environment "

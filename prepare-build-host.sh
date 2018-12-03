@@ -22,12 +22,7 @@ make setup_repos
 yum -y update
 yum -y install \
     ansible createrepo git psmisc yum-utils docker genisoimage isomd5sum
-yum -y install \
-    https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 yum-config-manager --disable epel
-yum -y --enablerepo=rhel-7-server-optional-rpms --enablerepo=epel install \
-    maven python2-pip
-pip install docker-py PyYAML
 yum -y clean all && rm -fr /var/cache/yum
 systemctl enable docker
 systemctl reboot
