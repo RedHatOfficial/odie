@@ -35,7 +35,6 @@ clean: fix_perms clean_rpms
 	rm -rf output
 
 
-
 clean_rpms:
 	rm -rf output/{Packages,repodata}
 
@@ -69,7 +68,8 @@ clone_git_repo:
 	sh scripts/local-git-repo.sh
 
 stage_rhel_iso: root_check
-	build/stage-rhel-iso.sh output/
+	./build/stage-rhel-iso.sh output/
+	./build/fix-perms.sh
 
 checksum:
 	cd output && sha256sum `find -type f | egrep -v '.*\.pdf'` > ../documentation/target/ISO_CHECKSUM
@@ -94,7 +94,7 @@ partial_clean:
 	./build/fix-perms.sh
 	mkdir -p output
 	cd output/ && find . -maxdepth 1 -not -name 'container_images' -not -name 'Packages' \
-		-exec rm -Irf {} \;
+		-exec sudo rm -Irf {} \;
 
 pull_odie_images: build_postgres_stig build_cac_proxy
 	mkdir -p output/container_images

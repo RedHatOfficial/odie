@@ -48,6 +48,7 @@ cp -f conf/bootable/isolinux.cfg conf/bootable/f*txt ${OUTPUT_DIR}/isolinux/
 
 
 ./build/fix-perms.sh
+chmod -R +w ${OUTPUT_DIR}/{isolinux,ks,ks_output}
 
 /usr/bin/sed -i -e "s/INSTALLER_VERSION/${INSTALLER}/" ${OUTPUT_DIR}/isolinux/isolinux.cfg
 
@@ -62,3 +63,5 @@ mv ${KS_OUT}/*.cfg ${KS}/jumphost-text-ks.cfg
 rmdir  ${KS_OUT}
 
 #find ${OUTPUT_DIR} -exec chmod u+w {} \;
+
+

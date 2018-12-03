@@ -128,7 +128,7 @@ function print_message() {
         echo;
         echo "${bold}${red} LOG TAIL  *******************************************${normal}"
         tail  ${LOG_FILE}
-        echo; confirmation_prompt 1 "${bold}${red}****** ${normal} Do you want to view the entire error log (y/n): "; less ${LOG_FILE}; exit $rc ; }
+        echo; confirmation_prompt 1 "${bold}${red}****** ${normal} Do you want to ${bold}less${normal} ${LOG_FILE} ? y/n: "; less ${LOG_FILE}; exit $rc ; }
     else
         tail -25 ${LOG_FILE} >> /dev/stderr
     fi
