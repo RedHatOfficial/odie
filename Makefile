@@ -3,7 +3,6 @@ SHELL := /bin/bash
 
 BUILD_VERSION?=snapshot
 DISC?=base/
-DISC?=output
 
 .PHONY: root_check
 
@@ -21,7 +20,7 @@ initial_rpm: list_pool_ids attach setup_repos
 
 initial_setup:
 	./odie.sh properties build.yml
-	cp -n /opt/odie/config/hosts-build.csv.sample /opt/odie/config/hosts.csv
+	cp -n /opt/odie/config/odie-hosts.yml.build-sample /opt/odie/config/odie-hosts.yml
 
 full_media: setup_repos rpms stage_rhel_iso pull_images  pull_odie_images
 

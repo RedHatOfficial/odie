@@ -1,0 +1,71 @@
+all:
+  group_vars:
+    gateway: 192.168.124.1
+    dns: 192.168.124.1
+    netmask: 255.255.255.0
+    default_subdomain: apps.lab.odie
+infra:
+  hosts:
+    infra01.lab.odie:
+      hostname: infra01.lab.odie
+      memory: 8096
+      zone: lab
+      ip: 192.168.124.7
+      disk2: 20
+      disk1: 150
+      env: lab
+      flavor: infra
+      cpu: 1
+#glusterfs:
+#  hosts: []
+nfs:
+  hosts:
+    lbnfs01.lab.odie:
+masters:
+  hosts:
+    master01.lab.odie:
+      ip: 192.168.124.2
+      hostname: master01.lab.odie
+      env: lab
+      flavor: master
+      cpu: 4
+      memory: 12000
+      disk1: 150
+#etcd:
+#  hosts:
+#    master01.lab.odie:
+nodes:
+  hosts:
+    node01.lab.odie:
+      ip: 192.168.124.4
+      hostname: node01.lab.odie
+      env: lab
+      flavor: node
+      cpu: 4
+      memory: 4096
+      disk1: 150
+      disk2: 20
+      disk3: 10 # for RHOCS
+jumphost:
+  hosts:
+    jumphost01.lab.odie:
+      ip: 192.168.124.10
+      hostname: jumphost01.lab.odie
+      flavor: jumphost
+      env: lab
+      cpu: 1
+      memory: 8000
+      disk1: 250
+      ansible_ssh_user: root
+      ansible_ssh_pass: odiejumphost
+lb_nfs:
+  hosts:
+    lbnfs01.lab.odie:
+      hostname: lbnfs01.lab.odie
+      ip: 192.168.124.5
+      flavor: lb_nfs
+      env: lab
+      cpu: 1
+      memory: 2048
+      disk1: 150
+      disk2: 11

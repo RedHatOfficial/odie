@@ -108,10 +108,7 @@ function setup_properties() {
   SAMPLE_DIR=/opt/odie/src/contrib/env-config/
   run_ansible_play  "Update Property Files for ${INSTALLER_VERSION}" ./playbooks/generate_configuration/property_generation.yml ${SINGLE_PROPERTY}
 
-  cp -n ${SAMPLE_DIR}/default/hosts.csv /opt/odie/config/hosts-default.csv.sample
-  cp -n ${SAMPLE_DIR}/lab/hosts.csv /opt/odie/config/hosts-lab.csv.sample
-  cp -n ${SAMPLE_DIR}/full/hosts.csv /opt/odie/config/hosts-full.csv.sample
-  cp -n ${SAMPLE_DIR}/build/hosts.csv /opt/odie/config/hosts-build.csv.sample
+  cp -n ${SAMPLE_DIR}/src/contrib/env-config/*/odie-hosts.yml* /opt/odie/config
 
   wc -l ${CONFIG_DIR}/*.{yml,csv} 2>/dev/null | grep -v total > ${AFTER_FILE} 2>/dev/null
 
@@ -130,7 +127,7 @@ PROPERTIES
     PROPS["${CONFIG_DIR}/odie.yml"]="Installation Parameters"
     PROPS["${CONFIG_DIR}/build.yml"]="Parameters used to build ODIE and deploy via KVM"
     PROPS["${CONFIG_DIR}/env.yml"]="Specify site centric information about your environment "
-    PROPS["${CONFIG_DIR}/hosts.csv"]="Static network information and cluster topology"
+    PROPS["${CONFIG_DIR}/odie-hosts.yml"]="Static network information and cluster topology"
     PROPS["${CONFIG_DIR}/secret.yml"]="Specifies the credentials for your default users. Encrypted via ${bold}odie encrypt${normal}"
     PROPS["${CONFIG_DIR}/certs.yml"]="Parameters used for SSL settings for the publically available OpenShift management endpoints"
 
