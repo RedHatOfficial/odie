@@ -81,8 +81,11 @@
   copy:
     content: |-
       listen-address={{listen_address}}
-      address=/.{{default_subdomain}}/{{hostvars[groups['infra'][0]].ip}}
       bind-interfaces
+
+      {% if 'infra' in groups and groups['infrara'][0] is defined %}
+      address=/.{{default_subdomain}}/{{hostvars[groups['infra'][0]].ip}}
+      {% endif %}
 
       {% if enable_dhcp %}
       expand-hosts

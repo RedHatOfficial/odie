@@ -875,6 +875,17 @@ version:
         status: active
         description_text: |-
           The docker registry host to use during the OCP installation
-
         props:
          regisry_fqdn: jumphost01.lab.odie:5000
+
+  1.0.0+beta:
+    properties:
+      - name: Auto installation of OCP Environment
+        yml_file: odie.yml
+        header_text:
+        required: true
+        status: active
+        description_text: |-
+          Should "odie setup" initiate 
+        props:
+         auto_install: False
