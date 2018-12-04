@@ -1,8 +1,15 @@
 # This Makefile prepares the DVD directories
 SHELL := /bin/bash
 
+
+CONFIG_DIR=/opt/odie/config
+
 BUILD_VERSION?=snapshot
-DISC?=base/
+OUTPUT_DIR?=output
+OUTPUT_DISC?=base
+TARGET_DIR=$(OUTPUT_DIR)/$(OUTPUT_DISC)/
+
+ISO_BUILD_DIR?=dist/
 
 .PHONY: root_check
 
@@ -13,20 +20,28 @@ root_check:
 
 all: clean setup full_media primary release iso
 
-build: primary
+build: primary baseline_iso
 setup: initial_setup initial_rpm install_dependencies
 
 initial_rpm: list_pool_ids attach setup_repos
 
 initial_setup:
 	./odie.sh properties build.yml
-	cp -n /opt/odie/config/odie-hosts.yml.build-sample /opt/odie/config/odie-hosts.yml
+	cp -n $(CONFIG_DIR)/odie-hosts.yml.build-sample $(CONFIG_DIR)/odie-hosts.yml
 
 full_media: setup_repos rpms stage_rhel_iso pull_images  pull_odie_images
 
 # everything is put into the same DVD now
-primary: root_check partial_clean stage_rhel_iso clone_git_repo setup_scripts
+bootable: root_check partial_clean	stage_rhel_iso clone_git_repo setup_scripts add_rpms_repo
 release: root_check clone_cop_git create_docs checksum
+
+
+slim_iso: bootable add_rpms_repo bootable_iso
+base_iso: bootable add_rpms_repo ln_base_images bootable_iso
+extra_iso: ln_supplemental_images content_iso
+appdev_iso: ln_s2i_images content_iso
+mega_iso: base_iso extra_iso appdev_iso bootable_iso
+
 
 install_dependencies: root_check
 	sudo yum -y install vim-enhanced `cat conf/build-rpms.txt`
@@ -35,23 +50,32 @@ install_dependencies: root_check
 	sudo pip install docker-py PyYAML
 	sudo systemctl enable --now docker
 
-rpms: root_check generate_rpm_manifest download_rpms create_rpm_repos fix_perms
+rpms: root_check generate_rpm_manifest download_rpms fix_perms
 
-clean: fix_perms clean_rpms
-	rm -rf manifests/*
-	rm -rf output
+clean:
+	rm -rf $(OUTPUT_DIR)/$(OUTPUT_DISC)/
+
+clean_all: clean clean_rpms clean_images clean_manifests
+	rm -rf $(OUTPUT_DIR)/$(OUTPUT_DISC)/
 
 clean_rpms:
-	rm -rf output/{Packages,repodata}
+	rm -rf $(OUTPUT_DIR)/media/{Packages,repodata}
 
-create_rpm_repo: root_check
-	sudo build/rpm-createrepo.sh
+clean_images:
+	rm -rf $(OUTPUT_DIR)/media/container_images
+
+clean_manifests:
+	rm -rf $(OUTPUT_DIR)/manifests/*
+
+
+add_rpms_repo: root_check cp_rpms
+	sudo build/rpm-createrepo.sh $(OUTPUT_DIR)/$(OUTPUT_DISC)/
 
 generate_rpm_manifest: root_check
-	sudo build/rpm-generate-file-list.sh
+	sudo build/rpm-generate-file-list.sh $(OUTPUT_DIR)/manifests/
 
 download_rpms: root_check
-	sudo build/rpm-download-files.sh
+	sudo build/rpm-download-files.sh $(OUTPUT_DIR)/$(OUTPUT_DISC)/
 
 fix_perms:  root_check
 	./build/fix-perms.sh
@@ -59,51 +83,73 @@ fix_perms:  root_check
 create_docs:
 	source /opt/rh/rh-ruby22/enable && cd documentation/ && make pdfs
 
-setup_scripts: root_check create_rpm_repo
-	mkdir -p output
-	cp -r scripts output/scripts
-	cp odie.sh output/
-	cp INSTALLER_VERSION output/
-	cp OCP_VERSION output/
+setup_scripts: root_check
+	mkdir -p $(OUTPUT_DIR)/$(OUTPUT_DISC)/
+	cp -r scripts $(OUTPUT_DIR)/$(OUTPUT_DISC)/scripts
+	cp odie.sh $(OUTPUT_DIR)/$(OUTPUT_DISC)/
+	cp INSTALLER_VERSION $(OUTPUT_DIR)/$(OUTPUT_DISC)/
+	cp OCP_VERSION $(OUTPUT_DIR)/$(OUTPUT_DISC)/
 
 cve_changelog:
-	./scripts/generate-cve-delta.pl 2>&1 > output/CVE_CHANGELOG
-
+	./scripts/generate-cve-delta.pl 2>&1 > $(OUTPUT_DIR)/$(OUTPUT_DISC)/CVE_CHANGELOG
 
 clone_git_repo:
-	sh scripts/local-git-repo.sh
+	./build/init-git-repo-on-disc.sh $(TARGET)/
 
 stage_rhel_iso: root_check
-	./build/stage-rhel-iso.sh output/
-	./build/fix-perms.sh
+	./build/stage-rhel-iso.sh $(OUTPUT_DIR)/$(OUTPUT_DISC)/
+	./build/fix-perms.sh $(OUTPUT_DIR)/$(OUTPUT_DISC)/
+
 
 checksum:
 	cd output && sha256sum `find -type f | egrep -v '.*\.pdf'` > ../documentation/target/ISO_CHECKSUM
 
+TARGETS?="--all"
 pull_images:
-	mkdir -p output/container_images
-	./scripts/migrate-images.sh pull --all
+	mkdir -p $(OUTPUT_DIR)/container_images
+	./scripts/migrate-images.sh pull $(TARGETS)
 
-ISO_NAME=dist/RedHat-ODIE-$(BUILD_VERSION).iso
-baseline_iso:
-	mkdir -p dist/
+ln_base_images:
+	mkdir -p $(TARGET_DIR)/container_images/
+	ln $(OUTPUT_DIR)/media/container_images/ocp-images-base* $(TARGET_DIR)/container_images/
+
+ln_supplemental_images:
+	mkdir -p $(TARGET_DIR)/container_images/
+	ln $(OUTPUT_DIR)/media/container_images/ocp-images-supplemental* $(TARGET_DIR)/container_images/
+
+ln_s2i_images:
+	mkdir -p $(TARGET_DIR)/container_images/
+	ln $(OUTPUT_DIR)/media/container_images/s2i* $(TARGET_DIR)/container_images/
+
+cp_rpms:
+	mkdir -p $(TARGET_DIR)/
+	cp -r $(OUTPUT_DIR)/media/{Packages,repodata} $(TARGET_DIR)
+
+ISO_NAME?=dist/RedHat-ODIE-$(BUILD_VERSION)-$(OUTPUT_DISC).iso
+bootable_iso:
+	mkdir -p $(ISO_BUILD_DIR)
 	find -name 'TRANS.TBL' -exec rm -f {} \;
 	rm -f ${ISO_NAME}
-	mkisofs -quiet -o ${ISO_NAME} -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -V 'RHEL-7.5 Server.x86_64' -boot-load-size 4 -boot-info-table -r -J -T output/
+	mkisofs -quiet -o ${ISO_NAME} -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -V 'RHEL-7.5 Server.x86_64' -boot-load-size 4 -boot-info-table -r -J -T $(OUTPUT_DIR)/$(OUTPUT_DISC)/
 	implantisomd5 ${ISO_NAME}
 
-7z:
-	7za a -m0 -v900m ${ISO_NAME}.7z  ${ISO_NAME}
+content_iso:
+	mkdir -p $(ISO_BUILD_DIR)
+	find -name 'TRANS.TBL' -exec rm -f {} \;
+	rm -f ${ISO_NAME}
+	mkisofs -quiet -o ${ISO_NAME} -r -J -T $(OUTPUT_DIR)/$(OUTPUT_DISC)/
+	implantisomd5 ${ISO_NAME}
 
 partial_clean:
 	./build/fix-perms.sh
-	mkdir -p output
-	cd output/ && find . -maxdepth 1 -not -name 'container_images' -not -name 'Packages' \
-		-exec sudo rm -Irf {} \;
+#	mkdir -p $(OUTPUT_DIR)/$(OUTPUT_DISC)/
+#	cd $(OUTPUT_DIR)/$(OUTPUT_DISC)/ && find . -maxdepth 1 -not -name 'container_images' -not -name 'Packages' \
+#		-exec sudo rm -Irf {} \;
 
 pull_odie_images: build_postgres_stig build_cac_proxy
-	mkdir -p output/container_images
-	./scripts/migrate-images.sh pull --odie -t output/container_images/
+	mkdir -p $(OUTPUT_DIR)/container_images
+	./scripts/migrate-images.sh pull --odie -t $(OUTPUT_DIR)/container_images/
+
 
 list_pool_ids:
 	@echo "*******************************************"
@@ -152,12 +198,16 @@ build_cac_proxy:
 
 
 clone_cop_git:
-	rm -rf output/utilities/
-	mkdir -p output/utilities/
-	git clone https://github.com/redhat-cop/casl-ansible output/utilities/casl-ansible	
-	git clone https://github.com/redhat-cop/openshift-applier.git  output/utilities/openshift-applier
-	git clone https://github.com/redhat-cop/openshift-playbooks output/utilities/openshift-playbooks
-	git clone https://github.com/redhat-cop/containers-quickstarts output/utilities/containers-quickstart
-	git clone https://github.com/redhat-cop/container-pipelines output/utilities/container-pipelines
-	git clone https://github.com/redhat-cop/infra-ansible.git output/utilities/infra-ansible
-	git clone https://github.com/redhat-cop/openshift-toolkit output/utilities/openshift-toolkit
+	rm -rf $(OUTPUT_DIR)/$(OUTPUT_DISC)/utilities/
+	mkdir -p $(OUTPUT_DIR)/$(OUTPUT_DISC)/utilities/
+	git clone https://github.com/redhat-cop/casl-ansible $(OUTPUT_DIR)/$(OUTPUT_DISC)/utilities/casl-ansible	
+	git clone https://github.com/redhat-cop/openshift-applier.git  $(OUTPUT_DIR)/$(OUTPUT_DISC)/utilities/openshift-applier
+	git clone https://github.com/redhat-cop/openshift-playbooks $(OUTPUT_DIR)/$(OUTPUT_DISC)/utilities/openshift-playbooks
+	git clone https://github.com/redhat-cop/containers-quickstarts $(OUTPUT_DIR)/$(OUTPUT_DISC)/utilities/containers-quickstart
+	git clone https://github.com/redhat-cop/container-pipelines $(OUTPUT_DIR)/$(OUTPUT_DISC)/utilities/container-pipelines
+	git clone https://github.com/redhat-cop/infra-ansible.git $(OUTPUT_DIR)/$(OUTPUT_DISC)/utilities/infra-ansible
+	git clone https://github.com/redhat-cop/openshift-toolkit $(OUTPUT_DIR)/$(OUTPUT_DISC)/utilities/openshift-toolkit
+
+# this explicitly uses the build.yml
+setup_buildhost_dnsmasq:
+	sudo ./playbooks/operations/setup_dnsmasq.yml  -e @$(CONFIG_DIR)/build.yml

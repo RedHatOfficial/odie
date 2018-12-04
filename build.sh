@@ -6,11 +6,15 @@ VERSION=$(cat INSTALLER_VERSION)
 SCRIPT_NAME=$(basename "$0")
 
 BUILD_FLAGS_PRE="partial_clean"
-BUILD_FLAGS_MAIN="primary"
+BUILD_FLAGS_MAIN=""
 BUILD_FLAGS_POST=""
 SHOW_TAIL=0
 INTERACTIVE=1
 RELEASE=0
+BUILD_BASE=0
+BUILD_EXTRA=0
+BUILD_APPDEV=0
+BUILD_MEGA=0
 
 export PROVISION_ODIE=0
 
@@ -57,7 +61,7 @@ ${bold}${underline}General Options${normal}
 EOF
 }
 
-export params="$(getopt -o c,i,f,r,b,h,n,m,u,d -l clean,images,full,release,baseline,help,none,rpm,bump,deploy,tail --name "${SCRIPT_NAME}" -- "$@")"
+export params="$(getopt -o c,i,f,r,b,h,n,m,u,d -l all,clean,images,full,release,base,extra,appdev,mega,help,none,rpm,bump,deploy,tail --name "${SCRIPT_NAME}" -- "$@")"
 
 if [[ $? -ne 0 ]]; then
   usage
@@ -79,8 +83,27 @@ do
           SHOW_TAIL=1
           shift
           ;;
-        --baseline|-b)
-           export BUILD_FLAGS_POST="${BUILD_FLAGS_POST} baseline_iso"
+        --base)
+           BUILD_BASE=1
+           shift
+           ;;
+        --extra)
+           BUILD_EXTRA=1
+           shift
+           ;;
+        --appdev)
+           BUILD_APPDEV=1
+           shift
+           ;;
+        --mega)
+           BUILD_MEGA=1
+           shift
+           ;;
+        --all)
+           BUILD_BASE=1
+           BUILD_APPDEV=1
+           BUILD_EXTRA=1
+           BUILD_MEGA=1
            shift
            ;;
         --deploy|-d)
@@ -88,10 +111,14 @@ do
            shift
            ;;
         --full|-f)
-           export BUILD_FLAGS_PRE="${BUILD_FLAGS_PRE} full_media"
+           export BUILD_FLAGS_MAIN="${BUILD_FLAGS_MAIN} full_media"
            shift
            ;;
-        --rpm|-m)
+        --images|-i)
+           export BUILD_FLAGS_MAIN="${BUILD_FLAGS_MAIN} pull_images"
+           shift
+           ;;
+        --rpms|--rpm|-m)
            export BUILD_FLAGS_MAIN="${BUILD_FLAGS_MAIN} rpms"
            shift
            ;;
@@ -99,7 +126,7 @@ do
            export BUILD_FLAGS_PRE="clean ${BUILD_FLAGS_PRE}"
            shift
            ;;
-        --bump|-u)
+        --bump|-b)
            bump
            shift
            ;;
@@ -113,45 +140,68 @@ do
         --release|-r)
            git_tag
            RELEASE=1
-           export BUILD_FLAGS_PRE="${BUILD_FLAGS_PRE}"
-           export BUILD_FLAGS_MAIN="${BUILD_FLAGS_MAIN}"
+           #export BUILD_FLAGS_PRE="${BUILD_FLAGS_PRE}"
+           #export BUILD_FLAGS_MAIN="${BUILD_FLAGS_MAIN}"
            export BUILD_FLAGS_POST="create_docs ${BUILD_FLAGS_POST}"
            shift
            ;;
         --)
           shift; break ;;
+        *)
+          shift; break ;;
     esac
 done
 
-
-if [[ $RELEASE = 0 ]]; then
-  bump
-fi
-
-
-export ISO_NAME=dist/RedHat-ODIE-${VERSION}.iso
+ISO_NAME=dist/RedHat-ODIE-${VERSION}-generic.iso
 
 function make_odie() {
   set +x
-  run_cmd make ${BUILD_FLAGS_PRE} ${BUILD_FLAGS_MAIN} ${BUILD_FLAGS_POST} BUILD_VERSION=${VERSION} ISO_NAME=${ISO_NAME}
+  ISO_TYPE=$1
+  run_cmd make ${BUILD_FLAGS_PRE} ${BUILD_FLAGS_MAIN} ${BUILD_FLAGS_POST} BUILD_VERSION=${VERSION} ISO_NAME=${ISO_NAME} OUTPUT_DISC=${ISO_TYPE} OUTPUT_DIR=output/
 }
 
+
+function build_iso_type() {
+  ISO_TYPE=$1
+  export ISO_NAME=dist/RedHat-ODIE-${VERSION}-${ISO_TYPE}.iso
+  export BUILD_FLAGS_MAIN="${ISO_TYPE}_iso"
+  export BUILD_FLAGS_PRE="${BUILD_FLAGS_PRE} clean"
+  make_odie $ISO_TYPE & spin $! "Building ${ISO_TYPE} ISO"
+}
 
 function header() {
-  export HEADER="Red Hat ODIE Build Script - ${bold}ISO=${ISO_NAME}${normal}"
-  echo
+  export HEADER="Red Hat ODIE Build Script"
   echo ${HEADER}
-  echo
   echo "- View log file in another terminal : ${bold}tail -f ${LOG_FILE}${normal}  "
-  echo
 }
-
-
 header
 
-make_odie & spin $! "Building ODIE"
+DEPLOY_ISO=""
 
+# if BUILD_FLAGS_MAIN has args it is a media build
+if [[ ! -z $BUILD_FLAGS_MAIN ]]; then
+  make_odie $BUILD_FLAGS_MAIN & spin $! "Downloading Media"
+fi
+
+if [[ $BUILD_BASE = 1 ]]; then
+  build_iso_type base
+  export DEPLOY_ISO=${ISO_NAME}
+fi
+
+if [[ $BUILD_EXTRA = 1 ]]; then
+  build_iso_type extra
+fi
+
+if [[ $BUILD_APPDEV = 1 ]]; then
+  build_iso_type appdev & spin $! "Building AppDev ISO"
+fi
+
+if [[ $BUILD_MEGA = 1 ]]; then
+  build_iso_type mega
+  # use the mega ISO if possible
+  export DEPLOY_ISO=${ISO_NAME}
+fi
 
 if [[ "${PROVISION_ODIE}" = 1 ]]; then
-  sudo ${BASEDIR}/deploy.sh --iso $(realpath ${ISO_NAME}) 
+  sudo ${BASEDIR}/deploy.sh --iso $(realpath ${DEPLOY_ISO})
 fi

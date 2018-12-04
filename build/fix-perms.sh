@@ -1,4 +1,6 @@
 #!/bin/bash
+
+# TODO: this needs to be reconciled after other directory issues are resolved
 set -e
 
 user=$(id -un):$(id -gn);

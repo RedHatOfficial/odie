@@ -6,8 +6,7 @@ set +x
 RUN_DIR=$(realpath $( dirname $0 ))
 cd $RUN_DIR/..
 
-BUILD_ROOT=${BUILD_ROOT:-output}
-OUTPUT_DIR="${BUILD_ROOT}/Packages"
+OUTPUT_DIR="${1:-output}/Packages"
 mkdir -p ${OUTPUT_DIR}
 
 COMP_PATH=$(realpath -L ./conf/bootable/comps.xml )

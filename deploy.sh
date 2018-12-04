@@ -11,7 +11,7 @@
 
 export VERSION=$(cat INSTALLER_VERSION)
 SCRIPT_NAME=$(basename "$0")
-export ISO_NAME=dist/RedHat-ODIE-${VERSION}.iso
+export ISO_NAME=dist/RedHat-ODIE-${VERSION}-baseDEFAULT.iso
 
 function usage() {
   cat <<EOF
@@ -58,6 +58,7 @@ do
           shift; break ;;
     esac
 done
+
 
 SIZE=$(du -sh ${ISO_NAME} | awk '{print $1;}')
 

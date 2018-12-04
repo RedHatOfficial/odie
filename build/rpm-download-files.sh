@@ -6,7 +6,7 @@ set +x
 RUN_DIR=$(realpath $( dirname $0 ))
 cd $RUN_DIR/..
 
-BUILD_ROOT=${BUILD_ROOT:-output}
+BUILD_ROOT=${1:-output}
 OUTPUT_DIR="${BUILD_ROOT}/Packages"
 mkdir -p ${OUTPUT_DIR}
 
