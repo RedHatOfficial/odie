@@ -640,7 +640,7 @@ function header() {
   COMMAND=${1:-""}
   MESSAGE=${2:-""}
 
-  echo -n "${white}${bold}  ODIE ${INSTALLER_VERSION} |"
+  echo -n "${white}${bold}ODIE ${INSTALLER_VERSION} |"
   echo -n "${green} OCP ${OCP_VERSION} ${white}| "
   echo -n "${yellow}tail -f ${LOG_FILE} ${white}|"
   echo -n "${blue} $COMMAND"
