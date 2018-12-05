@@ -889,3 +889,13 @@ version:
           Should "odie setup" initiate 
         props:
          auto_install: False
+
+      - name: OCP Service Type
+        yml_file: custom.yml
+        header_text:
+        required: true
+        status: active
+        description_text: |-
+          OCP Service Type (shouldn't need to change this)
+        props:
+          openshift_service_type: atomic-openshift
