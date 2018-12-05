@@ -1,0 +1,8 @@
+#!/usr/bin/env ansible-playbook
+- name: Create OCP Inventory file
+  hosts: localhost
+  connection: local
+  tags:
+    - ocp_inventory
+  roles:
+    - ocp_inventory_generator

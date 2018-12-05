@@ -686,7 +686,13 @@ do
       shift
       exit 0
       ;;
-    generate-config)
+    generate-kickstarts)
+      header $1
+      echo
+      generate_config
+      exit 0
+      ;;
+    generate-ocp)
       header $1
       echo
       generate_config
