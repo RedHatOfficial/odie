@@ -58,14 +58,14 @@ webdirs:
 
 localrepos:
 	cp files/ose.repo /etc/yum.repos.d/ose.repo
-	sudo yum clean all
+	yum clean all
 	#yum -y update
 
 setup_repo_pki:
 	./scripts/repo-pki.sh
 
 setup_dnsmasq:
-	sudo ./playbooks/operations/setup_dnsmasq.yml
+	./playbooks/operations/setup_dnsmasq.yml
 
 import_pki:
 	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
