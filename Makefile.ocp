@@ -68,4 +68,4 @@ setup_dnsmasq:
 	sudo ./playbooks/operations/setup_dnsmasq.yml
 
 import_pki:
-	sudo rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
