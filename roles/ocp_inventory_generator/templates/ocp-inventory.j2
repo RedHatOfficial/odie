@@ -74,7 +74,7 @@ openshift_docker_blocked_registries=registry.access.redhat.com,docker.io
 
 ###### Certificates ######
 {% if openshift_console_ca_file is defined and openshift_console_certfile is defined and openshift_console_keyfile is defined %}
-openshift_master_named_certificates=[{"certfile": "{{ openshift_console_certfile }}", "keyfile": "{{ openshift_console_keyfile }}", "names": ["{{ groups['lb'] | join('","') }}"], "cafile": "{{ openshift_console_ca_file }}"}]
+openshift_master_named_certificates=[{"certfile": "{{ openshift_console_certfile }}", "keyfile": "{{ openshift_console_keyfile }}", "names": ["{{ groups['extra'] | join('","') }}"], "cafile": "{{ openshift_console_ca_file }}"}]
 {% endif %}
 
 {% if docker_registry_ca_file is defined and docker_registry_certfile is defined and docker_registry_keyfile is defined and default_subdomain is defined %}
@@ -88,7 +88,7 @@ openshift_hosted_registry_routecertificates={"certfile": "{{ docker_registry_cer
 openshift_master_ldap_ca_file={{ openshift_master_ldap_ca_file }}
 {% endif %}
 
-{% for host in groups['lb'] %}
+{% for host in groups['extra'] %}
 openshift_master_cluster_hostname={{ host }}
 openshift_master_cluster_public_hostname={{ host }}
 openshift_hosted_registry_storage_host={{ host }}
@@ -164,7 +164,7 @@ openshift_logging_elasticsearch_replica_count={{ logging_elasticsearch_replica_c
 {% endfor %}
 
 [lb]
-{% for host in groups['lb'] %}
+{% for host in groups['extra'] %}
 {{ host }}
 {% endfor %}
 

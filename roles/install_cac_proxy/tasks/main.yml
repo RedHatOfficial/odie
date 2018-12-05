@@ -1,6 +1,6 @@
 - name: Set Role Facts
   set_fact:
-    public_hostname: "{{ hostvars[groups['lb_nfs'][0]].hostname }}"
+    public_hostname: "{{ hostvars[groups['extra'][0]].hostname }}"
     piv_hostname: "ose-pivproxy.{{default_subdomain}}"
     jumphost_user: "system:jumphost"
     temp_file: "/tmp/identityProvider"

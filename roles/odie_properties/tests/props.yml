@@ -87,7 +87,7 @@ version:
         header_text:
         description_text: |-
           The IP of your NTP Server
-          NOTE: An experimental server is configured on the lbnfs node
+          NOTE: An experimental server is configured on the extra node
         footer_text:
         required: false
         status: active

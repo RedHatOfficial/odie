@@ -26,6 +26,7 @@
         dest: "{{ odie_group_all_vars_dir }}/{{file_basename}}"
         state: link
         force: yes
+      when: file_basename != "build.yml"
 
     - name: Check for file {{item}}
       stat:

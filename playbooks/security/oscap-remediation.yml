@@ -33,7 +33,7 @@
       script: "{{odie_src_dir}}/scripts/oscap-remediation.sh {{ remediation }}"
 
 
-- name: Re-enabling FW on lb_nfs & registry
-  hosts: lb:registry
+- name: Re-enabling FW on extra node
+  hosts: extra
   roles:
     - os_firewall

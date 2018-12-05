@@ -58,12 +58,12 @@ jumphost:
       disk1: 250
       ansible_ssh_user: root
       ansible_ssh_pass: odiejumphost
-lb_nfs:
+extra:
   hosts:
     lbnfs01.lab.odie:
       hostname: lbnfs01.lab.odie
       ip: 192.168.124.5
-      flavor: lb_nfs
+      flavor: extra
       env: lab
       cpu: 1
       memory: 2048

@@ -1,8 +1,0 @@
-hostname,ip,flavor,env,cns,disk1,disk2,disk3,cpu,memory
-registry01.default.local,192.168.124.30,registry,default,,150,100,,2,4096
-master01.default.local,192.168.124.1,master,default,,150,,,2,16384
-infra01.default.local,192.168.124.10,infra,default,,150,50,,6,24576
-node01.default.local,192.168.124.100,node,default,x,150,50,50,4,49152
-node02.default.local,192.168.124.101,node,default,x,150,50,50,4,49152
-node03.default.local,192.168.124.102,node,default,x,150,50,50,4,49152
-lbnfs01.default.local,192.168.124.20,lb_nfs,default,,150,1000,,8,32768

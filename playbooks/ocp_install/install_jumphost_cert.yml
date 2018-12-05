@@ -3,7 +3,7 @@
   hosts: masters[0] # Safe to run on all masters?
   vars:
     jumphost_user: "system:jumphost"
-    public_hostname: "{{ hostvars[groups['lb_nfs'][0]].hostname }}"
+    public_hostname: "{{ hostvars[groups['extra'][0]].hostname }}"
     oc_config: " --config=/etc/origin/master/admin.kubeconfig"
   tasks:
     - name: Generate Cert for Jumphost

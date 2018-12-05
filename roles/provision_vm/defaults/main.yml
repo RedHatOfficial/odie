@@ -10,7 +10,7 @@ mac_flavor_decoder:
   master: 'b'
   infra: 'c'
   registry: 'd'
-  lb_nfs: 'e'
+  extra: 'e'
   jumphost: 'f'
 
 kvm_uri: ''
