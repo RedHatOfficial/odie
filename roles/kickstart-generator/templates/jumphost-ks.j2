@@ -34,6 +34,7 @@ firstboot --enable
 telnet
 mod_ssl
 vim-enhanced
+docker
 %end
 
 %post --nochroot
@@ -52,27 +53,31 @@ mv /mnt/sysimage/opt/odie/install_media/container_images/ /mnt/sysimage/opt/odie
 set -x -v
 exec 1>/root/kickstart-stage2.log 2>&1
 
-LOG_FILE=/root/kickstart-odie.log /opt/odie/install_media/odie.sh stage --kickstart
+LOG_FILE=/root/kickstart-odie.log INTERACTIVE=0 /opt/odie/install_media/odie.sh stage
 find /opt/odie -name 'TRANS.TBL' -delete
 
 
 cat << EOF > /etc/systemd/system/odie-setup.service
 [Unit]
 Description=ODIE Initial Setup
-Requires=network-online.target
 Requires=docker.service
 After=multi-user.target
 
 [Service]
-ExecStart=/opt/odie/src/odie.sh setup
+Type=oneshot
+RemainAfterFile=true
+EnvironmentFile=/etc/odie-env
+ExecStart=/opt/odie/src/odie.sh setup --nospin
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
 chmod 664 /etc/systemd/system/odie-setup.service
-EOF
+echo "LOG_FILE=/root/odie-setup.log" > /etc/odie-env
 
+systemctl enable docker
+systemctl enable odie-setup
 
 chage -d 0 root
 chage -d 0 admin

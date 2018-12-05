@@ -8,7 +8,7 @@ export CONTENT_DIR="${BASEDIR}"
 export OUTPUT_DIR=${OUTPUT_DIR:-/opt/odie}
 export KICKSTART=${KICKSTART:-0}
 export GIT_CLONE=${OUTPUT_DIR}/src
-export VERSION_SH=${CONTENT_DIR}/odie-version.pl
+export VERSION_SH=${OUTPUT_DIR}/src/scripts/odie-version.pl
 export CONTRIB_BIN=${GIT_CLONE}/contrib/bin
 export CONFIG_DIR=${ODIE_CONFIG_DIR:-${OUTPUT_DIR}/config}
 export EXPORT_DIR=${ODIE_EXPORT_DIRECTORY:-${OUTPUT_DIR}/exports}
@@ -168,18 +168,18 @@ tty_supports_color() {
 }
 
 if [ tty_supports_color ]; then
-  bold="$(tput bold)"
-  underline="$(tput smul)"
-  standout="$(tput smso)"
-  normal="$(tput sgr0)"
-  black="$(tput setaf 0)"
-  red="$(tput setaf 1)"
-  green="$(tput setaf 2)"
-  yellow="$(tput setaf 3)"
-  blue="$(tput setaf 4)"
-  magenta="$(tput setaf 5)"
-  cyan="$(tput setaf 6)"
-  white="$(tput setaf 7)"
+  bold="$(tput bold 2>/dev/null)"
+  underline="$(tput smul 2>/dev/null)"
+  standout="$(tput smso 2>/dev/null)"
+  normal="$(tput sgr0 2>/dev/null)"
+  black="$(tput setaf 0 2>/dev/null)"
+  red="$(tput setaf 1 2>/dev/null)"
+  green="$(tput setaf 2 2>/dev/null)"
+  yellow="$(tput setaf 3 2>/dev/null)"
+  blue="$(tput setaf 4 2>/dev/null)"
+  magenta="$(tput setaf 5 2>/dev/null)"
+  cyan="$(tput setaf 6 2>/dev/null)"
+  white="$(tput setaf 7 2>/dev/null)"
   # https://en.wikipedia.org/wiki/ANSI_escape_code
   light_green='\033[1;32m'
   light_blue='\033[1;34m'

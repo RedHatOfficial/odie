@@ -77,13 +77,17 @@
       - { src: "{{cpio_dir}}/usr/share/syslinux/pxelinux.0",  dest: "{{tftp_root}}/pxelinux/pxelinux.0"}
       - { src: "{{cpio_dir}}/usr/share/syslinux/vesamenu.c32",  dest: "{{tftp_root}}/pxelinux/vesamenu.c32"}
 
+- name: Enable DHCP
+  debug:
+    var: enable_dhcp
+
 - name: Prepare DNSConfg
   copy:
     content: |-
       listen-address={{listen_address}}
       bind-interfaces
 
-      {% if 'infra' in groups and groups['infrara'][0] is defined %}
+      {% if 'infra' in groups and groups['infra'][0] is defined %}
       address=/.{{default_subdomain}}/{{hostvars[groups['infra'][0]].ip}}
       {% endif %}
 
