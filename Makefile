@@ -94,7 +94,7 @@ cve_changelog:
 	./scripts/generate-cve-delta.pl 2>&1 > $(OUTPUT_DIR)/$(OUTPUT_DISC)/CVE_CHANGELOG
 
 clone_git_repo:
-	./build/init-git-repo-on-disc.sh $(TARGET)/
+	./build/init-git-repo-on-disc.sh $(TARGET_DIR)/odie-ocp-installer.git
 
 stage_rhel_iso: root_check
 	./build/stage-rhel-iso.sh $(OUTPUT_DIR)/$(OUTPUT_DISC)/
