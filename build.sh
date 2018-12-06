@@ -5,7 +5,7 @@ BASEDIR=$(dirname "$(readlink -f "$0")")
 VERSION=$(cat INSTALLER_VERSION)
 SCRIPT_NAME=$(basename "$0")
 
-BUILD_FLAGS_PRE=""
+BUILD_FLAGS_PRE="root_check fix_perms "
 BUILD_FLAGS_MAIN=""
 BUILD_FLAGS_POST=""
 SHOW_TAIL=0

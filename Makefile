@@ -33,7 +33,7 @@ full_media: setup_repos rpms stage_rhel_iso pull_images  pull_odie_images
 
 # everything is put into the same DVD now
 bootable: root_check partial_clean	stage_rhel_iso clone_git_repo setup_scripts add_rpms_repo
-release: root_check clone_cop_git create_docs checksum
+release: root_check clone_cop_git create_docs
 
 
 slim_iso: bootable add_rpms_repo bootable_iso
