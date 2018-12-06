@@ -118,26 +118,39 @@ General Options
 
 ## JumpHost Installation
 
-### Manual Installation
+The JumpHost should be given a single disc at least 150GB, 4 CPU and 4096 GB of RAM.  The container ingestion process is a very intensive and relies upon a single threaded docker.  The installation speed is directly tied to your I/O speed.
 
 The ISO itself is bootable.  Set this as the boot media and you will see the following option:
 
+![Custom Grub boot menu](documentation/assets/images/readme-bootmenu.png)
+
+The install may seem to take a while on the *Running post-installation scripts* section.  This is because the contents of the disc are being copied into `/opt/odie/install_media`.
+
+![Long running post-installation scripts](documentation/assets/images/readme-installation-inprogress.png)
+
+At login, the logins are *root*/*odie* and *admin*/*odie*.  Login as root and you will be forced to change the password:
+
+![Mandatory password reset](documentation/assets/images/readme-installation-initial-password.png)
+
+
+After login, the `odie setup` is already being run in the background.  You can use `systemctl status odie-setup` or `systemctl is-active odie-setup` more directly.  To directly follow the output you can `tail -f /root/odie-setup.log`.  As shown here:
+
+
+![Mandatory password reset](documentation/assets/images/readme-installation-runsetup.png)
+
+# Opinionated Installation
+* These are all being evaluated in a pure ODIE context, expect some additional context in this group. *
 
 ## ODIE Functions
 
-When you first get a JumpHost installed, you should run `odie setup`
 
+<< need help dump here >>
 
 ### `odie setup`
 
-This aggregate function combines the commands `odie properties`, `odie configure`, `odie generate-config` and `odie push` for a push-button ODIE setup process.
+As documented in the example above, this aggregate function combines the commands `odie properties`, `odie configure`, and `odie push` for a push-button ODIE setup process.
 
-
-Additionally, if your gateway hosts a (e.g. http://192.168.124.1/odie-config.tar.xz) 
-
-
-_The goal is to have a systemd unit that will run on the initial startup.  Debugging this has been difficult since the system refuses to boot with this unit in place (keep in mind this was taken directly from a RHT support case).  Will be
-implemented by GA_
+Additionally, if your gateway hosts a conifugration archive `odie-config.tar.gz` accessible via at the root of your gateway server (e.g. http://192.168.124.1/odie-config.tar.xz) that will be downloaded as part of `odie setup`.  If the *auto_start* variable is set in `odie.yml` then an automatic installation is triggered.
 
 ### `odie properties`
 
@@ -152,11 +165,12 @@ Alternatively, you can re-run a single file.  If you ever want to "reset" a file
 
 These files are tagged with the ODIE version at time of creation.  After future updates of ODIE, you can re-run this command and any new properties added to ODIE will be non-destructively appended on your existing property files.
 
-
 ### `odie generate-config`
 
 This command will update the Kickstart files (`/opt/odie/ks/`) and the OCP inventory file (`/opt/odie/src/inventory/inventory`).  It should be rerun after changing any of the configuration files.
 
+
+These can also be done as independent operations `odie generate-kickstart` and `odie generate-ocp-inventory` respectively.
 
 ### `odie configure`
 
@@ -164,7 +178,7 @@ This command configures all of the core services.  The `/opt/odie/config/odie.ym
 
 ### `odie install`
 
-This is the command that actually installs OCP.  It assumes that you have already provisioned your VMs.
+This is the command that actually installs OCP.  Your VMs must have alrady been configured.  
 
 #### Opinionated Installation
 
