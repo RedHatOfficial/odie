@@ -189,7 +189,6 @@ function setup() {
   download_config
   setup_properties
   configure
-  #generate_config
   push_images
 
   # TODO: add auto installation here
@@ -272,10 +271,27 @@ function stage() {
   ${VERSION_SH} set stage ${INSTALLER_VERSION}
 }
 
-function generate_config() {
+function generate_ocp_inventory() {
   pushd ${GIT_CLONE}
   rm -f inventory/inventory
-  run_ansible_play "ODIE :: Generate Configuration Files" ./odie-generate.yml
+  run_ansible_play "ODIE :: Generate OCP Inventory File" ./odie-generate.yml --tags ocp_inventory
+  ${VERSION_SH} set configure ${INSTALLER_VERSION}
+
+  cat <<GENERATEEOF
+
+  This has generated the following files.
+
+  * ${bold}${GIT_CLONE}/inventory/inventory${normal} - Static inventory file used for the Red Hat OCP Ansible playbooks
+
+  ${bold}${yellow}WARNING:${normal} Any changes to these files will be overriden
+
+GENERATEEOF
+
+  popd
+}
+function generate_kickstart() {
+  pushd ${GIT_CLONE}
+  run_ansible_play "ODIE :: Generate Kickstart Files" ./odie-generate.yml --tags kickstart
   ${VERSION_SH} set configure ${INSTALLER_VERSION}
 
   cat <<GENERATEEOF
@@ -686,16 +702,23 @@ do
       shift
       exit 0
       ;;
-    generate-kickstarts)
+    generate-config)
       header $1
       echo
-      generate_config
+      generate_kickstart
+      generate_ocp_inventory
+      exit 0
+      ;;
+    generate-kickstart)
+      header $1
+      echo
+      generate_kickstart
       exit 0
       ;;
     generate-ocp)
       header $1
       echo
-      generate_config
+      generate_ocp_inventory
       exit 0
       ;;
     configure)
