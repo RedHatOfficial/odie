@@ -5,7 +5,7 @@ BASEDIR=$(dirname "$(readlink -f "$0")")
 VERSION=$(cat INSTALLER_VERSION)
 SCRIPT_NAME=$(basename "$0")
 
-BUILD_FLAGS_PRE="partial_clean"
+BUILD_FLAGS_PRE=""
 BUILD_FLAGS_MAIN=""
 BUILD_FLAGS_POST=""
 SHOW_TAIL=0
@@ -40,28 +40,38 @@ function usage() {
 ${bold} ODIE Build Script ${normal}
 
 ${bold}${underline}Media Options${normal}
-	--full		-f	Download the latest RPMS and complete
-						set of container images (conf/base-images.yml)
-	--rpm			-m	Download the latest RPMs
+	--full		-f	Download the RPMS and container images
+	--images	-i	Download the container images
+	--rpm		-m	Download the RPMs
 
+${bold}${underline}ISO Output Options${normal}
+	--base  	  	Create the bootable base ISO incl. base OCP images
+	--extra  	  	Create the extra ISO containing additional OCP services
+	--appdev 	  	Create the baseline ISO
+	--mega  	  	Create mega ISO which includes a superset of all the images
 
-${bold}${underline}Build Output Options${normal}
-	--baseline		-b	Create the baseline (complete) ISO
-	--release		-r	Generate PDF, create git tag, stage output
-						in odie-media repo (TODO)
+	--all  	  		Create all 4 ISOs
 
 ${bold}${underline}General Options${normal}
-	--clean			-c	Clean the output and dist directories
-	--none			-n	Remove all the default operations
-	--deploy			-t	Provision a ODIE cluster using this ISO via KVM
-	--help			-h	Display this useful help information
-	--bump			-u	Increment the version number for the build & commit them 
-						(${bold}rebase these ${underline}before${normal}${bold} pushing!${normal}) 
+	--bump		-b	Increment the version number for the build
+	--clean		-c	Clean the entire output directories (be careful)
+	--deploy	-d	Provision a ODIE cluster using this ISO via KVM
+	--help		-h	Display this useful help information
+	--none		-n	Remove all the default operations
+	--release	-r	Tag this release and create PDFs
+	--tail  	-t	Tail the log during the build
 
 EOF
 }
 
-export params="$(getopt -o c,i,f,r,b,h,n,m,u,d -l all,clean,images,full,release,base,extra,appdev,mega,help,none,rpm,bump,deploy,tail --name "${SCRIPT_NAME}" -- "$@")"
+function header() {
+  export HEADER="Red Hat ODIE Build Script"
+  echo ${HEADER}
+  echo "- View log file in another terminal : ${bold}tail -f ${LOG_FILE}${normal}  "
+}
+header
+
+export params="$(getopt -o c,i,f,r,b,h,n,m,u,d,t -l all,clean,images,full,release,base,extra,appdev,mega,help,none,rpm,bump,deploy,tail --name "${SCRIPT_NAME}" -- "$@")"
 
 if [[ $? -ne 0 ]]; then
   usage
@@ -77,8 +87,7 @@ do
            usage
            exit 0
            ;;
-        --tail)
-          echo "Realtime tailing of log"
+        --tail|-t)
           INTERACTIVE=0
           SHOW_TAIL=1
           shift
@@ -123,7 +132,7 @@ do
            shift
            ;;
         --clean|-c)
-           export BUILD_FLAGS_PRE="clean ${BUILD_FLAGS_PRE}"
+           export BUILD_FLAGS_PRE="clean_all ${BUILD_FLAGS_PRE}"
            shift
            ;;
         --bump|-b)
@@ -131,18 +140,17 @@ do
            shift
            ;;
         --none|-n)
-           git_tag
            export BUILD_FLAGS_PRE=""
            export BUILD_FLAGS_MAIN=""
            export BUILD_FLAGS_POST=""
            shift
            ;;
         --release|-r)
-           git_tag
+           run_cmd git_tag & spin $! "Tagging Release"
            RELEASE=1
            #export BUILD_FLAGS_PRE="${BUILD_FLAGS_PRE}"
            #export BUILD_FLAGS_MAIN="${BUILD_FLAGS_MAIN}"
-           export BUILD_FLAGS_POST="create_docs ${BUILD_FLAGS_POST}"
+           export BUILD_FLAGS_POST="release ${BUILD_FLAGS_POST}"
            shift
            ;;
         --)
@@ -169,12 +177,6 @@ function build_iso_type() {
   make_odie $ISO_TYPE & spin $! "Building ${ISO_TYPE} ISO"
 }
 
-function header() {
-  export HEADER="Red Hat ODIE Build Script"
-  echo ${HEADER}
-  echo "- View log file in another terminal : ${bold}tail -f ${LOG_FILE}${normal}  "
-}
-header
 
 DEPLOY_ISO=""
 

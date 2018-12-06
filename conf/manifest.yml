@@ -653,7 +653,7 @@ version:
         description_text: |-
           This ISO is used during the build process via the stage-rhel-iso.sh script
         props:
-          rhel_iso: /root/rhel-server-7.5-x86_64-dvd.iso
+          rhel_iso: /opt/odie/media/rhel-server-7.5-x86_64-dvd.iso
 
       - name: OpenShift Web Console Certificates
         prefix: 10000
