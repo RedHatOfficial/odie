@@ -118,6 +118,9 @@ General Options
 
 ## JumpHost Installation
 
+### Manual Installation
+
+The ISO itself is bootable.  Set this as the boot media and you will see the following option:
 
 
 ## ODIE Functions
@@ -252,6 +255,14 @@ Edit -> Preferences
 `
 ssh root@jumphost01.lab.odie -C "tailodie"
 `
+
+## My build failed and now the permissions are messed up!
+
+
+```
+make fix_perms
+```
+
 
 # TODO
 

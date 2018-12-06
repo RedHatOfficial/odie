@@ -1,5 +1,6 @@
 enable_dhcp: false
 enable_pxe: false
+enable_dns: true
 
 stage_pxe: true
 

@@ -67,7 +67,6 @@ clean_images:
 clean_manifests:
 	rm -rf $(OUTPUT_DIR)/manifests/*
 
-
 add_rpms_repo: root_check cp_rpms
 	sudo build/rpm-createrepo.sh $(OUTPUT_DIR)/$(OUTPUT_DISC)/
 
@@ -76,6 +75,7 @@ generate_rpm_manifest: root_check
 
 download_rpms: root_check
 	sudo build/rpm-download-files.sh $(OUTPUT_DIR)/$(OUTPUT_DISC)/
+	./build/fix-perms.sh
 
 fix_perms:  root_check
 	./build/fix-perms.sh

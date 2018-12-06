@@ -11,6 +11,14 @@
   ignore_errors: true
   when: temp_dhcp_ip is defined
 
+- name: Setup FW for DNS
+  firewalld:
+    service: dns
+    state: enabled
+    immediate: yes
+    permanent: yes
+  when: enable_dns
+
 - name: Setup FW for DHCP
   firewalld:
     service: dhcp
