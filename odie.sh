@@ -529,19 +529,23 @@ if [ "$0" != "$BASH_SOURCE" ]  ; then return; fi
 usage() {
     cat <<EOF
 
-      usage: ${SCRIPT_NAME} [command] [--source DIR]
+      usage: ${SCRIPT_NAME} [command]
 
       ================
 
       Commands are:
 
         * ${bold}stage${normal}		-	copy the media from the ISO
+
+          ${bold}--source DIR${normal}	-	the source directory of the ODIE media
+          ${bold}--clean${normal}		-	Delete the ${OUTPUT_DIR} directory before installation
+          ${bold}--stash${normal}		-	Stash and re-apply all working changes in the git repo
+
         * ${bold}properties${normal}	-	generate the properties file based on the installed version
-        * ${bold}configure${normal}		-	setup the JumpHost 
+        * ${bold}configure${normal}		-	setup the JumpHost
         * ${bold}generate-config${normal}	-	generate config files
 
-
-        * ${bold}push${normal}		-	push images to the JumpHost registry
+        * ${bold}push${normal}		-	setup and push images to the JumpHost registry
 
         * ${bold}install${normal}	-	run the Ansible playbooks to install the cluster
             ${bold}--harden${normal}	-	Run the STIG remediation after installation
@@ -557,22 +561,12 @@ usage() {
         * ${bold}setup${normal}   -     initial setup 
 
 
+      Commands are:
+
       Options:
         ${bold}--tail${normal}		-	tail output in realtime
-        ${bold}--source DIR${normal}	-	the source directory of the ODIE media
-        ${bold}--clean${normal}		-	Delete the ${OUTPUT_DIR} directory before installation
-        ${bold}--stash${normal}		-	Stash and re-apply all working changes in the git repo
         ${bold}--nospin${normal}	-	Disable the spinning (set ${bold}SPIN_FPS${normal} for speed = ${SPIN_FPS}
         ${bold}--password${normal}		-	Prompt for the password of encrypted Vault config files
-
-
-      Broken:
-        * ${bold}validate${normal}	-	run the Ansible playbooks to validate the proper installation of the cluster
-        * ${bold}patch${normal}		-	patch the cluster
-      Deprecated Options:
-        ${bold}--target BRANCH${normal}	-	The branch to checkout (current: ${TARGET})
-
-
 EOF
 }
 
@@ -715,7 +709,7 @@ do
       generate_kickstart
       exit 0
       ;;
-    generate-ocp)
+    generate-ocp|generate-ocp-inventory)
       header $1
       echo
       generate_ocp_inventory
