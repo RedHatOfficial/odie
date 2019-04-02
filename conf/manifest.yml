@@ -564,7 +564,7 @@ version:
           The version of OCP to install.  This normally does not need to be modified
           unless specifically instructed to do so as part of an upgrade.
         props:
-          ocp_version: 3.11.43
+          ocp_version: 3.11.88
           ocp_short_version: 3.11
 
       - name: KVM Variables

@@ -105,8 +105,11 @@ parse_commandline ()
 			--base)
         			REPOS+=('base')
 				;;
+			--extra)
+        			REPOS+=('extra')
+				;;
 			--all)
-        			REPOS+=('base','s2i','supplemental','odie')
+        			REPOS+=('base','s2i','supplemental','odie','extra')
 				;;
       --debug)
         _arg_debug="-vvv"
