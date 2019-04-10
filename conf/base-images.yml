@@ -45,10 +45,10 @@ registries:
         - openshift3/snapshot-controller:v{{ocp_version}}
         - openshift3/snapshot-provisioner:v{{ocp_version}}
         - rhel7/etcd:3.2.22
-  extra:
-    name: ocp-images-extra
-    source_registry: registry.access.redhat.com
-    repos:
+#  extra:
+#    name: ocp-images-extra
+#    source_registry: registry.access.redhat.com
+#    repos:
         - openshift3/grafana:v{{ocp_version}}
         - openshift3/ose-prometheus-config-reloader:v{{ocp_version}}
         - openshift3/ose-prometheus-operator:v{{ocp_version}}
