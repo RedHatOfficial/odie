@@ -38,6 +38,7 @@ release: root_check clone_cop_git create_docs
 
 slim_iso: bootable add_rpms_repo bootable_iso
 base_iso: bootable add_rpms_repo ln_base_images bootable_iso
+registry_iso: setup_scripts clone_git_repo ln_base_images ln_supplemental_images ln_s2i_images content_iso
 extra_iso: ln_supplemental_images content_iso
 appdev_iso: ln_s2i_images content_iso
 mega_iso: base_iso extra_iso appdev_iso bootable_iso
@@ -106,20 +107,20 @@ checksum:
 
 TARGETS?="--all"
 pull_images:
-	mkdir -p $(OUTPUT_DIR)/container_images
-	./scripts/migrate-images.sh pull $(TARGETS)
+	mkdir -p $(OUTPUT_DIR)/media/container_images
+	./scripts/migrate-images.sh pull $(TARGETS) -t $(OUTPUT_DIR)/media/container_images
 
 ln_base_images:
 	mkdir -p $(TARGET_DIR)/container_images/
-	ln $(OUTPUT_DIR)/media/container_images/ocp-images-base* $(TARGET_DIR)/container_images/
+	sudo ln -f $(OUTPUT_DIR)/media/container_images/ocp-images-base* $(TARGET_DIR)/container_images/
 
 ln_supplemental_images:
 	mkdir -p $(TARGET_DIR)/container_images/
-	ln $(OUTPUT_DIR)/media/container_images/ocp-images-supplemental* $(TARGET_DIR)/container_images/
+	sudo ln -f $(OUTPUT_DIR)/media/container_images/ocp-images-supplemental* $(TARGET_DIR)/container_images/
 
 ln_s2i_images:
 	mkdir -p $(TARGET_DIR)/container_images/
-	ln $(OUTPUT_DIR)/media/container_images/s2i* $(TARGET_DIR)/container_images/
+	sudo ln -f $(OUTPUT_DIR)/media/container_images/s2i* $(TARGET_DIR)/container_images/
 
 cp_rpms:
 	mkdir -p $(TARGET_DIR)/
@@ -183,7 +184,7 @@ setup_repos:
 	sudo subscription-manager repos --disable "*" --enable rhel-7-server-rpms --enable rhel-7-server-ose-3.11-rpms --enable rhel-server-rhscl-7-rpms --enable rhel-7-server-extras-rpms --enable=rhel-7-server-ansible-2.6-rpms
 	sudo subscription-manager release --set=7.6
 	sudo yum clean all
-	sudo yum -y install  https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+	#sudo yum -y install  https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 	sudo yum-config-manager --disable epel
 
 unsubscribe:
