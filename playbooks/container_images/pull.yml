@@ -9,13 +9,19 @@
   tasks:
     - include_vars: "{{ images_file }}"
 
+
+    - debug:
+        var: image_types
+
     - debug:
         var: registries
 
-    - name: "Download Images {{ item.key }}"
+    - name: "Download Images {{ reg.key }}"
       with_dict: "{{ registries }}"
+      loop_control:
+        loop_var: reg
       include_role:
         name: docker_pull
       vars:
-        registry: "{{ item.value }}"
-      when: "item.key in image_types"
+        registry: "{{ reg.value }}"
+      when: "reg.key in image_types"

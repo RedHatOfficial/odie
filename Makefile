@@ -72,7 +72,8 @@ add_rpms_repo: root_check cp_rpms
 	sudo build/rpm-createrepo.sh $(OUTPUT_DIR)/$(OUTPUT_DISC)/
 
 generate_rpm_manifest: root_check
-	sudo build/rpm-generate-file-list.sh $(OUTPUT_DIR)/manifests/
+	sudo build/rpm-generate-file-list.sh 
+	#$(OUTPUT_DIR)/manifests/
 
 download_rpms: root_check
 	sudo build/rpm-download-files.sh $(OUTPUT_DIR)/$(OUTPUT_DISC)/
