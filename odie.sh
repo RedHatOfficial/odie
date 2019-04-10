@@ -260,9 +260,9 @@ function stage() {
   if [[  -d "${CONTENT_DIR}/odie-ocp-installer.git" ]] ; then
       git_update
       ${VERSION_SH} set stage ${INSTALLER_VERSION}
-      echo > /etc/motd
-      echo "    ODIE Release $( ${VERSION_SH} show stage)" >> /etc/motd
-      echo >> /etc/motd
+#      echo > /etc/motd
+#      echo "    ODIE Release $( ${VERSION_SH} show stage)" >> /etc/motd
+#      echo >> /etc/motd
       ln --force -s /opt/odie/src/odie.sh /usr/bin/odie & spin $! "Symlinking odie"
       cp -nf /opt/odie/src/contrib/bin/* /usr/bin/ & spin $! "Installing 3rd Party Utilities"
   fi
